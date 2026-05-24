@@ -1,0 +1,72 @@
+FROM gcc:13
+
+WORKDIR /app
+
+COPY . .
+
+RUN mkdir -p data
+
+# ========== BUILD UNIT TESTS ==========
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_post.cpp src/CommandParser.cpp -o test_post
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_get.cpp src/CommandParser.cpp -o test_get
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_delete.cpp src/CommandParser.cpp -o test_delete
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_patch.cpp src/CommandParser.cpp -o test_patch
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_help.cpp src/CommandParser.cpp -o test_help
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_400.cpp src/CommandParser.cpp -o test_400
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_404.cpp src/User.cpp src/UserRepository.cpp -o test_404
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/test_persistence.cpp \
+    src/Persistence.cpp \
+    src/User.cpp \
+    src/UserRepository.cpp -o test_persistence
+
+# ========== BUILD INTEGRATION TESTS ==========
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/integration/test_multiple_commands.cpp \
+    src/CommandParser.cpp \
+    src/RecommendationEngine.cpp \
+    src/UserRepository.cpp \
+    src/User.cpp \
+    src/Persistence.cpp \
+    src/TcpServer.cpp \
+    src/ClientSession.cpp \
+    -pthread -o test_multiple_commands
+
+RUN g++ -std=c++17 -Wall -Wextra -I src \
+    tests/integration/test_full_scenario.cpp \
+    src/CommandParser.cpp \
+    src/RecommendationEngine.cpp \
+    src/UserRepository.cpp \
+    src/User.cpp \
+    src/Persistence.cpp \
+    src/TcpServer.cpp \
+    src/ClientSession.cpp \
+    -pthread -o test_full_scenario
+
+# ========== RUN ALL TESTS ==========
+CMD ["sh", "-c", \
+    "./test_post && \
+     ./test_get && \
+     ./test_delete && \
+     ./test_patch && \
+     ./test_help && \
+     ./test_400 && \
+     ./test_404 && \
+     ./test_persistence && \
+     ./test_multiple_commands && \
+     ./test_full_scenario && \
+     echo '=== All Tests Passed ==='"]
