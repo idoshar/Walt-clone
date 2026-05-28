@@ -1,0 +1,22 @@
+﻿{
+  "name": "food-delivery-web-server",
+  "version": "1.0.0",
+  "description": "Exercise 3 NodeJS Express MVC web server for food delivery API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "mvc",
+    "rest-api"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
