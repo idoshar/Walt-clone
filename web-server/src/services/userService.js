@@ -38,7 +38,7 @@ class UserService {
         const user = userRepository.findById(id);
 
         if (!user) {
-            const error = new Error('user not found');
+            const error = new Error('User not found');
             error.statusCode = 404;
             throw error;
         }
