@@ -1,5 +1,7 @@
 ﻿const express = require('express');
 
+const userRoutes = require('./userRoutes');
+
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -8,5 +10,7 @@ router.get('/health', (req, res) => {
         service: 'food-delivery-api'
     });
 });
+
+router.use('/users', userRoutes);
 
 module.exports = router;
