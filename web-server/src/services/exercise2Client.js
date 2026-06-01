@@ -54,8 +54,9 @@ function sendCommand(command) {
         });
 
         socket.on('close', () => {
-            // Socket closed before we finished — deliver what we have
-            finish(null, response);
+            if (!settled) {
+                finish(new Error('Exercise 2 server closed the connection before sending a response'));
+            }
         });
     });
 }
@@ -152,3 +153,5 @@ module.exports = {
     reportProductView,
     getRecommendations,
 };
+
+
