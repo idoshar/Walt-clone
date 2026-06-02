@@ -46,6 +46,16 @@ class RestaurantRepository {
     findById(id) {
         return this.restaurants.find((restaurant) => restaurant.id === Number(id)) || null;
     }
+    update(id, updatedFields) {
+        const restaurant = this.findById(id);
+
+        if (!restaurant) {
+            return null;
+        }
+
+        Object.assign(restaurant, updatedFields);
+        return restaurant;
+    }
     
     search(query) {
         const normalizedQuery = String(query || '').trim().toLowerCase();
