@@ -1,3 +1,4 @@
+const responseHelper = require('../utilities/responseHelper');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
@@ -63,25 +64,7 @@ class RestaurantController {
             next(err);
         }
     }
-    updateRestaurant(req, res, next) {
-        try {
-            const objectError = validateObject(req.body);
-
-            if (objectError) {
-                return responseHelper.badRequest(res, objectError);
-            }
-
-            const restaurant = restaurantRepository.update(req.params.id, req.body);
-
-            if (!restaurant) {
-                return responseHelper.notFound(res, 'Restaurant not found');
-            }
-
-            return responseHelper.noContent(res);
-        } catch (err) {
-            next(err);
-        }
-    } 
+    
 }
 
 module.exports = new RestaurantController();
