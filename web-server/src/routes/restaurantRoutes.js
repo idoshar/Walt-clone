@@ -8,6 +8,7 @@ const router = express.Router();
 router.post('/', restaurantController.createRestaurant);
 router.get('/', restaurantController.getAllRestaurants);
 router.get('/:id', restaurantController.getRestaurantById);
+router.patch('/:id', restaurantController.updateRestaurant);
 
 router.use('/:id/products', productRoutes);
 
