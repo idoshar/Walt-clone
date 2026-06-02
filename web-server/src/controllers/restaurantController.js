@@ -1,5 +1,4 @@
 const restaurantRepository = require('../repositories/restaurantRepository');
-const restaurantRepository = require('../repositories/restaurantRepository');
 const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
 const { validateObject, validateRequiredFields } = require('../utilities/validationHelper');
