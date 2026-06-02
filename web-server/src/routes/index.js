@@ -1,7 +1,7 @@
 ﻿const express = require('express');
 
 const userRoutes = require('./userRoutes');
-const restaurantRoutes = require('./restaurantRoutes');
+const tokenRoutes = require('./tokenRoutes');
 
 const router = express.Router();
 
@@ -13,6 +13,6 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/users', userRoutes);
-router.use('/restaurants', restaurantRoutes);
+router.use('/tokens', tokenRoutes);
 
 module.exports = router;
