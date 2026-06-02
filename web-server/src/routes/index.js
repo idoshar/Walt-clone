@@ -1,8 +1,9 @@
-﻿const express = require('express');
+const express = require('express');
 
 const userRoutes = require('./userRoutes');
 const restaurantRoutes = require('./restaurantRoutes');
 const searchRoutes = require('./searchRoutes');
+const orderRoutes = require('./orderRoutes');
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.get('/health', (req, res) => {
 router.use('/users', userRoutes);
 router.use('/restaurants', restaurantRoutes);
 router.use('/search', searchRoutes);
+router.use('/orders', orderRoutes);
 
 module.exports = router;
