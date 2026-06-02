@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 
 const userRoutes = require('./userRoutes');
 const restaurantRoutes = require('./restaurantRoutes');
