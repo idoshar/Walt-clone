@@ -11,7 +11,8 @@ class RestaurantController {
                 ? restaurantRepository.getAll()
                 : restaurantRepository.findAll();
 
-            res.status(200).json(
+            return responseHelper.ok(
+                res,
                 restaurants.map((restaurant) => restaurant.toResponseObject())
             );
         } catch (err) {
@@ -24,16 +25,15 @@ class RestaurantController {
             const restaurant = restaurantRepository.findById(req.params.id);
 
             if (!restaurant) {
-                return res.status(404).json({
-                    error: 'Restaurant not found'
-                });
+                return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            return res.status(200).json(restaurant.toResponseObject());
+            return responseHelper.ok(res, restaurant.toResponseObject());
         } catch (err) {
             next(err);
         }
     }
+
     createRestaurant(req, res, next) {
         try {
             const objectError = validateObject(req.body);
@@ -64,7 +64,26 @@ class RestaurantController {
             next(err);
         }
     }
-    
+
+    updateRestaurant(req, res, next) {
+        try {
+            const objectError = validateObject(req.body);
+
+            if (objectError) {
+                return responseHelper.badRequest(res, objectError);
+            }
+
+            const restaurant = restaurantRepository.update(req.params.id, req.body);
+
+            if (!restaurant) {
+                return responseHelper.notFound(res, 'Restaurant not found');
+            }
+
+            return responseHelper.noContent(res);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = new RestaurantController();
