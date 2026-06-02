@@ -38,10 +38,15 @@ class RestaurantRepository {
         return this.findAll();
     }
 
+    create(restaurant) {
+        this.restaurants.push(restaurant);
+        return restaurant;
+    }
+
     findById(id) {
         return this.restaurants.find((restaurant) => restaurant.id === Number(id)) || null;
     }
-
+    
     search(query) {
         const normalizedQuery = String(query || '').trim().toLowerCase();
 

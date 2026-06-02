@@ -5,6 +5,7 @@ const productRoutes = require('./productRoutes');
 
 const router = express.Router();
 
+router.post('/', restaurantController.createRestaurant);
 router.get('/', restaurantController.getAllRestaurants);
 router.get('/:id', restaurantController.getRestaurantById);
 
