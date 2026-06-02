@@ -560,3 +560,24 @@ Rules:
 - No external libraries should be used unless allowed by the course instructions.
 - The repository should remain private.
 - Do not commit passwords, tokens, API keys, private information, `node_modules`, build artifacts or generated binaries.
+
+
+
+## Running with Docker
+
+### Both servers together (recommended)
+```bash
+docker-compose up --build
+```
+Web server will be available at: http://localhost:3000
+
+### Separately
+```bash
+# Ex2 server
+docker build -t ex2-server .
+docker run -p 8080:8080 ex2-server
+
+# Web server
+docker build -f Dockerfile.webserver -t web-server .
+docker run -p 3000:3000 -e EX2_HOST=host.docker.internal -e EX2_PORT=8080 web-server
+```

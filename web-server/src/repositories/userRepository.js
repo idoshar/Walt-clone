@@ -1,31 +1,29 @@
-﻿const User = require('../models/User');
+﻿const InMemoryRepository = require('./InMemoryRepository');
+const User = require('../models/User');
 
-class UserRepository {
-    constructor() {
-        this.users = [];
-        this.nextId = 1;
-    }
+
+class UserRepository extends InMemoryRepository {
 
     create(userData) {
-        const user = new User({
-            id: this.nextId++,
-            ...userData
-        });
-
-        this.users.push(user);
-        return user;
+        const raw = super.create(userData);
+        return new User(raw);
     }
+
 
     findById(id) {
-        return this.users.find((user) => user.id === Number(id)) || null;
+        const raw = super.findById(id);
+        return raw ? new User(raw) : null;
     }
 
+ 
     findByUsername(username) {
-        return this.users.find((user) => user.username === username) || null;
+        const raw = super.findOneBy('username', username);
+        return raw ? new User(raw) : null;
     }
+
 
     getAll() {
-        return this.users;
+        return super.findAll().map((raw) => new User(raw));
     }
 }
 

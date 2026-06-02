@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+
+  ex2-server:
+    build:
+      context: .
+      dockerfile: Dockerfile          
+    container_name: ex2-server
+    expose:
+      - "8080"                
+    command: ["./server", "8080"]
+    restart: unless-stopped
+
+  web-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.webserver
+    container_name: web-server
+    ports:
+      - "3000:3000"                   # exposed to the host
+    environment:
+      PORT: 3000
+      EX2_HOST: ex2-server            # Docker DNS resolves the service name
+      EX2_PORT: 8080
+    depends_on:
+      - ex2-server
+    restart: unless-stopped
