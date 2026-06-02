@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY web-server/package.json ./
+
+RUN npm install --omit=dev
+
+COPY web-server/src ./src
+
+EXPOSE 3000
+
+ENV PORT=3000 \
+    EX2_HOST=ex2-server \
+    EX2_PORT=8080
+
+CMD ["node", "src/server.js"]
