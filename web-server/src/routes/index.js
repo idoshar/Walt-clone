@@ -1,6 +1,7 @@
 const express = require('express');
 
 const userRoutes = require('./userRoutes');
+const tokenRoutes = require('./tokenRoutes');
 const restaurantRoutes = require('./restaurantRoutes');
 const searchRoutes = require('./searchRoutes');
 const orderRoutes = require('./orderRoutes');
@@ -15,6 +16,7 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/users', userRoutes);
+router.use('/tokens', tokenRoutes);
 router.use('/restaurants', restaurantRoutes);
 router.use('/search', searchRoutes);
 router.use('/orders', orderRoutes);
