@@ -44,7 +44,7 @@ class RestaurantRepository {
     }
 
     findById(id) {
-        return this.restaurants.find((restaurant) => restaurant.id === Number(id)) || null;
+        return this.restaurants.find((restaurant) => String(restaurant.id) === String(id)) || null;
     }
     update(id, updatedFields) {
         const restaurant = this.findById(id);
@@ -70,6 +70,19 @@ class RestaurantRepository {
 
             return name.includes(normalizedQuery) || description.includes(normalizedQuery);
         });
+    }
+
+    deleteById(id){
+        const index = this.restaurants.findIndex(
+            (restaurant) => String(restaurant.id) === String(id)
+        );
+
+        if(index === -1){
+            return false;
+        }
+
+        this.restaurants.splice(index, 1);
+        return true;
     }
 }
 
