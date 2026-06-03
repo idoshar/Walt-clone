@@ -119,7 +119,34 @@ function getUserOrders(req, res) {
     );
 }
 
+function getOrderById(req, res) {
+    const userId = req.headers['x-user-id'];
+
+    if (!userId) {
+        return res.status(400).json({
+            error: 'Missing x-user-id header'
+        });
+    }
+
+    const order = orderRepository.findById(req.params.id);
+
+    if (!order) {
+        return res.status(404).json({
+            error: 'Order not found'
+        });
+    }
+
+    if (String(order.userId) !== String(userId)) {
+        return res.status(404).json({
+            error: 'Order not found'
+        });
+    }
+
+    return res.status(200).json(order.toResponseObject());
+}
+
 module.exports = {
     createOrder,
-    getUserOrders
+    getUserOrders,
+    getOrderById
 };
