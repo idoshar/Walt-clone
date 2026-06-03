@@ -84,6 +84,19 @@ class RestaurantController {
             next(err);
         }
     }
+    deleteRestaurant(req, res, next) {
+        try {
+            const deleted = restaurantRepository.deleteById(req.params.id);
+
+            if (!deleted) {
+                return responseHelper.notFound(res, 'Restaurant not found');
+            }
+
+            return responseHelper.noContent(res);
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = new RestaurantController();
