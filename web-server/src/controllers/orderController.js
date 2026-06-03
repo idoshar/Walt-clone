@@ -103,6 +103,23 @@ function createOrder(req, res) {
         .json(order.toResponseObject());
 }
 
+function getUserOrders(req, res) {
+    const userId = req.headers['x-user-id'];
+
+    if (!userId) {
+        return res.status(400).json({
+            error: 'Missing x-user-id header'
+        });
+    }
+
+    const orders = orderRepository.findByUserId(userId);
+
+    return res.status(200).json(
+        orders.map((order) => order.toResponseObject())
+    );
+}
+
 module.exports = {
-    createOrder
+    createOrder,
+    getUserOrders
 };
