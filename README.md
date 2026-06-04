@@ -581,3 +581,66 @@ docker run -p 8080:8080 ex2-server
 docker build -f Dockerfile.webserver -t web-server .
 docker run -p 3000:3000 -e EX2_HOST=host.docker.internal -e EX2_PORT=8080 web-server
 ```
+
+## Users and Tokens API Examples
+
+### Create User
+
+```bash
+curl -i -X POST http://localhost:3000/api/users -H "Content-Type: application/json" -d '{"username":"maya","password":"1234","name":"Maya Kaykov","phone":"0500000000","address":"Israel"}'
+```
+
+Expected result:
+
+```text
+HTTP/1.1 201 Created
+Location: /api/users/<userId>
+```
+
+### Get User By ID
+
+```bash
+curl -i http://localhost:3000/api/users/1
+```
+
+Expected result:
+
+```text
+HTTP/1.1 200 OK
+```
+
+### User Not Found
+
+```bash
+curl -i http://localhost:3000/api/users/999
+```
+
+Expected result:
+
+```text
+HTTP/1.1 404 Not Found
+```
+
+### Login
+
+```bash
+curl -i -X POST http://localhost:3000/api/tokens -H "Content-Type: application/json" -d '{"username":"maya","password":"1234"}'
+```
+
+Expected result:
+
+```text
+HTTP/1.1 200 OK
+```
+
+### Invalid Login
+
+```bash
+curl -i -X POST http://localhost:3000/api/tokens -H "Content-Type: application/json" -d '{"username":"maya","password":"wrong"}'
+```
+
+Expected result:
+
+```text
+HTTP/1.1 401 Unauthorized
+```
