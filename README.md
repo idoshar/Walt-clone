@@ -789,31 +789,6 @@ For example:
 
 ---
 
-## Submission Notes
-
-Before final submission:
-
-* Make sure the repository is private.
-* Make sure the course checker has access to GitHub and Jira.
-* Make sure `details.txt` exists.
-* Make sure `details.txt` follows the required format exactly.
-* Make sure there are no extra lines or extra spaces in `details.txt`.
-* Make sure the README includes final run instructions.
-* Make sure screenshots are added where required.
-* Make sure no secrets or private data are committed.
-* Make sure `node_modules` is not committed.
-
-Required `details.txt` format:
-
-```text
-Israel Israeli 123456789
-Israela Israeli 012345678
-Israeli Israeli 012345679
-LINK TO GITHUB HERE
-```
-
----
-
 ## Notes
 
 * The C++ TCP server is based on previous exercises.
