@@ -1,15 +1,14 @@
 version: "3.9"
 
 services:
-
   ex2-server:
     build:
       context: .
-      dockerfile: Dockerfile          
+      dockerfile: Dockerfile
     container_name: ex2-server
     expose:
-      - "8080"                
-    command: ["./server", "8080"]
+      - "${EX2_SERVER_PORT:-8080}"
+    command: ["./server", "${EX2_SERVER_PORT:-8080}"]
     restart: unless-stopped
 
   web-server:
@@ -18,11 +17,12 @@ services:
       dockerfile: Dockerfile.webserver
     container_name: web-server
     ports:
-      - "3000:3000"                   # exposed to the host
+      - "${WEB_SERVER_HOST_PORT:-3000}:${WEB_SERVER_PORT:-3000}"
     environment:
-      PORT: 3000
-      EX2_HOST: ex2-server            # Docker DNS resolves the service name
-      EX2_PORT: 8080
+      PORT: ${WEB_SERVER_PORT:-3000}
+      EX2_HOST: ${EX2_HOST:-ex2-server}
+      EX2_PORT: ${EX2_SERVER_PORT:-8080}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api}
     depends_on:
       - ex2-server
     restart: unless-stopped
