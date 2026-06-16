@@ -1,145 +1,211 @@
-# Exercise 3 - Web Server Based on Exercise 2 Recommendation System
+# Exercise 4 - React Wolt-Style Web Application
 
 ## Overview
 
-This repository was created for Exercise 3 and is based on the final code of Exercise 2.
+This repository contains the Exercise 4 project for the Advanced Systems Programming course.
 
-At this stage, the repository contains the Exercise 2 TCP client-server recommendation system.  
-During Exercise 3, a new NodeJS + Express Web server will be added on top of this project.
+Exercise 4 continues the previous project work.
+The repository currently contains the previous C++ TCP recommendation server, the Exercise 3 NodeJS and Express web server, and the work area for the Exercise 4 React web application.
 
-The Exercise 2 C++ server will remain responsible for the recommendation logic.  
-The Exercise 3 Web server will communicate with the Exercise 2 server as a client when recommendation-related actions are required.
+The goal of Exercise 4 is to build a React-based web application inspired by Wolt.
+The React application communicates with the Exercise 3 web server, displays real dynamic data from the server, supports multiple users, and allows users to complete full application scenarios such as registration, login, restaurant browsing, menu viewing, ordering, search, restaurant management, theme switching, testing, Docker execution, and project documentation.
 
-The Exercise 2 repository remains unchanged.
-
----
-
-## Current Exercise 2 System
-
-The existing system is a TCP client-server recommendation system.
-
-The business logic is implemented in the C++ server.  
-The Python client receives user commands from the console, sends them to the server over TCP, and prints only the server response.
+The React application must not display hard-coded application data.
+For example, restaurants and products must come from the server API, and creating a restaurant or order must be done through the server.
 
 ---
 
-## Planned Exercise 3 System
+## Current Project Status
 
-Exercise 3 will add a Web server that exposes a RESTful API for a food delivery application.
+This repository is in transition from Exercise 3 to Exercise 4.
 
-The Web server will be implemented using:
+Currently included:
 
-- NodeJS
-- Express
-- MVC architecture
-- In-memory storage
-- JSON responses for all `/api` routes
+* Existing Exercise 2 C++ TCP recommendation server.
+* Existing Exercise 3 NodeJS and Express web server.
+* REST API endpoints for users, authentication, restaurants, products, orders and search.
+* Docker files and docker-compose configuration.
+* Jira and Git workflow documentation.
+* Exercise 4 planning and implementation tasks tracked in Jira.
 
-The Web server will support:
+Exercise 4 development adds:
 
-- User registration
-- User login
-- Restaurant management
-- Product/menu management
-- Order management
-- Search
-- Integration with the Exercise 2 recommendation server through sockets
+* React frontend application.
+* Login and register screens.
+* Home screen inspired by Wolt.
+* Dynamic restaurant and product display.
+* Search UI.
+* Order flow.
+* Previous orders screen.
+* Restaurant and menu management screens.
+* JWT-based authenticated requests.
+* Dark/light theme toggle.
+* Client-side and server-side validation.
+* Full E2E testing and screenshots.
+
+This README should be updated again before final submission after all Exercise 4 screens, screenshots, and final run instructions are completed.
+
+---
+
+## Exercise 4 Requirements Summary
+
+The Exercise 4 system should include:
+
+* A React web application.
+* Proper component-based structure.
+* Usage of `useState`.
+* Usage of `useRef`.
+* Usage of React Router.
+* Login screen.
+* Register screen.
+* Home screen.
+* Restaurant browsing.
+* Restaurant menu view.
+* Order creation flow.
+* Previous orders view.
+* Search functionality.
+* Restaurant and product management.
+* JWT authentication.
+* Protected pages for logged-in users.
+* Dark/light mode toggle.
+* Client-side validation.
+* Server-side validation.
+* Dynamic data from the server.
+* No hard-coded restaurants/products/orders in the React application.
+* Docker Compose run instructions.
+* README documentation.
+* Jira workflow, feature branches and Pull Requests.
 
 ---
 
 ## Architecture
 
-### Existing Exercise 2 Architecture
+The project contains three main parts:
 
-The current C++ project is separated into clear responsibilities:
+### 1. C++ TCP Recommendation Server
 
-- `main.cpp` - reads the server port argument and starts the TCP server.
-- `TcpServer` - creates the TCP socket, binds, listens, and accepts clients.
-- `ClientSession` - handles a connected client, reads commands line by line, executes them, and sends responses.
-- `CommandParser` - parses protocol commands.
-- `UserRepository` - manages users and watched products.
-- `RecommendationEngine` - calculates recommendations.
-- `Persistence` - loads and saves user data.
-- `client.py` - simple Python TCP client.
+This part comes from the previous exercises.
 
-This separation keeps the network layer independent from the business logic and supports future extension.
+The C++ server is responsible for recommendation-related logic.
+It communicates over TCP using a simple text protocol.
 
-### Planned Exercise 3 Architecture
+Main responsibilities:
 
-The Exercise 3 Web server will follow MVC-style separation:
+* Accept TCP client connections.
+* Parse commands.
+* Store user/product view history.
+* Return product recommendations.
+* Persist data when required.
 
-```text
-routes       - Define API routes
-controllers  - Handle HTTP requests and responses
-services     - Contain business logic
-models       - Define domain objects
-repositories - Store data in memory during runtime
-utils        - Shared helpers for validation, IDs and responses
-```
+### 2. NodeJS and Express Web Server
 
-The Web server will expose REST API endpoints and return JSON responses.
+This part comes from Exercise 3.
+
+The Express server exposes REST API endpoints for the food delivery system.
+It is responsible for:
+
+* Users.
+* Authentication.
+* Restaurants.
+* Products.
+* Orders.
+* Search.
+* JSON responses.
+* Communication with the previous recommendation server when needed.
+
+The React application from Exercise 4 communicates with this web server.
+
+### 3. React Frontend Application
+
+This part is added in Exercise 4.
+
+The React application is responsible for the user interface.
+
+It should include:
+
+* Pages.
+* Components.
+* Layout.
+* Routing.
+* API calls.
+* Auth state.
+* Form validation.
+* Theme state.
+* User-facing error messages.
+* Loading and empty states.
 
 ---
 
 ## Project Structure
 
-Current structure:
+Current repository structure:
 
 ```text
 .
-├── src/
-│   ├── main.cpp
-│   ├── TcpServer.h
-│   ├── TcpServer.cpp
-│   ├── ClientSession.h
-│   ├── ClientSession.cpp
-│   ├── CommandParser.h
-│   ├── CommandParser.cpp
-│   ├── User.h
-│   ├── User.cpp
-│   ├── UserRepository.h
-│   ├── UserRepository.cpp
-│   ├── RecommendationEngine.h
-│   ├── RecommendationEngine.cpp
-│   ├── Persistence.h
-│   ├── Persistence.cpp
-│   └── client.py
-├── data/
-│   ├── users.example.txt
-│   └── views.txt
-├── docs/
-│   └── file-format.md
-├── tests/
-│   └── integration/
-├── Dockerfile
-├── Dockerfile.client
-├── Dockerfile.test
-├── CMakeLists.txt
-├── details.txt
-└── README.md
+|-- client/
+|-- data/
+|-- docs/
+|-- src/
+|-- tests/
+|-- web-server/
+|-- .gitignore
+|-- CMakeLists.txt
+|-- details.txt
+|-- docker-compose.yml
+|-- Dockerfile
+|-- Dockerfile.client
+|-- Dockerfile.test
+|-- Dockerfile.webserver
+|-- README.md
 ```
 
-Planned Exercise 3 additions:
+Main directories:
 
 ```text
+src/
+  C++ TCP server source files from previous exercises.
+
 web-server/
-├── app.js
-├── routes/
-├── controllers/
-├── services/
-├── models/
-├── repositories/
-├── utils/
-├── config/
-└── package.json
+  NodeJS and Express web server from Exercise 3.
+
+client/
+  Frontend work area for the Exercise 4 React application.
+
+data/
+  Data files used by the previous server.
+
+tests/
+  Integration tests from previous exercises.
+
+docs/
+  Additional project documentation.
+```
+
+The exact React directory structure may be updated during development according to the Jira tasks.
+
+Recommended React structure:
+
+```text
+client/
+|-- public/
+|-- src/
+|   |-- components/
+|   |-- pages/
+|   |-- services/
+|   |-- context/
+|   |-- styles/
+|   |-- App.jsx
+|   |-- main.jsx
+|-- package.json
 ```
 
 ---
 
-## Exercise 2 TCP Protocol
+## Exercise 2 TCP Server
+
+The existing TCP server supports the following protocol.
 
 Each command sent by the client ends with a newline character.
-
 Each response sent by the server also ends with a newline character.
 
 Supported commands:
@@ -151,10 +217,6 @@ DELETE [userid] [productid1] [productid2] ...
 GET [userid] [productid]
 help
 ```
-
----
-
-## Exercise 2 Responses
 
 ### POST
 
@@ -172,8 +234,6 @@ If the user already exists:
 404 Not Found
 ```
 
----
-
 ### PATCH
 
 Adds watched products to an existing user.
@@ -190,8 +250,6 @@ If the user does not exist:
 404 Not Found
 ```
 
----
-
 ### DELETE
 
 Removes watched products from a user's history.
@@ -207,8 +265,6 @@ If the user does not exist, or one of the products was not watched by the user:
 ```text
 404 Not Found
 ```
-
----
 
 ### GET
 
@@ -228,8 +284,6 @@ If the user does not exist, or the user did not watch the requested product:
 404 Not Found
 ```
 
----
-
 ### Invalid Command
 
 ```text
@@ -238,7 +292,7 @@ If the user does not exist, or the user did not watch the requested product:
 
 ---
 
-## Build Exercise 2 Server
+## Build the C++ Recommendation Server
 
 ```bash
 g++ -std=c++17 -Wall -Wextra -I src \
@@ -255,7 +309,7 @@ src/Persistence.cpp \
 
 ---
 
-## Run Exercise 2 Server
+## Run the C++ Recommendation Server
 
 ```bash
 ./server 5555
@@ -263,143 +317,28 @@ src/Persistence.cpp \
 
 ---
 
-## Run Exercise 2 Client
+## Run the Python TCP Client
 
 ```bash
 python3 src/client.py 127.0.0.1 5555
 ```
 
-The client receives the server IP and port as command-line arguments.  
-It does not validate commands. It sends every input line to the server and prints only the server response.
+The client receives the server IP and port as command-line arguments.
+It sends each input line to the TCP server and prints the server response.
 
 ---
 
-## Docker
+## Exercise 3 Web Server API
 
-### Build Exercise 2 Server Image
+The Exercise 3 web server exposes REST API endpoints that are used by the Exercise 4 React application.
 
-```bash
-docker build -t recommender-server .
-```
+All `/api` routes should return JSON responses.
 
-### Run Exercise 2 Server
-
-```bash
-docker run --rm -p 8080:8080 --name recommender-server recommender-server
-```
-
-### Build Test Image
-
-```bash
-docker build -f Dockerfile.test -t recommender-tests .
-```
-
-### Run Tests
-
-```bash
-docker run --rm --network host recommender-tests
-```
-
-> Note: Docker instructions may be updated during Exercise 3 to support running both the Exercise 2 TCP server and the Exercise 3 Web server separately.
-
----
-
-## Example Run
-
-Client input:
+### Health
 
 ```text
-POST 1 10 20
+GET /api/health
 ```
-
-Server response:
-
-```text
-201 Created
-```
-
-Client input:
-
-```text
-POST 2 10 30
-```
-
-Server response:
-
-```text
-201 Created
-```
-
-Client input:
-
-```text
-GET 1 10
-```
-
-Server response:
-
-```text
-200 Ok
-
-30
-```
-
-Client input:
-
-```text
-DELETE 1 20
-```
-
-Server response:
-
-```text
-204 No Content
-```
-
----
-
-## Run Integration Tests
-
-Build the server first:
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-src/main.cpp \
-src/TcpServer.cpp \
-src/ClientSession.cpp \
-src/CommandParser.cpp \
-src/User.cpp \
-src/UserRepository.cpp \
-src/RecommendationEngine.cpp \
-src/Persistence.cpp \
--o server
-```
-
-### Multiple Commands Test
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-tests/integration/test_multiple_commands.cpp \
--o test_multiple_commands
-
-./test_multiple_commands
-```
-
-### Full Scenario Test
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-tests/integration/test_full_scenario.cpp \
--o test_full_scenario
-
-./test_full_scenario
-```
-
----
-
-## Exercise 3 REST API Plan
-
-The Exercise 3 Web server will implement the following API.
 
 ### Users
 
@@ -452,142 +391,154 @@ GET /api/search/:query
 
 ---
 
-## Exercise 2 Server Integration
+## Authentication and JWT
 
-The Exercise 3 Web server will connect to the Exercise 2 TCP server as a client.
+Exercise 4 requires authentication using JWT.
 
-For example, when a logged-in user views a product using:
+Expected flow:
 
-```text
-GET /api/restaurants/:id/products/:pId
-```
+1. A new user registers using `POST /api/users`.
+2. The user logs in using `POST /api/tokens`.
+3. The server returns a JWT.
+4. The React application stores the JWT.
+5. Future protected requests attach the JWT.
+6. Protected pages and API actions are available only to logged-in users.
 
-the Web server may report this product view to the Exercise 2 recommendation server.
+The application should decide for each action whether it can be performed by:
 
-The exact integration behavior will be implemented and documented as part of Exercise 3.
+* A guest user.
+* A registered and logged-in user.
 
----
+Protected pages should redirect unauthenticated users to the login screen.
 
-## SOLID and Extensibility
-
-### Separation of Responsibilities
-
-The project separates parsing, networking, persistence and recommendation logic into different classes.
-
-This makes the system easier to maintain and extend.
-
-### Command Name Changes
-
-Exercise 1 used commands such as `add` and `recommend`.  
-Exercise 2 uses HTTP-like names such as `POST`, `PATCH`, `DELETE`, and `GET`.
-
-The command parsing responsibility is isolated in `CommandParser`, so command naming changes do not require changes to networking code.
-
-### New Commands
-
-New commands are handled by extending the parser and command execution logic.  
-The socket communication code remains unchanged.
-
-### Output Format Changes
-
-Response formatting is handled inside `ClientSession`, so protocol responses are separated from low-level socket read/write logic.
-
-### Console to Socket Transition
-
-In Exercise 1, input and output were handled through the console.  
-In Exercise 2, input and output are handled through TCP sockets.
-
-The business logic remains separated from the transport mechanism.  
-The client session reads commands from the socket and delegates the command behavior to repository and recommendation classes.
-
-### Future Multi-Client Support
-
-The server currently handles clients according to the current implementation requirements.  
-Because `TcpServer` is separated from `ClientSession`, future support for multiple clients can be added by running each `ClientSession` independently, for example in a separate thread.
-
-### Exercise 3 Extension
-
-Exercise 3 will add a Web API layer without replacing the existing recommendation logic.  
-This allows the recommendation server to remain independent from the Web server.
+No real passwords, private data, API keys, tokens, real photos or sensitive information should be committed to the repository.
 
 ---
 
-## Repository Policy
+## React Application
 
-This repository was created separately for Exercise 3 and is based on the final code of Exercise 2.
+The React application should provide a Wolt-style user interface.
 
-The Exercise 2 repository remains unchanged.
+Required screens:
 
-Exercise 3 development is done in this repository using feature branches named after Jira issue keys.
+* Login screen.
+* Register screen.
+* Home screen.
+* Restaurant page.
+* Menu/products page.
+* Order/cart flow.
+* Previous orders page.
+* Search results.
+* Restaurant management screen.
+* Product/menu management screen.
 
-Example feature branch:
+Required behavior:
 
-```text
-SCRUM-150-create-express-server
-```
-
-All changes are merged into `main` only through Pull Requests after code review.
-
-Each Pull Request must be reviewed and approved by the other team members before merge.
-
----
-
-## Jira Workflow
-
-The Jira workflow for this exercise is:
-
-```text
-To Do → In Progress → Review Code → Done
-```
-
-Rules:
-
-- Move an issue to `In Progress` only when work actually starts.
-- Move an issue to `Review Code` only after opening a Pull Request.
-- Move an issue to `Done` only after the Pull Request is approved and merged.
-- Each issue should be assigned before work starts.
-- Each issue should be linked to a feature branch.
-- Blocked issues should be linked in Jira using `blocks` / `is blocked by`.
+* React Router is used for page navigation.
+* The application loads once and does not refresh the whole page when moving between pages.
+* Components are separated logically.
+* `useState` is used for dynamic UI state.
+* `useRef` is used where appropriate, especially in form-related logic.
+* The application communicates with the server using `fetch`.
+* Data is loaded from the server and rendered dynamically.
+* Loading, empty and error states are displayed clearly.
+* The user receives clear feedback after invalid actions.
+* The logged-in user's details appear in the top navigation area.
+* Logout clears the authentication state and returns the user to the login flow.
+* Dark/light theme can be changed from the top navigation after login.
 
 ---
 
-## Notes
+## Validation
 
-- The Exercise 2 server is implemented in C++.
-- The Exercise 2 client is implemented in Python 3.
-- The Exercise 3 Web server will be implemented in NodeJS and Express.
-- Data for Exercise 3 will be stored in memory during server runtime.
-- No external libraries should be used unless allowed by the course instructions.
-- The repository should remain private.
-- Do not commit passwords, tokens, API keys, private information, `node_modules`, build artifacts or generated binaries.
+Both client-side and server-side validation are required.
 
+### Login
 
+Required:
+
+* Username.
+* Password.
+
+Invalid login should show a clear error message.
+
+### Register
+
+Required:
+
+* Username.
+* Password.
+* Confirm password.
+* Display name.
+* Profile image.
+
+The register screen should validate:
+
+* All fields are required.
+* Password strength rules.
+* Password confirmation.
+* Duplicate username error.
+* Image selection and preview.
+
+A user should not be able to register or log in without valid input.
+
+---
+
+## Theme Support
+
+Exercise 4 requires a dark/light mode toggle.
+
+Expected behavior:
+
+* A button appears in the top navigation after login.
+* Clicking the button switches between light mode and dark mode.
+* Application colors change according to the selected theme.
+* The selected theme may be saved locally so it remains after refresh.
+
+---
 
 ## Running with Docker
 
-### Both servers together (recommended)
+### Recommended: run all services with Docker Compose
+
 ```bash
 docker-compose up --build
 ```
-Web server will be available at: http://localhost:3000
 
-### Separately
-```bash
-# Ex2 server
-docker build -t ex2-server .
-docker run -p 8080:8080 ex2-server
+Expected web server URL:
 
-# Web server
-docker build -f Dockerfile.webserver -t web-server .
-docker run -p 3000:3000 -e EX2_HOST=host.docker.internal -e EX2_PORT=8080 web-server
+```text
+http://localhost:3000
 ```
 
-## Users and Tokens API Examples
+The exact Docker Compose behavior should be updated before final submission according to the final Exercise 4 implementation.
+
+### Run the previous C++ server separately
+
+```bash
+docker build -t recommender-server .
+docker run --rm -p 8080:8080 --name recommender-server recommender-server
+```
+
+### Run the web server separately
+
+```bash
+docker build -f Dockerfile.webserver -t web-server .
+docker run --rm -p 3000:3000 -e EX2_HOST=host.docker.internal -e EX2_PORT=8080 web-server
+```
+
+---
+
+## API Examples
+
+The following examples can be used to test the web server.
 
 ### Create User
 
 ```bash
-curl -i -X POST http://localhost:3000/api/users -H "Content-Type: application/json" -d '{"username":"maya","password":"1234","name":"Maya Kaykov","phone":"0500000000","address":"Israel"}'
+curl -i -X POST http://localhost:3000/api/users \
+-H "Content-Type: application/json" \
+-d '{"username":"maya","password":"1234","name":"Maya Kaykov","phone":"0500000000","address":"Israel"}'
 ```
 
 Expected result:
@@ -624,7 +575,9 @@ HTTP/1.1 404 Not Found
 ### Login
 
 ```bash
-curl -i -X POST http://localhost:3000/api/tokens -H "Content-Type: application/json" -d '{"username":"maya","password":"1234"}'
+curl -i -X POST http://localhost:3000/api/tokens \
+-H "Content-Type: application/json" \
+-d '{"username":"maya","password":"1234"}'
 ```
 
 Expected result:
@@ -636,7 +589,9 @@ HTTP/1.1 200 OK
 ### Invalid Login
 
 ```bash
-curl -i -X POST http://localhost:3000/api/tokens -H "Content-Type: application/json" -d '{"username":"maya","password":"wrong"}'
+curl -i -X POST http://localhost:3000/api/tokens \
+-H "Content-Type: application/json" \
+-d '{"username":"maya","password":"wrong"}'
 ```
 
 Expected result:
@@ -644,52 +599,228 @@ Expected result:
 ```text
 HTTP/1.1 401 Unauthorized
 ```
+
+### Get Restaurants
+
+```bash
+curl -i http://localhost:3000/api/restaurants
+```
+
+Expected result:
+
+```text
+HTTP/1.1 200 OK
+```
+
+### Search
+
+```bash
+curl -i http://localhost:3000/api/search/pizza
+```
+
+Expected result:
+
+```text
+HTTP/1.1 200 OK
+```
+
+---
+
+## Testing
+
+The project includes integration tests from the previous exercises.
+
+### Build the C++ server before running integration tests
+
+```bash
+g++ -std=c++17 -Wall -Wextra -I src \
+src/main.cpp \
+src/TcpServer.cpp \
+src/ClientSession.cpp \
+src/CommandParser.cpp \
+src/User.cpp \
+src/UserRepository.cpp \
+src/RecommendationEngine.cpp \
+src/Persistence.cpp \
+-o server
+```
+
+### Multiple Commands Test
+
+```bash
+g++ -std=c++17 -Wall -Wextra -I src \
+tests/integration/test_multiple_commands.cpp \
+-o test_multiple_commands
+
+./test_multiple_commands
+```
+
+### Full Scenario Test
+
+```bash
+g++ -std=c++17 -Wall -Wextra -I src \
+tests/integration/test_full_scenario.cpp \
+-o test_full_scenario
+
+./test_full_scenario
+```
+
+### Exercise 4 E2E Testing Plan
+
+The final Exercise 4 submission should include manual or documented E2E testing for:
+
+* Register/login/logout scenario.
+* Protected pages without login.
+* Restaurant browsing and menu scenario.
+* Search scenario.
+* Create order scenario.
+* Previous orders scenario.
+* Restaurant and product management scenario.
+* Invalid inputs and visible error messages.
+* Docker Compose startup.
+* README screenshots.
+
+Screenshots should be added before final submission.
+
+---
+
+## Repository and Git Policy
+
+This repository is used for Exercise 4 and continues the previous exercise codebase.
+
+Development is done using feature branches named after Jira issue keys.
+
+Example feature branches:
+
+```text
+SCRUM-224-create-react-frontend-project-structure
+SCRUM-276-create-app-shell-and-shared-layout
+SCRUM-328-add-jira-git-workflow-explanation-to-readme
+```
+
+All changes are merged into `main` only through Pull Requests after code review.
+
+Each Pull Request must be reviewed and approved by team members other than the student who opened the Pull Request.
+
+The repository should remain private.
+
+Do not commit:
+
+* Passwords.
+* Tokens.
+* API keys.
+* Private information.
+* Real user data.
+* Real private images.
+* `node_modules`.
+* Build artifacts.
+* Generated binaries.
+
+---
+
 ## Jira and Git Workflow
 
-This project was developed using Jira and GitHub as part of a Scrum-based workflow.
+This project is developed using Jira and GitHub as part of a Scrum-based workflow.
+
+### Jira Structure
+
+The project is divided into:
+
+* Epics.
+* User Stories.
+* Tasks.
+* Subtasks.
+
+Each Epic represents a major area of the system, such as:
+
+* React setup and infrastructure.
+* Authentication and user management.
+* Home page and restaurants.
+* Orders.
+* Search.
+* Restaurant management.
+* Theme and design.
+* Docker, testing and documentation.
+
+Each User Story describes a user-facing capability.
+Each Subtask represents a smaller technical step required to complete that story.
 
 ### Jira Workflow
 
-The project was divided into Epics, User Stories, and Subtasks.
+The Jira workflow is:
 
-Each Epic represents a major area of the system, such as Authentication, Restaurant Browsing, Orders, Search, Theme and Design, Docker, Testing, and Documentation.
+```text
+To Do -> In Progress -> Review Code -> Done
+```
 
-Each User Story describes a user-facing capability, and each Subtask represents a smaller technical step required to complete that story.
+Rules:
 
-Before starting work on a task, the task was assigned to a team member and moved to **In Progress**.
-
-When implementation was completed, the related feature branch was pushed to GitHub and a Pull Request was opened.
-
-The Jira issue was then moved to **Review Code** until the review was completed.
-
-After approval and merge, the issue was moved to **Done**.
-
-### Branch Naming
-
-Each feature branch includes the Jira issue key in its name, so the work can be tracked between Jira and GitHub.
-
-Branch name examples:
-
-- SCRUM-224-create-react-frontend-project-structure
-- SCRUM-276-create-app-shell-and-shared-layout
-- SCRUM-328-add-jira-git-workflow-explanation-to-readme
+* Move an issue to `In Progress` only when work actually starts.
+* Move an issue to `Review Code` only after opening a Pull Request.
+* Move an issue to `Done` only after the Pull Request is approved and merged.
+* Each issue should be assigned before work starts.
+* Each issue should be linked to a feature branch.
+* Blocked issues should be linked in Jira using `blocks` / `is blocked by`.
+* Jira activity comments should be updated while working.
 
 ### Pull Request Process
 
 For each implemented task:
 
-1. A dedicated feature branch was created.
-2. The code was committed with a clear commit message.
-3. The branch was pushed to GitHub.
-4. A Pull Request was opened.
-5. Another team member reviewed the code.
-6. After approval, the branch was merged into main.
-7. The Jira issue was updated and moved to **Done**.
+1. A dedicated feature branch is created.
+2. The code is committed with a clear commit message.
+3. The branch is pushed to GitHub.
+4. A Pull Request is opened.
+5. Team members review the code.
+6. After approval, the branch is merged into `main`.
+7. The Jira issue is updated and moved to `Done`.
 
 ### Blockers
 
-Jira blockers were used to show task dependencies.
+Jira blockers are used to show task dependencies.
 
-For example, tasks that require JWT authentication were blocked by the JWT generation and verification tasks.
+For example:
 
-Testing and documentation tasks were blocked by the relevant implementation tasks, so final testing and README updates were done only after the required features were completed.
+* JWT-related tasks block protected route tasks.
+* React setup tasks block page implementation tasks.
+* Feature implementation tasks block E2E testing tasks.
+* Docker tasks block Docker screenshot documentation.
+* Testing and documentation tasks block the final submission task.
+
+---
+
+## Submission Notes
+
+Before final submission:
+
+* Make sure the repository is private.
+* Make sure the course checker has access to GitHub and Jira.
+* Make sure `details.txt` exists.
+* Make sure `details.txt` follows the required format exactly.
+* Make sure there are no extra lines or extra spaces in `details.txt`.
+* Make sure the README includes final run instructions.
+* Make sure screenshots are added where required.
+* Make sure no secrets or private data are committed.
+* Make sure `node_modules` is not committed.
+
+Required `details.txt` format:
+
+```text
+Israel Israeli 123456789
+Israela Israeli 012345678
+Israeli Israeli 012345679
+LINK TO GITHUB HERE
+```
+
+---
+
+## Notes
+
+* The C++ TCP server is based on previous exercises.
+* The NodeJS and Express web server is based on Exercise 3.
+* The React frontend is the main new part of Exercise 4.
+* The React frontend must communicate with the Exercise 3 web server.
+* The React frontend must show dynamic data from the server.
+* The React frontend must not hard-code restaurants, products or orders.
+* The application should behave like a complete working app.
+* The README should be updated again after the final Exercise 4 implementation is completed.
