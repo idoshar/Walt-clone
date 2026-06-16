@@ -644,3 +644,52 @@ Expected result:
 ```text
 HTTP/1.1 401 Unauthorized
 ```
+## Jira and Git Workflow
+
+This project was developed using Jira and GitHub as part of a Scrum-based workflow.
+
+### Jira Workflow
+
+The project was divided into Epics, User Stories, and Subtasks.
+
+Each Epic represents a major area of the system, such as Authentication, Restaurant Browsing, Orders, Search, Theme and Design, Docker, Testing, and Documentation.
+
+Each User Story describes a user-facing capability, and each Subtask represents a smaller technical step required to complete that story.
+
+Before starting work on a task, the task was assigned to a team member and moved to **In Progress**.
+
+When implementation was completed, the related feature branch was pushed to GitHub and a Pull Request was opened.
+
+The Jira issue was then moved to **Review Code** until the review was completed.
+
+After approval and merge, the issue was moved to **Done**.
+
+### Branch Naming
+
+Each feature branch includes the Jira issue key in its name, so the work can be tracked between Jira and GitHub.
+
+Branch name examples:
+
+- SCRUM-224-create-react-frontend-project-structure
+- SCRUM-276-create-app-shell-and-shared-layout
+- SCRUM-328-add-jira-git-workflow-explanation-to-readme
+
+### Pull Request Process
+
+For each implemented task:
+
+1. A dedicated feature branch was created.
+2. The code was committed with a clear commit message.
+3. The branch was pushed to GitHub.
+4. A Pull Request was opened.
+5. Another team member reviewed the code.
+6. After approval, the branch was merged into main.
+7. The Jira issue was updated and moved to **Done**.
+
+### Blockers
+
+Jira blockers were used to show task dependencies.
+
+For example, tasks that require JWT authentication were blocked by the JWT generation and verification tasks.
+
+Testing and documentation tasks were blocked by the relevant implementation tasks, so final testing and README updates were done only after the required features were completed.
