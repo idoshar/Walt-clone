@@ -441,3 +441,10 @@ adversarial_compile_*.txt
 web-server/node_modules/
 web-server/web-server/
 
+
+# Local environment files
+.env
+.env.local
+client/.env
+client/.env.local
+web-server/.env
