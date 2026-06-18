@@ -1,5 +1,8 @@
 ﻿import { useRef, useState } from 'react';
 import { apiRequest } from '../api/client.js';
+import EmptyState from '../components/EmptyState.jsx';
+import ErrorMessage from '../components/ErrorMessage.jsx';
+import LoadingState from '../components/LoadingState.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 import RestaurantCard from '../components/RestaurantCard.jsx';
 
@@ -14,6 +17,7 @@ function SearchPage() {
   async function fetchSearchResults(query) {
     if (!query.trim()) {
       setResults({ restaurants: [], products: [] });
+      setError('');
       return;
     }
 
@@ -47,6 +51,9 @@ function SearchPage() {
     }, 400);
   }
 
+  const hasSearchTerm = searchTerm.trim().length > 0;
+  const hasResults = results.restaurants.length > 0 || results.products.length > 0;
+
   return (
     <section className="page-container">
       <h1>Search</h1>
@@ -60,10 +67,18 @@ function SearchPage() {
         className="search-input"
       />
 
-      {loading && <p>Searching...</p>}
-      {error && <p className="error-message">{error}</p>}
+      {loading && <LoadingState message="Searching..." />}
 
-      {searchTerm.trim() && !loading && (
+      {!loading && error && <ErrorMessage message={error} />}
+
+      {!loading && hasSearchTerm && !error && !hasResults && (
+        <EmptyState
+          title="No results found"
+          message="Try searching for another restaurant or dish."
+        />
+      )}
+
+      {!loading && hasSearchTerm && !error && hasResults && (
         <div className="search-results">
           <section>
             <h2>Restaurants ({results.restaurants.length})</h2>
@@ -75,7 +90,10 @@ function SearchPage() {
                 ))}
               </div>
             ) : (
-              <p>No restaurants found.</p>
+              <EmptyState
+                title="No restaurants found"
+                message="No restaurants match this search."
+              />
             )}
           </section>
 
@@ -89,7 +107,10 @@ function SearchPage() {
                 ))}
               </div>
             ) : (
-              <p>No products found.</p>
+              <EmptyState
+                title="No dishes found"
+                message="No dishes or products match this search."
+              />
             )}
           </section>
         </div>
