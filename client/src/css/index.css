@@ -590,3 +590,30 @@ body {
   font-weight: 700;
   color: var(--color-text);
 }
+
+/* SCRUM-299 Search query state and submit behavior */
+.header-search-input {
+  border-color: var(--color-input-border);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.header-search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.header-search-clear-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.header-search-clear-button:hover {
+  background-color: var(--color-hover-bg);
+}
