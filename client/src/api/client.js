@@ -21,14 +21,22 @@ export async function apiRequest(path, options = {}) {
     headers
   });
 
-  if (response.status === 204) {
-    return null;
+  const responseText = await response.text();
+
+  let data = null;
+
+  try {
+    data = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    data = null;
   }
 
-  const data = await response.json().catch(() => null);
-
   if (!response.ok) {
-    const message = data?.error || data?.message || 'Request failed';
+    const message =
+      data?.error ||
+      data?.message ||
+      `Request failed with status ${response.status}`;
+
     throw new Error(message);
   }
 

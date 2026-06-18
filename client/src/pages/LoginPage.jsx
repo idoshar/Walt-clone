@@ -38,6 +38,14 @@ function LoginPage({ onLoginSuccess }) {
         throw new Error('Token not received from server');
       }
 
+      if (data?.userId) {
+        localStorage.setItem('userId', String(data.userId));
+      }
+
+      if (data?.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+
       onLoginSuccess(String(receivedToken));
       navigate('/');
     } catch (err) {
