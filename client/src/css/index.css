@@ -345,3 +345,29 @@ body {
   flex-shrink: 0;
 }
 
+
+/* SCRUM-310 logout button theme variables */
+:root {
+  --logout-button-bg: #f8f9fa;
+  --logout-button-text: #202125;
+  --logout-button-border: #ced4da;
+  --logout-button-hover-bg: #eef1f4;
+}
+
+:root[data-theme='dark'] {
+  --logout-button-bg: #ffffff;
+  --logout-button-text: #121417;
+  --logout-button-border: #ffffff;
+  --logout-button-hover-bg: #e6e8eb;
+}
+
+.logout-button {
+  background-color: var(--logout-button-bg);
+  color: var(--logout-button-text);
+  border-color: var(--logout-button-border);
+}
+
+.logout-button:hover {
+  background-color: var(--logout-button-hover-bg);
+  color: var(--logout-button-text);
+}
