@@ -1,4 +1,5 @@
 ﻿import { Link, NavLink } from 'react-router-dom';
+import HeaderSearch from './HeaderSearch.jsx';
 
 function getUserLabel() {
   const savedUser = localStorage.getItem('user');
@@ -30,6 +31,8 @@ function Header({ token, onLogout }) {
         <span className="logo-mark">W</span>
         <span>Wolt Clone</span>
       </Link>
+
+      {token && <HeaderSearch />}
 
       <nav className="navbar-actions" aria-label="Main navigation">
         {token ? (

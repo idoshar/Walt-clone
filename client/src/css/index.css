@@ -491,3 +491,102 @@ body {
   background-color: var(--logout-button-hover-bg);
   color: var(--logout-button-text);
 }
+
+/* SCRUM-243 Header search */
+.header-search {
+  flex: 1;
+  max-width: 520px;
+  margin: 0 32px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-search-input {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 14px;
+  border: 1px solid #d7d9dd;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #202125;
+  outline: none;
+}
+
+.header-search-input:focus {
+  border-color: #009de0;
+}
+
+.header-search-button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background-color: #009de0;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.header-search-button:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .header-search {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    margin: 12px 0 0 0;
+  }
+}
+
+/* Header logo and avatar styling */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.user-label {
+  font-weight: 700;
+  color: var(--color-text);
+}
