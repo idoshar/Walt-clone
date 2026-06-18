@@ -1,16 +1,75 @@
 ﻿:root {
   font-family: Arial, Helvetica, sans-serif;
-  color: #202125;
-  background-color: #f8f9fa;
+
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #fbfcfd;
+  --color-text: #202125;
+  --color-text-muted: #5e646e;
+
+  --color-primary: #009de0;
+  --color-primary-contrast: #ffffff;
+
+  --color-border: #e2e4e8;
+  --color-border-strong: #ced4da;
+  --color-input-border: #d7d9dd;
+
+  --color-hover-bg: #eef1f4;
+  --color-info-bg: #e9f7fb;
+  --color-spinner-bg: #d7eff8;
+
+  --color-danger: #b42318;
+  --color-danger-bg: #fff6f6;
+  --color-danger-border: #f4b8b8;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-round: 999px;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #121417;
+  --color-surface: #1b1f24;
+  --color-surface-muted: #20252b;
+  --color-text: #f4f6f8;
+  --color-text-muted: #aeb7c2;
+
+  --color-primary: #35bdf2;
+  --color-primary-contrast: #061015;
+
+  --color-border: #303741;
+  --color-border-strong: #46505c;
+  --color-input-border: #46505c;
+
+  --color-hover-bg: #252b32;
+  --color-info-bg: #102b38;
+  --color-spinner-bg: #244655;
+
+  --color-danger: #ff8a80;
+  --color-danger-bg: #321b1b;
+  --color-danger-border: #7a3535;
+
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
+  color: var(--color-text);
+  background-color: var(--color-bg);
 }
 
 a {
@@ -32,8 +91,8 @@ input {
 .navbar {
   min-height: 72px;
   padding: 0 32px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e4e8;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -45,7 +104,7 @@ input {
 .logo {
   font-size: 22px;
   font-weight: 800;
-  color: #009de0;
+  color: var(--color-primary);
 }
 
 .navbar-actions {
@@ -56,17 +115,17 @@ input {
 
 .nav-link {
   font-weight: 600;
-  color: #202125;
+  color: var(--color-text);
 }
 
 .nav-link.active {
-  color: #009de0;
+  color: var(--color-primary);
 }
 
 .logout-button {
   padding: 9px 16px;
-  background-color: #f8f9fa;
-  border: 1px solid #ced4da;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
@@ -84,7 +143,7 @@ input {
 }
 
 .page-subtitle {
-  color: #5e646e;
+  color: var(--color-text-muted);
   margin-top: -8px;
   margin-bottom: 24px;
 }
@@ -100,10 +159,10 @@ input {
   flex-direction: column;
   gap: 16px;
   padding: 32px;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   border-radius: 16px;
-  border: 1px solid #e2e4e8;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
 .form-card h1 {
@@ -112,7 +171,7 @@ input {
 
 .form-card p {
   margin-top: 0;
-  color: #5e646e;
+  color: var(--color-text-muted);
 }
 
 .form-card label {
@@ -125,15 +184,15 @@ input {
 .form-card input,
 .search-input {
   padding: 12px 14px;
-  border: 1px solid #d7d9dd;
+  border: 1px solid var(--color-input-border);
   border-radius: 10px;
-  background-color: #ffffff;
+  background-color: var(--color-surface);
   outline: none;
 }
 
 .form-card input:focus,
 .search-input:focus {
-  border-color: #009de0;
+  border-color: var(--color-primary);
 }
 
 .form-card button,
@@ -141,8 +200,8 @@ input {
   padding: 12px 16px;
   border: none;
   border-radius: 10px;
-  background-color: #009de0;
-  color: white;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
   font-weight: 700;
   cursor: pointer;
 }
@@ -157,12 +216,12 @@ input {
 }
 
 .form-footer a {
-  color: #009de0;
+  color: var(--color-primary);
   font-weight: 700;
 }
 
 .error-message {
-  color: #d93025;
+  color: var(--color-danger);
   font-weight: 600;
 }
 
@@ -203,8 +262,8 @@ input {
 
 .restaurant-card,
 .product-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e4e8;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   overflow: hidden;
   display: block;
@@ -230,12 +289,18 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e9f7fb;
-  color: #009de0;
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
   font-weight: 700;
 }
 
-.card-body {
+.card-html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
   padding: 16px;
 }
 
@@ -245,7 +310,7 @@ input {
 
 .card-body p {
   margin: 4px 0;
-  color: #5e646e;
+  color: var(--color-text-muted);
 }
 
 .product-list {
@@ -268,7 +333,7 @@ input {
 
 .product-card p {
   margin: 0 0 8px 0;
-  color: #5e646e;
+  color: var(--color-text-muted);
 }
 
 .product-image,
@@ -278,4 +343,31 @@ input {
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+
+/* SCRUM-310 logout button theme variables */
+:root {
+  --logout-button-bg: #f8f9fa;
+  --logout-button-text: #202125;
+  --logout-button-border: #ced4da;
+  --logout-button-hover-bg: #eef1f4;
+}
+
+:root[data-theme='dark'] {
+  --logout-button-bg: #ffffff;
+  --logout-button-text: #121417;
+  --logout-button-border: #ffffff;
+  --logout-button-hover-bg: #e6e8eb;
+}
+
+.logout-button {
+  background-color: var(--logout-button-bg);
+  color: var(--logout-button-text);
+  border-color: var(--logout-button-border);
+}
+
+.logout-button:hover {
+  background-color: var(--logout-button-hover-bg);
+  color: var(--logout-button-text);
 }
