@@ -279,3 +279,59 @@ input {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+/* SCRUM-274 Shared state components */
+.state-box {
+  width: 100%;
+  padding: 28px;
+  border: 1px solid #e2e4e8;
+  border-radius: 16px;
+  background-color: #ffffff;
+  text-align: center;
+  color: #5e646e;
+}
+
+.state-box strong {
+  display: block;
+  color: #202125;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.state-box p {
+  margin: 0;
+}
+
+.loading-box {
+  min-height: 120px;
+}
+
+.error-box {
+  border-color: #f4b8b8;
+  background-color: #fff6f6;
+  color: #b42318;
+}
+
+.error-box strong {
+  color: #b42318;
+}
+
+.empty-box {
+  background-color: #fbfcfd;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 12px auto;
+  border: 3px solid #d7eff8;
+  border-top-color: #009de0;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

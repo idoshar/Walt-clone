@@ -1,6 +1,9 @@
 ﻿import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
+import EmptyState from '../components/EmptyState.jsx';
+import ErrorMessage from '../components/ErrorMessage.jsx';
+import LoadingState from '../components/LoadingState.jsx';
 import ProductCard from '../components/ProductCard.jsx';
 
 function RestaurantPage() {
@@ -30,15 +33,30 @@ function RestaurantPage() {
   }, [id]);
 
   if (loading) {
-    return <p className="page-container">Loading restaurant...</p>;
+    return (
+      <section className="page-container">
+        <LoadingState message="Loading restaurant..." />
+      </section>
+    );
   }
 
   if (error) {
-    return <p className="page-container error-message">{error}</p>;
+    return (
+      <section className="page-container">
+        <ErrorMessage message={error} />
+      </section>
+    );
   }
 
   if (!restaurant) {
-    return <p className="page-container">Restaurant not found.</p>;
+    return (
+      <section className="page-container">
+        <EmptyState
+          title="Restaurant not found"
+          message="The restaurant you requested does not exist."
+        />
+      </section>
+    );
   }
 
   return (
@@ -57,7 +75,10 @@ function RestaurantPage() {
           ))}
         </div>
       ) : (
-        <p>No products yet.</p>
+        <EmptyState
+          title="No products yet"
+          message="This restaurant does not have menu items yet."
+        />
       )}
     </section>
   );
