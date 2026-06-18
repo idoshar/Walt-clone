@@ -448,3 +448,14 @@ web-server/web-server/
 client/.env
 client/.env.local
 web-server/.env
+
+# React client generated files
+client/dist/
+client/node_modules/
+
+# Node generated files
+node_modules/
+dist/
+
+# Environment files
+.env
