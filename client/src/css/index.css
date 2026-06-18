@@ -345,6 +345,72 @@ body {
   flex-shrink: 0;
 }
 
+/* SCRUM-272 Header */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background-color: #009de0;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-link {
+  padding: 8px 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #009de0;
+  border-bottom-color: #009de0;
+}
+
+.register-link {
+  font-weight: 800;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: #e9f7fb;
+  color: #009de0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.user-label {
+  font-weight: 700;
+  color: #202125;
+}
+
+.logout-button:hover {
+  background-color: #eef1f4;
 
 /* SCRUM-310 logout button theme variables */
 :root {

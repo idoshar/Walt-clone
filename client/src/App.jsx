@@ -27,6 +27,7 @@ function App() {
   function handleLogout() {
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
+    localStorage.removeItem('userId');
     setToken('');
   }
 

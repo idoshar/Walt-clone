@@ -1,16 +1,40 @@
 ﻿import { Link, NavLink } from 'react-router-dom';
 
+function getUserLabel() {
+  const savedUser = localStorage.getItem('user');
+
+  if (savedUser) {
+    try {
+      const user = JSON.parse(savedUser);
+      return user.fullName || user.displayName || user.username || 'Signed in';
+    } catch {
+      return 'Signed in';
+    }
+  }
+
+  const userId = localStorage.getItem('userId');
+
+  if (userId) {
+    return `User ${userId}`;
+  }
+
+  return 'Signed in';
+}
+
 function Header({ token, onLogout }) {
+  const userLabel = token ? getUserLabel() : '';
+
   return (
     <header className="navbar">
-      <Link to="/" className="logo">
-        Wolt Clone
+      <Link to={token ? '/' : '/login'} className="logo">
+        <span className="logo-mark">W</span>
+        <span>Wolt Clone</span>
       </Link>
 
-      <nav className="navbar-actions">
-        {token && (
+      <nav className="navbar-actions" aria-label="Main navigation">
+        {token ? (
           <>
-            <NavLink to="/" className="nav-link">
+            <NavLink to="/" end className="nav-link">
               Home
             </NavLink>
 
@@ -18,19 +42,25 @@ function Header({ token, onLogout }) {
               Search
             </NavLink>
 
-            <button type="button" onClick={onLogout} className="logout-button">
-              Log Out
-            </button>
-          </>
-        )}
+            <div className="user-area">
+              <span className="user-avatar" aria-hidden="true">
+                {userLabel.charAt(0).toUpperCase()}
+              </span>
 
-        {!token && (
+              <span className="user-label">{userLabel}</span>
+
+              <button type="button" onClick={onLogout} className="logout-button">
+                Log Out
+              </button>
+            </div>
+          </>
+        ) : (
           <>
             <NavLink to="/login" className="nav-link">
               Login
             </NavLink>
 
-            <NavLink to="/register" className="nav-link">
+            <NavLink to="/register" className="nav-link register-link">
               Register
             </NavLink>
           </>
