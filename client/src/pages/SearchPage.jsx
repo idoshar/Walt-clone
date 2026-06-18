@@ -1,4 +1,5 @@
-﻿import { useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
@@ -8,8 +9,9 @@ import RestaurantCard from '../components/RestaurantCard.jsx';
 
 function SearchPage() {
   const debounceTimeoutRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [results, setResults] = useState({ restaurants: [], products: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +40,12 @@ function SearchPage() {
     }
   }
 
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q') || '';
+    setSearchTerm(queryFromUrl);
+    fetchSearchResults(queryFromUrl);
+  }, [searchParams]);
+
   function handleInputChange(event) {
     const value = event.target.value;
     setSearchTerm(value);
@@ -47,7 +55,15 @@ function SearchPage() {
     }
 
     debounceTimeoutRef.current = setTimeout(() => {
-      fetchSearchResults(value);
+      const trimmedValue = value.trim();
+
+      if (trimmedValue) {
+        setSearchParams({ q: trimmedValue });
+      } else {
+        setSearchParams({});
+        setResults({ restaurants: [], products: [] });
+        setError('');
+      }
     }, 400);
   }
 
