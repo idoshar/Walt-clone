@@ -67,7 +67,7 @@ function getProductById(req, res) {
     if (!product) return notFound(res, 'Product not found');
 
 
-    const userId = req.headers['x-user-id'];
+    const userId = req.user?.sub;
     if (userId) {
         ex2.reportProductView(userId, req.params.pId);
     }
