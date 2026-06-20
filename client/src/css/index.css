@@ -1216,81 +1216,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* SCRUM-331 cart action alongside recommendations */
-.product-card-with-actions {
-  display: block;
-  padding: 0;
-}
-
-.product-card-content {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.product-card-select-button {
-  width: 100%;
-  padding: 20px;
-  border: 0;
-  background-color: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.product-card-select-button:hover:not(:disabled) {
-  background-color: var(--color-hover-bg);
-}
-
-.product-card-with-actions.product-card-selected {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-card-hover);
-}
-
-.product-card-select-button:focus-visible,
-.add-to-cart-button:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.product-card-select-button:disabled {
-  cursor: wait;
-  opacity: 0.72;
-}
-
-.add-to-cart-button {
-  width: calc(100% - 40px);
-  min-height: 42px;
-  margin: 0 20px 20px;
-  padding: 10px 16px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.add-to-cart-button:hover {
-  opacity: 0.9;
-}
-
-@media (max-width: 640px) {
-  .product-card-select-button,
-  .product-card-static-content {
-    padding: 16px;
-  }
-
-  .add-to-cart-button {
-    width: calc(100% - 32px);
-    margin: 0 16px 16px;
-  }
-}
-
 /* SCRUM-331 product-card action layout */
 .product-card-with-actions {
   display: block;
@@ -1371,4 +1296,172 @@ input {
     width: calc(100% - 32px);
     margin: 0 16px 16px;
   }
+}
+/* SCRUM-254 final UI polish */
+.management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.management-actions button {
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.secondary-button {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-primary);
+  background-color: var(--color-hover-bg);
+}
+
+.secondary-button:focus-visible,
+.checkout-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.secondary-button:disabled,
+.checkout-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.checkout-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 24px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.checkout-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.orders-list {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+  margin-top: 24px;
+}
+
+.order-card {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.order-card h3 {
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+.order-card p {
+  margin: 6px 0;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .management-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .management-actions button {
+    width: 100%;
+  }
+
+  .order-card {
+    padding: 16px;
+  }
+}
+/* SCRUM-254 primary action button base style */
+.primary-button {
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+/* SCRUM-254 primary action button base style */
+.primary-button {
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+/* SCRUM-254 primary action button base style */
+.primary-button {
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

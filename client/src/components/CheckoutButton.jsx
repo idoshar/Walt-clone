@@ -19,7 +19,12 @@ function CheckoutButton({ restaurantId }) {
   }
 
   return (
-    <button type="button" onClick={handleCheckout} disabled={cartItems.length === 0}>
+    <button
+      type="button"
+      className="checkout-button"
+      onClick={handleCheckout}
+      disabled={cartItems.length === 0}
+    >
       Checkout
     </button>
   );
