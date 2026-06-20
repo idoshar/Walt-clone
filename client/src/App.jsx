@@ -1,5 +1,4 @@
 ﻿import { Navigate, Route, Routes } from 'react-router-dom';
-import { useState } from 'react';
 import Layout from './components/Layout.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -7,8 +6,11 @@ import RegisterPage from './pages/RegisterPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import RestaurantPage from './pages/RestaurantPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import { useAuth } from './context/AuthContext.jsx';
 
-function RequireAuth({ token, children }) {
+function RequireAuth({ children }) {
+  const { token } = useAuth();
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -17,27 +19,15 @@ function RequireAuth({ token, children }) {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('jwt') || '');
-
-  function handleLoginSuccess(receivedToken) {
-    localStorage.setItem('jwt', receivedToken);
-    setToken(receivedToken);
-  }
-
-  function handleLogout() {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('user');
-    localStorage.removeItem('userId');
-    setToken('');
-  }
+  const { token, logout } = useAuth();
 
   return (
     <Routes>
-      <Route element={<Layout token={token} onLogout={handleLogout} />}>
+      <Route element={<Layout token={token} onLogout={logout} />}>
         <Route
           path="/"
           element={
-            <RequireAuth token={token}>
+            <RequireAuth>
               <HomePage />
             </RequireAuth>
           }
@@ -46,7 +36,7 @@ function App() {
         <Route
           path="/search"
           element={
-            <RequireAuth token={token}>
+            <RequireAuth>
               <SearchPage />
             </RequireAuth>
           }
@@ -55,7 +45,7 @@ function App() {
         <Route
           path="/restaurants/:id"
           element={
-            <RequireAuth token={token}>
+            <RequireAuth>
               <RestaurantPage />
             </RequireAuth>
           }
@@ -63,19 +53,10 @@ function App() {
 
         <Route
           path="/login"
-          element={
-            token ? (
-              <Navigate to="/" replace />
-            ) : (
-              <LoginPage onLoginSuccess={handleLoginSuccess} />
-            )
-          }
+          element={token ? <Navigate to="/" replace /> : <LoginPage />}
         />
 
-        <Route
-          path="/register"
-          element={token ? <Navigate to="/" replace /> : <RegisterPage />}
-        />
+        <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>
