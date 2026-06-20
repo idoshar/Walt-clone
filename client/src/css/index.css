@@ -661,3 +661,108 @@ input {
 .state-box.error-box p {
   color: var(--color-danger);
 }
+
+/* SCRUM-234 Home page layout */
+.home-page {
+  max-width: 1180px;
+  padding-top: 40px;
+  padding-bottom: 56px;
+}
+
+.home-hero {
+  margin-bottom: 42px;
+  padding: 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--color-surface), var(--color-info-bg));
+  box-shadow: var(--shadow-card);
+}
+
+.home-eyebrow,
+.section-eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-hero h1 {
+  max-width: 720px;
+  margin: 0;
+  font-size: clamp(32px, 4vw, 52px);
+  line-height: 1.08;
+}
+
+.home-hero-description {
+  max-width: 650px;
+  margin: 18px 0 28px;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.home-search-cta {
+  width: fit-content;
+  padding: 13px 18px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.home-search-cta:hover {
+  transform: translateY(-2px);
+  opacity: 0.92;
+}
+
+.home-search-cta span {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.restaurant-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.restaurant-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.restaurant-section-heading h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.restaurant-count {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.home-page .cards-grid {
+  gap: 22px;
+}
+
+.home-page .restaurant-card {
+  box-shadow: var(--shadow-card);
+}
+
+.home-page .restaurant-card:hover {
+  transform: translateY(-5px);
+}
