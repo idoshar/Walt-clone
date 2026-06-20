@@ -1,44 +1,87 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
 import { createOrder } from '../api/orderApi.js';
-import { useEffect, useState } from 'react';
+import {
+  formatCurrency,
+  groupCartItemsByRestaurant
+} from '../utils/cart.js';
 
 function CheckoutPage() {
-  const { cartItems, totalPrice, setCartItems } = useCart();
+  const {
+    cartItems,
+    clearRestaurantCart
+  } = useCart();
+
   const navigate = useNavigate();
-  
+  const [searchParams] = useSearchParams();
+
+  const requestedRestaurantId = searchParams.get('restaurantId');
+
   const [isDarkMode, setIsDarkMode] = useState(
-    document.body.classList.contains('dark') || document.body.classList.contains('dark-mode')
+    document.documentElement.dataset.theme === 'dark'
   );
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      setIsDarkMode(document.body.classList.contains('dark') || document.body.classList.contains('dark-mode'));
+      setIsDarkMode(document.documentElement.dataset.theme === 'dark');
     });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+
     return () => observer.disconnect();
   }, []);
 
+  const cartGroups = useMemo(
+    () => groupCartItemsByRestaurant(cartItems),
+    [cartItems]
+  );
+
+  const selectedGroup = requestedRestaurantId
+    ? cartGroups.find(
+        (group) =>
+          String(group.restaurantId) === String(requestedRestaurantId)
+      )
+    : cartGroups.length === 1
+      ? cartGroups[0]
+      : null;
+
   async function handleConfirmOrder() {
-    if (cartItems.length === 0) return;
+    if (!selectedGroup || selectedGroup.items.length === 0) {
+      return;
+    }
 
     try {
-      const restaurantId = cartItems[0]?.restaurantId || '1'; 
       const response = await createOrder({
-        restaurantId,
-        items: cartItems.map((item) => ({
+        restaurantId: selectedGroup.restaurantId,
+        items: selectedGroup.items.map((item) => ({
           productId: item.id,
           quantity: item.quantity,
           price: item.price
         }))
       });
 
-      const orderId = response?.id || response?.orderId || response?.data?.id || 'WOLT-' + Math.floor(10000 + Math.random() * 90000);
-      setCartItems([]);
+      const orderId =
+        response?.id ||
+        response?.orderId ||
+        response?.data?.id ||
+        `WOLT-${Math.floor(10000 + Math.random() * 90000)}`;
+
+      clearRestaurantCart(selectedGroup.restaurantId);
+
       navigate(`/order-status?status=success&orderId=${orderId}`);
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'Payment failure';
-      navigate(`/order-status?status=fail&message=${encodeURIComponent(errorMessage)}`);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Payment failure';
+
+      navigate(
+        `/order-status?status=fail&message=${encodeURIComponent(errorMessage)}`
+      );
     }
   }
 
@@ -48,41 +91,43 @@ function CheckoutPage() {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '75vh',
-      fontFamily: 'system-ui, sans-serif',
       padding: '20px',
-      color: isDarkMode ? '#ffffff' : '#202125',
-      transition: 'color 0.3s'
+      color: isDarkMode ? '#ffffff' : '#202125'
     },
     card: {
-      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      width: '100%',
+      maxWidth: '540px',
       padding: '40px',
       borderRadius: '16px',
-      boxShadow: isDarkMode ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
-      maxWidth: '500px',
-      width: '100%',
-      transition: 'background-color 0.3s, box-shadow 0.3s'
+      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      boxShadow: isDarkMode
+        ? '0 4px 20px rgba(0, 0, 0, 0.5)'
+        : '0 4px 16px rgba(0, 0, 0, 0.08)'
     },
     title: {
+      margin: '0 0 8px',
+      color: isDarkMode ? '#ffffff' : '#202125',
       fontSize: '24px',
       fontWeight: '700',
-      color: isDarkMode ? '#ffffff' : '#202125',
-      margin: '0 0 20px 0',
       textAlign: 'center'
     },
-    itemsList: {
-      marginBottom: '20px'
+    subtitle: {
+      margin: '0 0 22px',
+      color: isDarkMode ? '#cbd5e1' : '#5e646e',
+      textAlign: 'center'
     },
     itemRow: {
       display: 'flex',
       justifyContent: 'space-between',
+      gap: '16px',
       padding: '10px 0',
-      fontSize: '16px',
-      color: isDarkMode ? '#e2e8f0' : '#5e646e'
+      color: isDarkMode ? '#e2e8f0' : '#5e646e',
+      fontSize: '16px'
     },
     divider: {
       height: '1px',
-      backgroundColor: isDarkMode ? '#4a5568' : '#cbd5e1',
-      margin: '15px 0'
+      margin: '15px 0',
+      backgroundColor: isDarkMode ? '#4a5568' : '#cbd5e1'
     },
     totalRow: {
       display: 'flex',
@@ -91,9 +136,9 @@ function CheckoutPage() {
       marginBottom: '30px'
     },
     totalPrice: {
+      color: '#009de0',
       fontSize: '22px',
-      fontWeight: '700',
-      color: '#009de0'
+      fontWeight: '700'
     },
     buttonGroup: {
       display: 'flex',
@@ -101,35 +146,46 @@ function CheckoutPage() {
       gap: '12px'
     },
     primaryButton: {
+      padding: '14px 20px',
+      border: 'none',
+      borderRadius: '10px',
       backgroundColor: '#009de0',
       color: '#ffffff',
-      border: 'none',
-      padding: '14px 20px',
-      borderRadius: '10px',
+      cursor: 'pointer',
       fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer'
+      fontWeight: '600'
     },
     secondaryButton: {
+      padding: '14px 20px',
+      border: isDarkMode
+        ? '1px solid #4a5568'
+        : '1px solid #cbd5e1',
+      borderRadius: '10px',
       backgroundColor: isDarkMode ? '#2d2d2d' : '#ffffff',
       color: isDarkMode ? '#ffffff' : '#202125',
-      border: isDarkMode ? '1px solid #4a5568' : '1px solid #cbd5e1',
-      padding: '14px 20px',
-      borderRadius: '10px',
+      cursor: 'pointer',
       fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer'
+      fontWeight: '600'
     }
   };
 
-  if (cartItems.length === 0) {
+  if (!selectedGroup) {
     return (
-      <div style={themeStyles.container}>
+      <section style={themeStyles.container}>
         <div style={themeStyles.card}>
-          <h2>Your cart is empty</h2>
-          <button style={themeStyles.primaryButton} onClick={() => navigate('/')}>Go Back Home</button>
+          <h2 style={themeStyles.title}>Choose a restaurant to checkout</h2>
+          <p style={themeStyles.subtitle}>
+            Open your cart and choose Checkout for the restaurant you want to order from.
+          </p>
+          <button
+            type="button"
+            style={themeStyles.primaryButton}
+            onClick={() => navigate('/')}
+          >
+            Go Back Home
+          </button>
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -137,28 +193,43 @@ function CheckoutPage() {
     <section style={themeStyles.container}>
       <div style={themeStyles.card}>
         <h1 style={themeStyles.title}>Order Summary</h1>
-        
-        <div style={themeStyles.itemsList}>
-          {cartItems.map((item) => (
-            <div key={item.id} style={themeStyles.itemRow}>
-              <span>{item.name} x {item.quantity}</span>
-              <span>₪{item.price * item.quantity}</span>
+
+        <p style={themeStyles.subtitle}>
+          Ordering from {selectedGroup.restaurantName}
+        </p>
+
+        <div>
+          {selectedGroup.items.map((item) => (
+            <div key={item.cartKey} style={themeStyles.itemRow}>
+              <span>{item.name} × {item.quantity}</span>
+              <span>{formatCurrency(item.price * item.quantity)}</span>
             </div>
           ))}
         </div>
 
-        <div style={themeStyles.divider}></div>
+        <div style={themeStyles.divider} />
 
         <div style={themeStyles.totalRow}>
           <span>Total Amount:</span>
-          <span style={themeStyles.totalPrice}>₪{totalPrice}</span>
+          <span style={themeStyles.totalPrice}>
+            {formatCurrency(selectedGroup.totalPrice)}
+          </span>
         </div>
 
         <div style={themeStyles.buttonGroup}>
-          <button style={themeStyles.primaryButton} onClick={handleConfirmOrder}>
+          <button
+            type="button"
+            style={themeStyles.primaryButton}
+            onClick={handleConfirmOrder}
+          >
             Confirm & Place Order
           </button>
-          <button style={themeStyles.secondaryButton} onClick={() => navigate(-1)}>
+
+          <button
+            type="button"
+            style={themeStyles.secondaryButton}
+            onClick={() => navigate(-1)}
+          >
             Cancel
           </button>
         </div>
