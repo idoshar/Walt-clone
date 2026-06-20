@@ -8,10 +8,13 @@ function ProductCard({
   selected = false,
   disabled = false
 }) {
-  const { addToCart } = useCart();
+  const { cartItems, addToCart } = useCart();
+
+  const quantityInCart =
+    cartItems.find((item) => item.id === product.id)?.quantity ?? 0;
 
   const content = (
-    <>
+    <div className="product-card-content">
       <div>
         <h3>{product.name}</h3>
         <p>{product.description || 'Fresh and tasty dish'}</p>
@@ -23,12 +26,29 @@ function ProductCard({
       ) : (
         <div className="small-image-placeholder">Food</div>
       )}
-    </>
+    </div>
+  );
+
+  const addToCartButton = (
+    <button
+      type="button"
+      className="add-to-cart-button"
+      onClick={() => addToCart(product)}
+      aria-label={`Add ${product.name} to cart`}
+    >
+      {quantityInCart > 0
+        ? `Added to cart (${quantityInCart})`
+        : 'Add to cart'}
+    </button>
   );
 
   if (linkTo) {
     return (
-      <Link to={linkTo} className="product-card product-card-link">
+      <Link
+        to={linkTo}
+        className="product-card product-card-link"
+        aria-label={`View restaurant for ${product.name}`}
+      >
         {content}
       </Link>
     );
@@ -36,26 +56,32 @@ function ProductCard({
 
   if (typeof onSelect === 'function') {
     return (
-      <button
-        type="button"
-        className={`product-card product-card-button${selected ? ' product-card-selected' : ''}`}
-        onClick={() => onSelect(product)}
-        aria-label={`Show recommendations based on ${product.name}`}
-        aria-pressed={selected}
-        disabled={disabled}
+      <article
+        className={`product-card product-card-with-actions${
+          selected ? ' product-card-selected' : ''
+        }`}
       >
-        {content}
-      </button>
+        <button
+          type="button"
+          className="product-card-select-button"
+          onClick={() => onSelect(product)}
+          aria-label={`Show recommendations based on ${product.name}`}
+          aria-pressed={selected}
+          disabled={disabled}
+        >
+          {content}
+        </button>
+
+        {addToCartButton}
+      </article>
     );
   }
 
   return (
-    <article className="product-card">
-      {content}
+    <article className="product-card product-card-with-actions">
+      <div className="product-card-static-content">{content}</div>
 
-      <button type="button" onClick={() => addToCart(product)}>
-        Add to cart
-      </button>
+      {addToCartButton}
     </article>
   );
 }
