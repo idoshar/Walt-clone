@@ -8,7 +8,7 @@ function ProductCard({
   selected = false,
   disabled = false
 }) {
-  const { cartItems, addToCart } = useCart();
+  const { cartItems, addToCart, removeFromCart } = useCart();
 
   const quantityInCart =
     cartItems.find((item) => item.id === product.id)?.quantity ?? 0;
@@ -29,17 +29,48 @@ function ProductCard({
     </div>
   );
 
-  const addToCartButton = (
+  const addToCartButton = quantityInCart === 0 ? (
     <button
       type="button"
       className="add-to-cart-button"
-      onClick={() => addToCart(product)}
+      onClick={(e) => {
+        e.stopPropagation();
+        addToCart(product);
+      }}
       aria-label={`Add ${product.name} to cart`}
     >
-      {quantityInCart > 0
-        ? `Added to cart (${quantityInCart})`
-        : 'Add to cart'}
+      Add to cart
     </button>
+  ) : (
+    <div className="quantity-selector" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
+      <button
+        type="button"
+        className="add-to-cart-button"
+        style={{ width: '35px', padding: '5px' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          removeFromCart(product.id);
+        }}
+        aria-label={`Decrease quantity of ${product.name}`}
+      >
+        -
+      </button>
+      <span style={{ fontWeight: 'bold', fontSize: '16px', minWidth: '20px', textAlign: 'center' }}>
+        {quantityInCart}
+      </span>
+      <button
+        type="button"
+        className="add-to-cart-button"
+        style={{ width: '35px', padding: '5px' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          addToCart(product);
+        }}
+        aria-label={`Increase quantity of ${product.name}`}
+      >
+        +
+      </button>
+    </div>
   );
 
   if (linkTo) {

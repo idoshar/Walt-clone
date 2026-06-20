@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import HeaderSearch from './HeaderSearch.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
+import CartDropdown from './CartDropdown.jsx';
 
 function getUserLabel() {
   const savedUser = localStorage.getItem('user');
@@ -53,6 +54,8 @@ function Header({ token, onLogout }) {
             <NavLink to="/management" className="nav-link">
               Management
             </NavLink>
+
+            <CartDropdown />
 
             <ThemeToggle />
 
