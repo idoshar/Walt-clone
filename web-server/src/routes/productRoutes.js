@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const productController = require('../controllers/productController');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // GET    /api/restaurants/:id/products
 router.get('/', productController.getAllProducts);

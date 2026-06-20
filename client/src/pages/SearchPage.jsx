@@ -17,7 +17,9 @@ function SearchPage() {
   const [error, setError] = useState('');
 
   async function fetchSearchResults(query) {
-    if (!query.trim()) {
+    const trimmedQuery = query.trim();
+
+    if (!trimmedQuery) {
       setResults({ restaurants: [], products: [] });
       setError('');
       return;
@@ -27,7 +29,7 @@ function SearchPage() {
     setError('');
 
     try {
-      const data = await apiRequest(`/search/${encodeURIComponent(query.trim())}`);
+      const data = await apiRequest(`/search/${encodeURIComponent(trimmedQuery)}`);
 
       setResults({
         restaurants: data?.restaurants || [],
@@ -45,6 +47,14 @@ function SearchPage() {
     setSearchTerm(queryFromUrl);
     fetchSearchResults(queryFromUrl);
   }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function handleInputChange(event) {
     const value = event.target.value;
@@ -67,8 +77,19 @@ function SearchPage() {
     }, 400);
   }
 
-  const hasSearchTerm = searchTerm.trim().length > 0;
-  const hasResults = results.restaurants.length > 0 || results.products.length > 0;
+  function getProductRestaurantLink(product) {
+    if (product.restaurantId === undefined || product.restaurantId === null) {
+      return undefined;
+    }
+
+    return `/restaurants/${product.restaurantId}`;
+  }
+
+  const trimmedSearchTerm = searchTerm.trim();
+  const hasSearchTerm = trimmedSearchTerm.length > 0;
+  const hasRestaurants = results.restaurants.length > 0;
+  const hasProducts = results.products.length > 0;
+  const hasResults = hasRestaurants || hasProducts;
 
   return (
     <section className="page-container">
@@ -87,10 +108,17 @@ function SearchPage() {
 
       {!loading && error && <ErrorMessage message={error} />}
 
+      {!loading && !hasSearchTerm && !error && (
+        <EmptyState
+          title="Start searching"
+          message="Type a restaurant or dish name to see matching results."
+        />
+      )}
+
       {!loading && hasSearchTerm && !error && !hasResults && (
         <EmptyState
-          title="No results found"
-          message="Try searching for another restaurant or dish."
+          title={`No results for "${trimmedSearchTerm}"`}
+          message="Try searching for another restaurant name, cuisine or dish."
         />
       )}
 
@@ -99,7 +127,7 @@ function SearchPage() {
           <section>
             <h2>Restaurants ({results.restaurants.length})</h2>
 
-            {results.restaurants.length > 0 ? (
+            {hasRestaurants ? (
               <div className="cards-grid">
                 {results.restaurants.map((restaurant) => (
                   <RestaurantCard key={restaurant.id} restaurant={restaurant} />
@@ -116,10 +144,14 @@ function SearchPage() {
           <section>
             <h2>Dishes & Products ({results.products.length})</h2>
 
-            {results.products.length > 0 ? (
+            {hasProducts ? (
               <div className="product-list">
                 {results.products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={`${product.restaurantId || 'product'}-${product.id}`}
+                    product={product}
+                    linkTo={getProductRestaurantLink(product)}
+                  />
                 ))}
               </div>
             ) : (
