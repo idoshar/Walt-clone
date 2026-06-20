@@ -9,7 +9,7 @@ const app = express();
 
 app.use(express.json());
 
-const clientDistPath = path.join(__dirname, '../../client/dist');
+const clientDistPath = path.resolve(__dirname, '..', 'client', 'dist');
 
 app.use(express.static(clientDistPath));
 
