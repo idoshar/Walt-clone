@@ -1,0 +1,51 @@
+[33mf4b89ae[m[33m ([m[1;36mHEAD -> [m[1;32mSCRUM-307-connect-product-crud-api[m[33m, [m[1;31morigin/SCRUM-307-connect-product-crud-api[m[33m)[m HEAD@{0}: commit: SCRUM306+307
+[33me19e467[m[33m ([m[1;32mmain[m[33m)[m HEAD@{1}: checkout: moving from main to SCRUM-307-connect-product-crud-api
+[33me19e467[m[33m ([m[1;32mmain[m[33m)[m HEAD@{2}: pull: Fast-forward
+[33mb97973f[m HEAD@{3}: checkout: moving from SCRUM-305-create-product-menu-create-edit-form to main
+[33m51602bc[m[33m ([m[1;31morigin/SCRUM-305-create-product-menu-create-edit-form[m[33m, [m[1;32mSCRUM-305-create-product-menu-create-edit-form[m[33m)[m HEAD@{4}: commit: commiting
+[33mb97973f[m HEAD@{5}: checkout: moving from main to SCRUM-305-create-product-menu-create-edit-form
+[33mb97973f[m HEAD@{6}: pull: Fast-forward
+[33m4c6fa1b[m HEAD@{7}: checkout: moving from SCRUM-304-delete-restaurant to main
+[33m4f611d4[m[33m ([m[1;31morigin/SCRUM-304-delete-restaurant[m[33m, [m[1;32mSCRUM-304-delete-restaurant[m[33m)[m HEAD@{8}: commit: commiting
+[33m4c6fa1b[m HEAD@{9}: checkout: moving from main to SCRUM-304-delete-restaurant
+[33m4c6fa1b[m HEAD@{10}: pull: Fast-forward
+[33mb2e0d55[m HEAD@{11}: checkout: moving from SCRUM-303-restaurant-form to main
+[33m168e47e[m[33m ([m[1;31morigin/SCRUM-303-restaurant-form[m[33m, [m[1;32mSCRUM-303-restaurant-form[m[33m)[m HEAD@{12}: commit: commiting
+[33mb2e0d55[m HEAD@{13}: checkout: moving from main to SCRUM-303-restaurant-form
+[33mb2e0d55[m HEAD@{14}: pull: Fast-forward
+[33m96ef75c[m HEAD@{15}: checkout: moving from SCRUM-239+SCRUM-240 to main
+[33ma4cf532[m[33m ([m[1;31morigin/SCRUM-239+SCRUM-240[m[33m, [m[1;32mSCRUM-239+SCRUM-240[m[33m)[m HEAD@{16}: commit: commiting
+[33m96ef75c[m HEAD@{17}: checkout: moving from main to SCRUM-239+SCRUM-240
+[33m96ef75c[m HEAD@{18}: pull: Fast-forward
+[33mbee4a2f[m HEAD@{19}: checkout: moving from SCRUM-294+SCRUM-295 to main
+[33m74873ac[m[33m ([m[1;31morigin/SCRUM-294+SCRUM-295[m[33m, [m[1;32mSCRUM-294+SCRUM-295[m[33m)[m HEAD@{20}: commit: scrum294+295
+[33mbee4a2f[m HEAD@{21}: checkout: moving from main to SCRUM-294+SCRUM-295
+[33mbee4a2f[m HEAD@{22}: pull: Fast-forward
+[33m389219a[m HEAD@{23}: checkout: moving from main to main
+[33m389219a[m HEAD@{24}: pull: Fast-forward
+[33m58d14d7[m[33m ([m[1;32mSCRUM-294-update-quantity-and-remove-item-from-cart[m[33m)[m HEAD@{25}: checkout: moving from SCRUM-293-add-product-to-cart-from-menu to main
+[33m8e47f3c[m[33m ([m[1;31morigin/SCRUM-293-add-product-to-cart-from-menu[m[33m, [m[1;32mSCRUM-293-add-product-to-cart-from-menu[m[33m)[m HEAD@{26}: commit (merge): Merge remote-tracking branch 'origin/main' into SCRUM-293-add-product-to-cart-from-menu
+[33mce2277b[m HEAD@{27}: checkout: moving from main to SCRUM-293-add-product-to-cart-from-menu
+[33m58d14d7[m[33m ([m[1;32mSCRUM-294-update-quantity-and-remove-item-from-cart[m[33m)[m HEAD@{28}: checkout: moving from SCRUM-294-update-quantity-and-remove-item-from-cart to main
+[33m58d14d7[m[33m ([m[1;32mSCRUM-294-update-quantity-and-remove-item-from-cart[m[33m)[m HEAD@{29}: checkout: moving from main to SCRUM-294-update-quantity-and-remove-item-from-cart
+[33m58d14d7[m[33m ([m[1;32mSCRUM-294-update-quantity-and-remove-item-from-cart[m[33m)[m HEAD@{30}: pull: Fast-forward
+[33m58112fa[m HEAD@{31}: checkout: moving from SCRUM-293-add-product-to-cart-from-menu to main
+[33mce2277b[m HEAD@{32}: commit: SCRUM-293 add product to cart
+[33m58112fa[m HEAD@{33}: checkout: moving from main to SCRUM-293-add-product-to-cart-from-menu
+[33m58112fa[m HEAD@{34}: pull: Fast-forward
+[33m0ddcab3[m HEAD@{35}: checkout: moving from SCRUM-292-create-cart-state to main
+[33m1607328[m[33m ([m[1;31morigin/SCRUM-292-create-cart-state[m[33m, [m[1;32mSCRUM-292-create-cart-state[m[33m)[m HEAD@{36}: commit: scrum 292
+[33m0ddcab3[m HEAD@{37}: checkout: moving from main to SCRUM-292-create-cart-state
+[33m0ddcab3[m HEAD@{38}: checkout: moving from SCRUM-248-connect-restaurant-crud-ap-is to main
+[33m879a77a[m[33m ([m[1;31morigin/SCRUM-248-connect-restaurant-crud-ap-is[m[33m, [m[1;32mSCRUM-248-connect-restaurant-crud-ap-is[m[33m)[m HEAD@{39}: commit: SCRUM-248-connect-restaurant-crud-ap-is
+[33m0ddcab3[m HEAD@{40}: checkout: moving from main to SCRUM-248-connect-restaurant-crud-ap-is
+[33m0ddcab3[m HEAD@{41}: pull: Fast-forward
+[33m0adcaf0[m HEAD@{42}: checkout: moving from SCRUM-247-restaurant-management-page to main
+[33mb0fd3e7[m[33m ([m[1;31morigin/SCRUM-247-restaurant-management-page[m[33m, [m[1;32mSCRUM-247-restaurant-management-page[m[33m)[m HEAD@{43}: commit: SCRUM-247-restaurant-management-page
+[33m0adcaf0[m HEAD@{44}: checkout: moving from main to SCRUM-247-restaurant-management-page
+[33m0adcaf0[m HEAD@{45}: pull: Fast-forward
+[33m0d476ae[m[33m ([m[1;31morigin/scrum-236[m[33m)[m HEAD@{46}: pull: Fast-forward
+[33me12573f[m HEAD@{47}: checkout: moving from SCRUM-273-add-global-auth-state-context to main
+[33m4cf0c0c[m[33m ([m[1;31morigin/SCRUM-273-add-global-auth-state-context[m[33m, [m[1;32mSCRUM-273-add-global-auth-state-context[m[33m)[m HEAD@{48}: commit: commiting
+[33me12573f[m HEAD@{49}: checkout: moving from main to SCRUM-273-add-global-auth-state-context
+[33me12573f[m HEAD@{50}: pull: Fast-forward
