@@ -263,13 +263,14 @@ The repository includes `.env.example` with safe local defaults.
 | `WEB_SERVER_PORT`      |                      `3000` | Internal Express server port inside the container           |
 | `EX2_SERVER_PORT`      |                      `8080` | Internal port of the C++ recommendation server              |
 | `EX2_HOST`             |                `ex2-server` | Docker service hostname of the recommendation server        |
-| `VITE_API_BASE_URL`    | `http://localhost:3000/api` | API base URL used when building the React client            |
+| `VITE_API_BASE_URL`    | `http://localhost:3000/api` | API base URL for Vite development mode; Docker uses the client `/api` default            |
 
 ### Environment-file submission note
 
 * `.env` is ignored by Git and must not be committed to the repository.
-* `.env.example` is included in the repository so the project can be configured consistently.
-* For course submission requirements, provide environment configuration according to the course instructions, but do not add personal or secret values to Git history.
+* `.env.example` is tracked in the repository and contains safe local defaults.
+* For course submission, include the required environment configuration alongside the submitted exercise only as instructed by the course staff.
+* Do not commit personal, secret, or machine-specific values to Git history.
 
 ---
 
@@ -584,7 +585,7 @@ Shows restaurants sorted by distance from the user’s saved browser location, i
 
 ### 14. Restaurant Management
 
-Shows the Management route after restaurant and product management actions are finalized.
+Shows the Management route for creating, editing and deleting restaurants and menu products.
 
 <!--
 ![Restaurant management](docs/screenshots/14-management.png)
