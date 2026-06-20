@@ -9,6 +9,8 @@ import NotFoundPage from './pages/NotFoundPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import RestaurantManagementPage from './pages/RestaurantManagementPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
+import OrderStatusPage from './pages/OrderStatusPage.jsx';
+import CheckoutPage from './pages/CheckoutPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -63,15 +65,6 @@ function App() {
         />
 
         <Route
-          path="/login"
-          element={token ? <Navigate to="/" replace /> : <LoginPage />}
-        />
-
-        <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
-
-        <Route path="*" element={<NotFoundPage />} />
-
-        <Route
           path="/orders"
           element={
             <RequireAuth>
@@ -79,6 +72,36 @@ function App() {
             </RequireAuth>
           }
         />
+
+        <Route
+          path="/order-status"
+          element={
+            <RequireAuth>
+              <OrderStatusPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/checkout"
+          element={
+            <RequireAuth>
+              <CheckoutPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/login"
+          element={token ? <Navigate to="/" replace /> : <LoginPage />}
+        />
+
+        <Route 
+          path="/register" 
+          element={token ? <Navigate to="/" replace /> : <RegisterPage />} 
+        />
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
