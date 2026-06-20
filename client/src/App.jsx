@@ -7,6 +7,7 @@ import SearchPage from './pages/SearchPage.jsx';
 import RestaurantPage from './pages/RestaurantPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
+import RestaurantManagementPage from './pages/RestaurantManagementPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -47,6 +48,15 @@ function App() {
           element={
             <RequireAuth>
               <RestaurantPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/management"
+          element={
+            <RequireAuth>
+              <RestaurantManagementPage />
             </RequireAuth>
           }
         />
