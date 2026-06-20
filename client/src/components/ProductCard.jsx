@@ -1,6 +1,9 @@
 ﻿import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext.jsx';
 
 function ProductCard({ product, linkTo }) {
+  const { addToCart } = useCart();
+
   const content = (
     <>
       <div>
@@ -19,17 +22,21 @@ function ProductCard({ product, linkTo }) {
 
   if (linkTo) {
     return (
-      <Link
-        to={linkTo}
-        className="product-card product-card-link"
-        aria-label={`View restaurant for ${product.name}`}
-      >
+      <Link to={linkTo} className="product-card product-card-link">
         {content}
       </Link>
     );
   }
 
-  return <article className="product-card">{content}</article>;
+  return (
+    <article className="product-card">
+      {content}
+
+      <button type="button" onClick={() => addToCart(product)}>
+        Add to cart
+      </button>
+    </article>
+  );
 }
 
 export default ProductCard;
