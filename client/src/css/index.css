@@ -1537,13 +1537,73 @@ input {
   }
 }
 
-body.dark, body.dark-mode,
-body.dark #root, body.dark-mode #root,
-body.dark main, body.dark-mode main,
-body.dark .layout, body.dark-mode .layout {
-  background-color: #121212 !important;
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
 }
 
+body.dark input,
+body.dark textarea,
+body.dark select {
+  background-color: #1f2937;
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+body.dark input::placeholder,
+body.dark textarea::placeholder {
+  color: #9ca3af;
+}
+
+body.dark form {
+  background-color: transparent;
+}
+
+body.dark .restaurant-card,
+body.dark .product-card {
+  background-color: #111827;
+  color: #f9fafb;
+  border-color: #374151;
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] textarea,
+[data-theme='dark'] select {
+  background-color: #111827;
+  color: #ffffff;
+  border: 1px solid #374151;
+}
+
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: #d1d5db;
+}
+
+[data-theme='dark'] label,
+[data-theme='dark'] h1,
+[data-theme='dark'] h2,
+[data-theme='dark'] h3,
+[data-theme='dark'] p,
+[data-theme='dark'] span,
+[data-theme='dark'] strong {
+  color: #ffffff;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+[data-theme='dark'] .theme-toggle-button {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+[data-theme='dark'] .theme-toggle-button span {
+  color: #111827;
+}
 /* SCRUM-257 cart dropdown, checkout theme and menu quantity controls */
 .cart-dropdown {
   position: relative;
