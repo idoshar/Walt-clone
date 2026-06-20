@@ -1,4 +1,5 @@
-const express = require('express');
+﻿const express = require('express');
+
 const router = express.Router({ mergeParams: true });
 const productController = require('../controllers/productController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -8,6 +9,13 @@ router.get('/', productController.getAllProducts);
 
 // POST   /api/restaurants/:id/products
 router.post('/', productController.createProduct);
+
+// GET    /api/restaurants/:id/products/:pId/recommendations
+router.get(
+    '/:pId/recommendations',
+    authMiddleware,
+    productController.getProductRecommendations
+);
 
 // GET    /api/restaurants/:id/products/:pId
 router.get('/:pId', productController.getProductById);
