@@ -1,168 +1,140 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 function OrderStatusPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  const [isDarkMode, setIsDarkMode] = useState(
+    document.body.classList.contains('dark') || document.body.classList.contains('dark-mode')
+  );
 
-  const status = searchParams.get('status'); // 'success' or 'fail'
-  const orderId = searchParams.get('orderId') || 'N/A';
-  const errorMessage = searchParams.get('message') || 'Something went wrong with your payment.';
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.body.classList.contains('dark') || document.body.classList.contains('dark-mode'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const status = searchParams.get('status');
+  const orderId = searchParams.get('orderId');
+  const message = searchParams.get('message');
 
   const isSuccess = status === 'success';
 
+  const themeStyles = {
+    container: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '75vh',
+      fontFamily: 'system-ui, sans-serif',
+      padding: '20px',
+      color: isDarkMode ? '#ffffff' : '#202125',
+      transition: 'color 0.3s'
+    },
+    card: {
+      backgroundColor: isDarkMode ? '#1e1e1e' : '#ffffff',
+      padding: '40px',
+      borderRadius: '16px',
+      boxShadow: isDarkMode ? '0 4px 20px rgba(0, 0, 0, 0.5)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
+      maxWidth: '500px',
+      width: '100%',
+      textAlign: 'center',
+      transition: 'background-color 0.3s, box-shadow 0.3s'
+    },
+    iconContainer: {
+      width: '72px',
+      height: '72px',
+      borderRadius: '50%',
+      backgroundColor: isSuccess 
+        ? (isDarkMode ? 'rgba(34, 197, 94, 0.2)' : '#e6f7ed') 
+        : (isDarkMode ? 'rgba(239, 68, 68, 0.2)' : '#fdf2f2'),
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      margin: '0 auto 24px auto'
+    },
+    icon: {
+      fontSize: '32px',
+      color: isSuccess ? '#22c55e' : '#ef4444'
+    },
+    title: {
+      fontSize: '24px',
+      fontWeight: '700',
+      margin: '0 0 12px 0',
+      color: isDarkMode ? '#ffffff' : '#202125'
+    },
+    text: {
+      fontSize: '16px',
+      color: isDarkMode ? '#a0aec0' : '#5e646e',
+      margin: '0 0 32px 0'
+    },
+    infoBox: {
+      backgroundColor: isDarkMode ? '#2d2d2d' : '#f1f5f9',
+      padding: '16px',
+      borderRadius: '10px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '32px',
+      transition: 'background-color 0.3s'
+    },
+    infoLabel: {
+      fontSize: '14px',
+      color: isDarkMode ? '#a0aec0' : '#5e646e'
+    },
+    infoValue: {
+      fontSize: '14px',
+      fontWeight: '600',
+      fontFamily: 'monospace',
+      color: isDarkMode ? '#ffffff' : '#202125'
+    },
+    button: {
+      backgroundColor: '#009de0',
+      color: '#ffffff',
+      border: 'none',
+      padding: '14px 28px',
+      borderRadius: '10px',
+      fontSize: '16px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      width: '100%',
+      transition: 'background-color 0.2s'
+    }
+  };
+
   return (
-    <section style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.iconContainer}>
-          {isSuccess ? (
-            <span style={{ ...styles.icon, ...styles.successIcon }}>✓</span>
-          ) : (
-            <span style={{ ...styles.icon, ...styles.failIcon }}>✕</span>
-          )}
+    <div style={themeStyles.container}>
+      <div style={themeStyles.card}>
+        <div style={themeStyles.iconContainer}>
+          <span style={themeStyles.icon}>{isSuccess ? '✓' : '✕'}</span>
         </div>
 
-        <h1 style={styles.title}>
-          {isSuccess ? 'Order Placed Successfully!' : 'Order Placement Failed'}
+        <h1 style={themeStyles.title}>
+          {isSuccess ? 'Order Placed Successfully!' : 'Order Failed'}
         </h1>
 
-        <p style={styles.subtitle}>
-          {isSuccess
-            ? `Thank you for your order. Your food is on the way!`
-            : errorMessage}
+        <p style={themeStyles.text}>
+          {isSuccess 
+            ? 'Thank you for your order. Your food is on the way!' 
+            : (message || 'Something went wrong with your transaction. Please try again.')}
         </p>
 
-        {isSuccess && (
-          <div style={styles.detailsBox}>
-            <span style={styles.detailsLabel}>Order ID:</span>
-            <span style={styles.detailsValue}>{orderId}</span>
+        {orderId && (
+          <div style={themeStyles.infoBox}>
+            <span style={themeStyles.infoLabel}>Order ID:</span>
+            <span style={themeStyles.infoValue}>{orderId}</span>
           </div>
         )}
 
-        <div style={styles.actions}>
-          {isSuccess ? (
-            <button style={styles.primaryButton} onClick={() => navigate('/')}>
-              Track Order & Go Home
-            </button>
-          ) : (
-            <div style={styles.buttonGroup}>
-              <button style={styles.primaryButton} onClick={() => navigate('/cart')}>
-                Try Again
-              </button>
-              <button style={styles.secondaryButton} onClick={() => navigate('/')}>
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
+        <button style={themeStyles.button} onClick={() => navigate('/')}>
+          Track Order & Go Home
+        </button>
       </div>
-    </section>
+    </div>
   );
 }
-
-const styles = {
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '75vh',
-    fontFamily: 'system-ui, sans-serif',
-    padding: '20px',
-    backgroundColor: '#f8f9fa',
-    direction: 'ltr',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    padding: '40px',
-    borderRadius: '16px',
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-    maxWidth: '480px',
-    width: '100%',
-    textAlign: 'center',
-  },
-  iconContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    marginBottom: '24px',
-  },
-  icon: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    fontSize: '32px',
-    fontWeight: 'bold',
-  },
-  successIcon: {
-    backgroundColor: '#e6f7ed',
-    color: '#00a04b',
-  },
-  failIcon: {
-    backgroundColor: '#fde8e8',
-    color: '#e02424',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#202125',
-    margin: '0 0 12px 0',
-  },
-  subtitle: {
-    fontSize: '15px',
-    color: '#5e646e',
-    margin: '0 0 24px 0',
-    lineHeight: '1.5',
-  },
-  detailsBox: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#f1f3f5',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    marginBottom: '30px',
-  },
-  detailsLabel: {
-    fontSize: '14px',
-    color: '#5e646e',
-    fontWeight: '500',
-  },
-  detailsValue: {
-    fontSize: '14px',
-    color: '#202125',
-    fontWeight: '700',
-  },
-  actions: {
-    marginTop: '10px',
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '12px',
-  },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: '#009de0',
-    color: '#ffffff',
-    border: 'none',
-    padding: '14px 20px',
-    borderRadius: '10px',
-    fontSize: '15px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    color: '#202125',
-    border: '1px solid #cbd5e1',
-    padding: '14px 20px',
-    borderRadius: '10px',
-    fontSize: '15px',
-    fontWeight: '600',
-    cursor: 'pointer',
-  },
-};
 
 export default OrderStatusPage;
