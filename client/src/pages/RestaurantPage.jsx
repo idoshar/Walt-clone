@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
 import CheckoutButton from '../components/CheckoutButton.jsx';
@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
 import ProductCard from '../components/ProductCard.jsx';
+import { getRestaurantImage } from '../utils/restaurantImages.js';
 
 function RestaurantPage() {
   const { id } = useParams();
@@ -107,12 +108,25 @@ function RestaurantPage() {
     );
   }
 
+  const displayImage = getRestaurantImage(restaurant);
+
+  function createCartProduct(product) {
+    return {
+      ...product,
+      restaurantId: product.restaurantId ?? restaurant.id,
+      restaurantName: product.restaurantName ?? restaurant.name,
+      restaurantImage:
+        typeof product.restaurantImage === 'string' &&
+        product.restaurantImage.trim() !== ''
+          ? product.restaurantImage
+          : displayImage
+    };
+  }
+
   return (
     <section style={styles.container}>
       <div style={styles.heroSection}>
-        {restaurant.image && (
-          <img src={restaurant.image} alt={restaurant.name} style={styles.heroImage} />
-        )}
+        <img src={displayImage} alt={restaurant.name} style={styles.heroImage} />
 
         <div style={styles.heroOverlay}>
           <h1 style={styles.restaurantName}>{restaurant.name}</h1>
@@ -137,7 +151,7 @@ function RestaurantPage() {
               {products.map((product) => (
                 <ProductCard
                   key={product.id}
-                  product={product}
+                  product={createCartProduct(product)}
                   onSelect={handleProductSelect}
                   selected={selectedProductKey === getProductKey(product)}
                   disabled={recommendationsLoading}
@@ -145,7 +159,7 @@ function RestaurantPage() {
               ))}
             </div>
 
-            <CheckoutButton restaurantId={restaurant.id} />
+            <CheckoutButton restaurantId={restaurant.id} restaurantName={restaurant.name} />
           </>
         ) : (
           <EmptyState
@@ -178,7 +192,7 @@ function RestaurantPage() {
             {recommendations.map((product) => (
               <ProductCard
                 key={`${product.restaurantId ?? id}-${product.id}`}
-                product={product}
+                product={createCartProduct(product)}
                 onSelect={handleProductSelect}
                 selected={selectedProductKey === getProductKey(product)}
                 disabled={recommendationsLoading}
