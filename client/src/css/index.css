@@ -1465,3 +1465,74 @@ input {
   opacity: 0.65;
   cursor: not-allowed;
 }
+/* SCRUM-338 browser location and nearby restaurant sorting */
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-location-cta {
+  min-height: 48px;
+  padding: 13px 18px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.home-location-cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background-color: var(--color-hover-bg);
+}
+
+.home-location-cta:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.home-location-cta:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.location-feedback {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.location-feedback-error {
+  border-color: var(--color-danger-border);
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.restaurant-distance {
+  margin-top: 10px;
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .home-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .home-hero-actions .home-search-cta,
+  .home-location-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

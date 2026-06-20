@@ -4,6 +4,45 @@ const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
 const { validateObject, validateRequiredFields } = require('../utilities/validationHelper');
 
+function getLocationFields(body) {
+    const hasLatitude = Object.prototype.hasOwnProperty.call(body, 'latitude');
+    const hasLongitude = Object.prototype.hasOwnProperty.call(body, 'longitude');
+
+    if (!hasLatitude && !hasLongitude) {
+        return {
+            coordinates: null
+        };
+    }
+
+    if (!hasLatitude || !hasLongitude) {
+        return {
+            error: 'latitude and longitude must be provided together'
+        };
+    }
+
+    const latitude = Number(body.latitude);
+    const longitude = Number(body.longitude);
+
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+        return {
+            error: 'latitude must be a valid coordinate'
+        };
+    }
+
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+        return {
+            error: 'longitude must be a valid coordinate'
+        };
+    }
+
+    return {
+        coordinates: {
+            latitude,
+            longitude
+        }
+    };
+}
+
 class RestaurantController {
     getAllRestaurants(req, res, next) {
         try {
@@ -48,13 +87,20 @@ class RestaurantController {
                 return responseHelper.badRequest(res, 'Name is required');
             }
 
+            const locationResult = getLocationFields(req.body);
+
+            if (locationResult.error) {
+                return responseHelper.badRequest(res, locationResult.error);
+            }
+
             const restaurant = new Restaurant({
                 id: generateId(),
                 name: req.body.name,
                 address: req.body.address || '',
                 phone: req.body.phone || '',
                 cuisine: req.body.cuisine || '',
-                description: req.body.description || ''
+                description: req.body.description || '',
+                ...(locationResult.coordinates || {})
             });
 
             restaurantRepository.create(restaurant);
@@ -73,7 +119,18 @@ class RestaurantController {
                 return responseHelper.badRequest(res, objectError);
             }
 
-            const restaurant = restaurantRepository.update(req.params.id, req.body);
+            const locationResult = getLocationFields(req.body);
+
+            if (locationResult.error) {
+                return responseHelper.badRequest(res, locationResult.error);
+            }
+
+            const updates = {
+                ...req.body,
+                ...(locationResult.coordinates || {})
+            };
+
+            const restaurant = restaurantRepository.update(req.params.id, updates);
 
             if (!restaurant) {
                 return responseHelper.notFound(res, 'Restaurant not found');
@@ -84,6 +141,7 @@ class RestaurantController {
             next(err);
         }
     }
+
     deleteRestaurant(req, res, next) {
         try {
             const deleted = restaurantRepository.deleteById(req.params.id);
