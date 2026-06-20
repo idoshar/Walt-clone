@@ -26,6 +26,7 @@ function getUserLabel() {
 
 function Header({ token, onLogout }) {
   const userLabel = token ? getUserLabel() : '';
+  const avatarLetter = userLabel && typeof userLabel === 'string' ? userLabel.charAt(0).toUpperCase() : 'U';
 
   return (
     <header className="navbar">
@@ -61,7 +62,7 @@ function Header({ token, onLogout }) {
 
             <div className="user-area">
               <span className="user-avatar" aria-hidden="true">
-                {userLabel.charAt(0).toUpperCase()}
+                {avatarLetter}
               </span>
 
               <span className="user-label">{userLabel}</span>
