@@ -1,4 +1,4 @@
-﻿import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import HeaderSearch from './HeaderSearch.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 
@@ -44,6 +44,14 @@ function Header({ token, onLogout }) {
 
             <NavLink to="/search" className="nav-link">
               Search
+            </NavLink>
+
+            <NavLink to="/orders" className="nav-link">
+              Orders
+            </NavLink>
+
+            <NavLink to="/management" className="nav-link">
+              Management
             </NavLink>
 
             <ThemeToggle />
