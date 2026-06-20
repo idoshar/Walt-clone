@@ -1178,4 +1178,38 @@ input {
     white-space: normal;
     overflow-wrap: anywhere;
   }
+/* SCRUM-291 interactive menu cards and recommendations */
+.product-card-button {
+  width: 100%;
+  appearance: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-card-button:hover:not(:disabled),
+.product-card-button.product-card-selected {
+  transform: translateY(-5px);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.product-card-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.product-card-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.recommendations-section {
+  margin-top: 40px;
+}
+
+.recommendations-subtitle {
+  margin: -12px 0 20px;
+  color: var(--color-text-muted);
 }
