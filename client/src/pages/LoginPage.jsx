@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -42,6 +42,14 @@ function LoginPage() {
     setError('');
   }
 
+  function handleLoginEnter(event) {
+    if (event.key !== 'Enter' || loading) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
@@ -107,6 +115,7 @@ function LoginPage() {
             type="text"
             value={username}
             onChange={handleUsernameChange}
+            onKeyDown={handleLoginEnter}
             placeholder="Enter username"
             autoComplete="username"
             disabled={loading}
@@ -124,6 +133,7 @@ function LoginPage() {
             type="password"
             value={password}
             onChange={handlePasswordChange}
+            onKeyDown={handleLoginEnter}
             placeholder="Enter password"
             autoComplete="current-password"
             disabled={loading}
