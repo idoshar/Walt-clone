@@ -3,6 +3,20 @@ import HeaderSearch from './HeaderSearch.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import CartDropdown from './CartDropdown.jsx';
 
+function getSavedUser() {
+  const savedUser = localStorage.getItem('user');
+
+  if (!savedUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    return null;
+  }
+}
+
 function getUserLabel() {
   const savedUser = localStorage.getItem('user');
 
@@ -25,7 +39,9 @@ function getUserLabel() {
 }
 
 function Header({ token, onLogout }) {
+  const user = token ? getSavedUser() : null;
   const userLabel = token ? getUserLabel() : '';
+  const userImage = user?.image || '';
 
   return (
     <header className="navbar">
@@ -39,30 +55,22 @@ function Header({ token, onLogout }) {
       <nav className="navbar-actions" aria-label="Main navigation">
         {token ? (
           <>
-            <NavLink to="/" end className="nav-link">
-              Home
-            </NavLink>
-
-            <NavLink to="/search" className="nav-link">
-              Search
-            </NavLink>
-
-            <NavLink to="/orders" className="nav-link">
-              Orders
-            </NavLink>
-
-            <NavLink to="/management" className="nav-link">
-              Management
-            </NavLink>
+            <NavLink to="/" end className="nav-link">Home</NavLink>
+            <NavLink to="/search" className="nav-link">Search</NavLink>
+            <NavLink to="/orders" className="nav-link">Orders</NavLink>
+            <NavLink to="/management" className="nav-link">Management</NavLink>
 
             <CartDropdown />
-
             <ThemeToggle />
 
             <div className="user-area">
-              <span className="user-avatar" aria-hidden="true">
-                {userLabel.charAt(0).toUpperCase()}
-              </span>
+              {userImage ? (
+                <img src={userImage} alt={userLabel} className="user-avatar" />
+              ) : (
+                <span className="user-avatar" aria-hidden="true">
+                  {userLabel.charAt(0).toUpperCase()}
+                </span>
+              )}
 
               <span className="user-label">{userLabel}</span>
 
@@ -74,14 +82,8 @@ function Header({ token, onLogout }) {
         ) : (
           <>
             <ThemeToggle />
-
-            <NavLink to="/login" className="nav-link">
-              Login
-            </NavLink>
-
-            <NavLink to="/register" className="nav-link register-link">
-              Register
-            </NavLink>
+            <NavLink to="/login" className="nav-link">Login</NavLink>
+            <NavLink to="/register" className="nav-link register-link">Register</NavLink>
           </>
         )}
       </nav>

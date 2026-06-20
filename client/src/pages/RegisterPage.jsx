@@ -46,8 +46,14 @@ function RegisterPage() {
     }
 
     setFieldErrors((currentErrors) => ({ ...currentErrors, image: '' }));
-    setImagePreview(URL.createObjectURL(file));
-    setImageName(file.name);
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setImagePreview(reader.result);
+      setImageName(file.name);
+    };
+
+    reader.readAsDataURL(file);
   }
 
   function validateForm() {
@@ -126,7 +132,8 @@ function RegisterPage() {
           password,
           fullName: displayName.trim(),
           phone: '0500000000',
-          address: 'Default address'
+          address: 'Default address',
+          image: imagePreview
         })
       });
 

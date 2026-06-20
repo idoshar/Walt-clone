@@ -73,6 +73,7 @@ class TokenService {
                 fullName: user.fullName,
                 phone: user.phone,
                 address: user.address,
+                image: user.image,
                 latitude: user.latitude,
                 longitude: user.longitude
             }

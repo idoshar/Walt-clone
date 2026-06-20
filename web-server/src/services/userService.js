@@ -78,13 +78,14 @@ class UserService {
         const location = getOptionalLocation(data);
 
         return userRepository.create({
-            username: username.trim(),
-            password: password.trim(),
-            fullName: fullName.trim(),
-            phone: phone.trim(),
-            address: address.trim(),
-            latitude: location.latitude,
-            longitude: location.longitude
+            username: data.username.trim(),
+            password: data.password,
+            fullName: data.fullName.trim(),
+            phone: data.phone.trim(),
+            address: data.address.trim(),
+            image: data.image || '',
+            latitude: data.latitude || null,
+            longitude: data.longitude || null
         });
     }
 
