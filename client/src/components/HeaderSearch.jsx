@@ -1,9 +1,14 @@
-﻿import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 function HeaderSearch() {
   const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+
+  useEffect(() => {
+    setQuery(searchParams.get('q') || '');
+  }, [searchParams]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -18,6 +23,11 @@ function HeaderSearch() {
     navigate(`/search?q=${encodeURIComponent(trimmedQuery)}`);
   }
 
+  function handleClearSearch() {
+    setQuery('');
+    navigate('/search');
+  }
+
   return (
     <form className="header-search" onSubmit={handleSubmit} role="search">
       <input
@@ -28,6 +38,17 @@ function HeaderSearch() {
         className="header-search-input"
         aria-label="Search restaurants or dishes"
       />
+
+      {query && (
+        <button
+          type="button"
+          className="header-search-clear-button"
+          onClick={handleClearSearch}
+          aria-label="Clear search"
+        >
+          ×
+        </button>
+      )}
 
       <button type="submit" className="header-search-button">
         Search
