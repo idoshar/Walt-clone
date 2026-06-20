@@ -1178,6 +1178,8 @@ input {
     white-space: normal;
     overflow-wrap: anywhere;
   }
+}
+
 /* SCRUM-291 interactive menu cards and recommendations */
 .product-card-button {
   width: 100%;
@@ -1212,4 +1214,161 @@ input {
 .recommendations-subtitle {
   margin: -12px 0 20px;
   color: var(--color-text-muted);
+}
+
+/* SCRUM-331 cart action alongside recommendations */
+.product-card-with-actions {
+  display: block;
+  padding: 0;
+}
+
+.product-card-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.product-card-select-button {
+  width: 100%;
+  padding: 20px;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-card-select-button:hover:not(:disabled) {
+  background-color: var(--color-hover-bg);
+}
+
+.product-card-with-actions.product-card-selected {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.product-card-select-button:focus-visible,
+.add-to-cart-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.product-card-select-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.add-to-cart-button {
+  width: calc(100% - 40px);
+  min-height: 42px;
+  margin: 0 20px 20px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-to-cart-button:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+  .product-card-select-button,
+  .product-card-static-content {
+    padding: 16px;
+  }
+
+  .add-to-cart-button {
+    width: calc(100% - 32px);
+    margin: 0 16px 16px;
+  }
+}
+
+/* SCRUM-331 product-card action layout */
+.product-card-with-actions {
+  display: block;
+  padding: 0;
+}
+
+.product-card-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.product-card-select-button,
+.product-card-static-content {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.product-card-select-button {
+  appearance: none;
+  cursor: pointer;
+}
+
+.product-card-select-button:hover:not(:disabled) {
+  background-color: var(--color-hover-bg);
+}
+
+.product-card-with-actions.product-card-selected {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.product-card-select-button:focus-visible,
+.add-to-cart-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.product-card-select-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.add-to-cart-button {
+  width: calc(100% - 40px);
+  min-height: 42px;
+  margin: 0 20px 20px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-to-cart-button:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 640px) {
+  .product-card-select-button,
+  .product-card-static-content {
+    padding: 16px;
+  }
+
+  .add-to-cart-button {
+    width: calc(100% - 32px);
+    margin: 0 16px 16px;
+  }
 }
