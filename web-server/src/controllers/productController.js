@@ -1,4 +1,4 @@
-const productRepository = require('../repositories/productRepository');
+﻿const productRepository = require('../repositories/productRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const ex2 = require('../services/exercise2Client');
 const { generateId } = require('../utilities/idGenerator');
@@ -14,13 +14,14 @@ const {
     validateRequiredFields,
 } = require('../utilities/validationHelper');
 
-
 function requireRestaurant(req, res) {
     const restaurant = restaurantRepository.findById(req.params.id);
+
     if (!restaurant) {
         notFound(res, 'Restaurant not found');
         return false;
     }
+
     return true;
 }
 
@@ -35,10 +36,16 @@ function createProduct(req, res) {
     if (!requireRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
-    if (bodyError) return badRequest(res, bodyError);
+
+    if (bodyError) {
+        return badRequest(res, bodyError);
+    }
 
     const fieldError = validateRequiredFields(req.body, ['name', 'price']);
-    if (fieldError) return badRequest(res, fieldError);
+
+    if (fieldError) {
+        return badRequest(res, fieldError);
+    }
 
     const { name, price, description = '', category = '' } = req.body;
 
@@ -56,59 +63,131 @@ function createProduct(req, res) {
     };
 
     productRepository.save(req.params.id, product);
-    return created(res, `/api/restaurants/${req.params.id}/products/${product.id}`);
-}
 
+    return created(
+        res,
+        `/api/restaurants/${req.params.id}/products/${product.id}`
+    );
+}
 
 function getProductById(req, res) {
     if (!requireRestaurant(req, res)) return;
 
     const product = productRepository.findById(req.params.id, req.params.pId);
-    if (!product) return notFound(res, 'Product not found');
 
+    if (!product) {
+        return notFound(res, 'Product not found');
+    }
 
     const userId = req.user?.sub;
-    if (userId) {
-        ex2.reportProductView(userId, req.params.pId);
+    const recommendationId = productRepository.getRecommendationId(
+        req.params.id,
+        req.params.pId
+    );
+
+    if (userId && recommendationId) {
+        ex2.reportProductView(userId, recommendationId);
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     return ok(res, product);
 }
 
+async function getProductRecommendations(req, res, next) {
+    try {
+        if (!requireRestaurant(req, res)) return;
+
+        const sourceProduct = productRepository.findById(
+            req.params.id,
+            req.params.pId
+        );
+
+        if (!sourceProduct) {
+            return notFound(res, 'Product not found');
+        }
+
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'Missing authenticated user'
+            });
+        }
+
+        const recommendationId = productRepository.getRecommendationId(
+            req.params.id,
+            req.params.pId
+        );
+
+        if (!recommendationId) {
+            return ok(res, []);
+        }
+
+        await ex2.reportProductView(userId, recommendationId);
+
+        const recommendationIds = await ex2.getRecommendations(
+            userId,
+            recommendationId
+        );
+
+        const recommendedProducts = recommendationIds
+            .map((id) => productRepository.findByRecommendationId(id))
+            .filter(Boolean);
+
+        return ok(res, recommendedProducts);
+    } catch (err) {
+        next(err);
+    }
+}
 
 function updateProduct(req, res) {
     if (!requireRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
-    if (bodyError) return badRequest(res, bodyError);
+
+    if (bodyError) {
+        return badRequest(res, bodyError);
+    }
 
     if (Object.keys(req.body).length === 0) {
         return badRequest(res, 'Request body must not be empty');
     }
 
-    // Validate price if provided
-    if (req.body.price !== undefined) {
-        if (typeof req.body.price !== 'number' || req.body.price < 0) {
-            return badRequest(res, 'price must be a non-negative number');
-        }
+    if (
+        req.body.price !== undefined &&
+        (typeof req.body.price !== 'number' || req.body.price < 0)
+    ) {
+        return badRequest(res, 'price must be a non-negative number');
     }
 
-    // Prevent overwriting the product id or restaurantId via the body
-    const { id: _id, restaurantId: _rid, ...safeUpdates } = req.body;
+    const {
+        id: _id,
+        restaurantId: _restaurantId,
+        recommendationId: _recommendationId,
+        ...safeUpdates
+    } = req.body;
 
-    const updated = productRepository.update(req.params.id, req.params.pId, safeUpdates);
-    if (!updated) return notFound(res, 'Product not found');
+    const updated = productRepository.update(
+        req.params.id,
+        req.params.pId,
+        safeUpdates
+    );
+
+    if (!updated) {
+        return notFound(res, 'Product not found');
+    }
 
     return noContent(res);
 }
-
 
 function deleteProduct(req, res) {
     if (!requireRestaurant(req, res)) return;
 
     const deleted = productRepository.remove(req.params.id, req.params.pId);
-    if (!deleted) return notFound(res, 'Product not found');
+
+    if (!deleted) {
+        return notFound(res, 'Product not found');
+    }
 
     return noContent(res);
 }
@@ -117,6 +196,7 @@ module.exports = {
     getAllProducts,
     createProduct,
     getProductById,
+    getProductRecommendations,
     updateProduct,
     deleteProduct,
 };
