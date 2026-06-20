@@ -13,7 +13,6 @@ export async function apiRequest(path, options = {}) {
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
-    headers['x-user-id'] = token;
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
