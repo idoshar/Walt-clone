@@ -1,5 +1,6 @@
 ﻿import { Link, NavLink } from 'react-router-dom';
 import HeaderSearch from './HeaderSearch.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 function getUserLabel() {
   const savedUser = localStorage.getItem('user');
@@ -45,6 +46,8 @@ function Header({ token, onLogout }) {
               Search
             </NavLink>
 
+            <ThemeToggle />
+
             <div className="user-area">
               <span className="user-avatar" aria-hidden="true">
                 {userLabel.charAt(0).toUpperCase()}
@@ -59,6 +62,8 @@ function Header({ token, onLogout }) {
           </>
         ) : (
           <>
+            <ThemeToggle />
+
             <NavLink to="/login" className="nav-link">
               Login
             </NavLink>
