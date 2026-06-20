@@ -11,7 +11,8 @@ class RestaurantRepository {
                 cuisine: 'Italian',
                 description: 'Italian pizza restaurant with pasta and fresh tomato sauce',
                 latitude: 32.0616,
-                longitude: 34.7743
+                longitude: 34.7743,
+                isDefault: true
             }),
             new Restaurant({
                 id: 2,
@@ -21,7 +22,8 @@ class RestaurantRepository {
                 cuisine: 'American',
                 description: 'American burger restaurant with fries and grilled meat',
                 latitude: 32.077,
-                longitude: 34.774
+                longitude: 34.774,
+                isDefault: true
             }),
             new Restaurant({
                 id: 3,
@@ -31,7 +33,8 @@ class RestaurantRepository {
                 cuisine: 'Japanese',
                 description: 'Japanese sushi restaurant with rolls, rice and fish',
                 latitude: 32.0627,
-                longitude: 34.7726
+                longitude: 34.7726,
+                isDefault: true
             })
         ];
     }

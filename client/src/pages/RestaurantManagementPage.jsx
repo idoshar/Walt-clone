@@ -24,7 +24,19 @@ function RestaurantManagementPage() {
 
   async function loadRestaurants() {
     const data = await getRestaurants();
-    setRestaurants(Array.isArray(data) ? data : []);
+
+    const savedUser = localStorage.getItem('user');
+    const currentUser = savedUser ? JSON.parse(savedUser) : null;
+    const currentUserId = currentUser?.id;
+
+    const myRestaurants = Array.isArray(data)
+      ? data.filter((restaurant) =>
+          !restaurant.isDefault &&
+          String(restaurant.ownerId) === String(currentUserId)
+        )
+      : [];
+
+    setRestaurants(myRestaurants);
   }
 
   async function loadProducts(restaurantId) {
