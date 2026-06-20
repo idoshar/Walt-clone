@@ -7,7 +7,9 @@ class Restaurant {
         cuisine,
         description = '',
         latitude = null,
-        longitude = null
+        longitude = null,
+        ownerId = null,
+        isDefault = false
     }) {
         this.id = id;
         this.name = name;
@@ -17,6 +19,8 @@ class Restaurant {
         this.description = description;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.ownerId = ownerId;
+        this.isDefault = isDefault;
     }
 
     toResponseObject() {
@@ -28,7 +32,9 @@ class Restaurant {
             cuisine: this.cuisine,
             description: this.description,
             latitude: this.latitude,
-            longitude: this.longitude
+            longitude: this.longitude,
+            ownerId: this.ownerId,
+            isDefault: this.isDefault,
         };
     }
 }

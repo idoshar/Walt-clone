@@ -43,6 +43,16 @@ function getLocationFields(body) {
     };
 }
 
+function canManageRestaurant(req, restaurant) {
+  const userId = req.user?.sub || req.user?.id;
+
+  if (!restaurant.ownerId || !userId) {
+    return false;
+  }
+
+  return String(restaurant.ownerId) === String(userId);
+}
+
 class RestaurantController {
     getAllRestaurants(req, res, next) {
         try {
@@ -100,7 +110,9 @@ class RestaurantController {
                 phone: req.body.phone || '',
                 cuisine: req.body.cuisine || '',
                 description: req.body.description || '',
-                ...(locationResult.coordinates || {})
+                ...(locationResult.coordinates || {}),
+                ownerId: String(req.user?.sub || req.user?.id || ''),
+                isDefault: false
             });
 
             restaurantRepository.create(restaurant);
@@ -113,6 +125,19 @@ class RestaurantController {
 
     updateRestaurant(req, res, next) {
         try {
+            const existingRestaurant = restaurantRepository.findById(req.params.id);
+
+            if (!existingRestaurant) {
+                return responseHelper.notFound(res, 'Restaurant not found');
+            }
+
+            if (!canManageRestaurant(req, existingRestaurant)) {
+                return res.status(403).json({
+                    error: 'Forbidden',
+                    message: 'You can manage only your own restaurants'
+                });
+            }
+
             const objectError = validateObject(req.body);
 
             if (objectError) {
@@ -130,11 +155,7 @@ class RestaurantController {
                 ...(locationResult.coordinates || {})
             };
 
-            const restaurant = restaurantRepository.update(req.params.id, updates);
-
-            if (!restaurant) {
-                return responseHelper.notFound(res, 'Restaurant not found');
-            }
+            restaurantRepository.update(req.params.id, updates);
 
             return responseHelper.noContent(res);
         } catch (err) {
@@ -144,11 +165,20 @@ class RestaurantController {
 
     deleteRestaurant(req, res, next) {
         try {
-            const deleted = restaurantRepository.deleteById(req.params.id);
+            const restaurant = restaurantRepository.findById(req.params.id);
 
-            if (!deleted) {
+            if (!restaurant) {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
+
+            if (!canManageRestaurant(req, restaurant)) {
+                return res.status(403).json({
+                    error: 'Forbidden',
+                    message: 'You can manage only your own restaurants'
+                });
+            }
+
+            restaurantRepository.deleteById(req.params.id);
 
             return responseHelper.noContent(res);
         } catch (err) {
