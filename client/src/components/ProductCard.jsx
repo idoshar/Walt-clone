@@ -1,7 +1,13 @@
 ﻿import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
 
-function ProductCard({ product, linkTo }) {
+function ProductCard({
+  product,
+  linkTo,
+  onSelect,
+  selected = false,
+  disabled = false
+}) {
   const { addToCart } = useCart();
 
   const content = (
@@ -25,6 +31,21 @@ function ProductCard({ product, linkTo }) {
       <Link to={linkTo} className="product-card product-card-link">
         {content}
       </Link>
+    );
+  }
+
+  if (typeof onSelect === 'function') {
+    return (
+      <button
+        type="button"
+        className={`product-card product-card-button${selected ? ' product-card-selected' : ''}`}
+        onClick={() => onSelect(product)}
+        aria-label={`Show recommendations based on ${product.name}`}
+        aria-pressed={selected}
+        disabled={disabled}
+      >
+        {content}
+      </button>
     );
   }
 
