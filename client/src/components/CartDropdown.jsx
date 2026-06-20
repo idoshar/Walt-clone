@@ -69,47 +69,47 @@ function CartDropdown() {
             position: 'absolute',
             top: '45px',
             right: '0',
-            backgroundColor: 'var(--color-bg-card, #1e1e1e)',
-            border: '1px solid var(--color-border, #4a5568)',
+            backgroundColor: 'var(--color-cart-bg, #ffffff)',
+            border: '1px solid var(--color-border, #cccccc)',
             borderRadius: '12px',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
             width: '320px',
             maxHeight: '450px',
             overflowY: 'auto',
             zIndex: 1000,
             padding: '16px',
-            color: 'var(--color-text, #ffffff)'
+            color: 'var(--color-text-main, #333333)'
           }}
         >
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', borderBottom: '1px solid var(--color-border, #4a5568)', paddingBottom: '8px', color: 'var(--color-text, #ffffff)' }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', borderBottom: '1px solid var(--color-border, #cccccc)', paddingBottom: '8px' }}>
             Your Cart
           </h3>
 
           {cartItems.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#a0aec0', margin: '20px 0' }}>Your cart is empty</p>
+            <p style={{ textAlign: 'center', color: '#666666', margin: '20px 0' }}>Your cart is empty</p>
           ) : (
             <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
                 {cartItems.map((item) => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ flex: 1, paddingRight: '10px' }}>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: 'var(--color-text, #ffffff)' }}>{item.name}</h4>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600' }}>{item.name}</h4>
                       <span style={{ fontSize: '13px', color: '#009de0', fontWeight: '600' }}>₪{item.price}</span>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--color-bg-selected, #2d2d2d)', borderRadius: '12px', padding: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'var(--color-bg-light, #f0f0f0)', borderRadius: '12px', padding: '2px' }}>
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-text, #ffffff)', width: '24px', height: '24px', cursor: 'pointer', fontSize: '16px' }}
+                        style={{ background: 'none', border: 'none', color: 'inherit', width: '24px', height: '24px', cursor: 'pointer', fontSize: '16px' }}
                       >
                         -
                       </button>
-                      <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '14px', textAlign: 'center', margin: '0 6px', color: 'var(--color-text, #ffffff)' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '14px', textAlign: 'center', margin: '0 6px' }}>
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => addToCart(item)}
-                        style={{ background: 'none', border: 'none', color: 'var(--color-text, #ffffff)', width: '24px', height: '24px', cursor: 'pointer', fontSize: '16px' }}
+                        style={{ background: 'none', border: 'none', color: 'inherit', width: '24px', height: '24px', cursor: 'pointer', fontSize: '16px' }}
                       >
                         +
                       </button>
@@ -118,7 +118,7 @@ function CartDropdown() {
                 ))}
               </div>
 
-              <div style={{ borderTop: '1px solid var(--color-border, #4a5568)', paddingTop: '12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '700', color: 'var(--color-text, #ffffff)' }}>
+              <div style={{ borderTop: '1px solid var(--color-border, #cccccc)', paddingTop: '12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', fontWeight: '700' }}>
                 <span>Total:</span>
                 <span style={{ color: '#009de0' }}>₪{totalPrice}</span>
               </div>
