@@ -1,6 +1,12 @@
 ﻿import { Link } from 'react-router-dom';
 
-function ProductCard({ product, linkTo }) {
+function ProductCard({
+  product,
+  linkTo,
+  onSelect,
+  selected = false,
+  disabled = false
+}) {
   const content = (
     <>
       <div>
@@ -26,6 +32,21 @@ function ProductCard({ product, linkTo }) {
       >
         {content}
       </Link>
+    );
+  }
+
+  if (typeof onSelect === 'function') {
+    return (
+      <button
+        type="button"
+        className={`product-card product-card-button${selected ? ' product-card-selected' : ''}`}
+        onClick={() => onSelect(product)}
+        aria-label={`Show recommendations based on ${product.name}`}
+        aria-pressed={selected}
+        disabled={disabled}
+      >
+        {content}
+      </button>
     );
   }
 
