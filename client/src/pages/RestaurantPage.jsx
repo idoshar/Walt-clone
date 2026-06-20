@@ -11,11 +11,21 @@ function RestaurantPage() {
 
   const [restaurant, setRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [selectedProductKey, setSelectedProductKey] = useState('');
+  const [selectedProductName, setSelectedProductName] = useState('');
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationError, setRecommendationError] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadRestaurant() {
+      setRecommendations([]);
+      setSelectedProductKey('');
+      setSelectedProductName('');
+      setRecommendationError('');
+
       try {
         const restaurantData = await apiRequest(`/restaurants/${id}`);
         const productsData = await apiRequest(`/restaurants/${id}/products`);
@@ -31,6 +41,43 @@ function RestaurantPage() {
 
     loadRestaurant();
   }, [id]);
+
+  function getProductKey(product) {
+    const restaurantId = product.restaurantId ?? id;
+    return `${restaurantId}-${product.id}`;
+  }
+
+  async function handleProductSelect(product) {
+    if (!product?.id || recommendationsLoading) {
+      return;
+    }
+
+    const restaurantId = product.restaurantId ?? id;
+
+    setSelectedProductKey(getProductKey(product));
+    setSelectedProductName(product.name);
+    setRecommendations([]);
+    setRecommendationError('');
+    setRecommendationsLoading(true);
+
+    try {
+      const data = await apiRequest(
+        `/restaurants/${restaurantId}/products/${product.id}/recommendations`
+      );
+
+      const recommendedProducts = Array.isArray(data)
+        ? data.filter((recommendedProduct) => recommendedProduct?.id !== product.id)
+        : [];
+
+      setRecommendations(recommendedProducts);
+    } catch (err) {
+      setRecommendationError(
+        err.message || 'Could not load recommendations right now.'
+      );
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -65,11 +112,14 @@ function RestaurantPage() {
         {restaurant.image && (
           <img src={restaurant.image} alt={restaurant.name} style={styles.heroImage} />
         )}
+
         <div style={styles.heroOverlay}>
           <h1 style={styles.restaurantName}>{restaurant.name}</h1>
+
           {restaurant.description && (
             <p style={styles.restaurantDescription}>{restaurant.description}</p>
           )}
+
           <div style={styles.metaInfo}>
             <span>📍 {restaurant.address}</span>
             {restaurant.phone && <span>• 📞 {restaurant.phone}</span>}
@@ -83,7 +133,13 @@ function RestaurantPage() {
         {products.length > 0 ? (
           <div style={styles.productList}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelect={handleProductSelect}
+                selected={selectedProductKey === getProductKey(product)}
+                disabled={recommendationsLoading}
+              />
             ))}
           </div>
         ) : (
@@ -93,6 +149,39 @@ function RestaurantPage() {
           />
         )}
       </div>
+
+      {recommendationsLoading && (
+        <section className="recommendations-section">
+          <LoadingState message="Finding recommendations..." />
+        </section>
+      )}
+
+      {!recommendationsLoading && recommendationError && (
+        <section className="recommendations-section">
+          <ErrorMessage message={recommendationError} />
+        </section>
+      )}
+
+      {!recommendationsLoading && recommendations.length > 0 && (
+        <section className="recommendations-section">
+          <h2 style={styles.menuTitle}>Recommended for you</h2>
+          <p className="recommendations-subtitle">
+            Based on {selectedProductName}.
+          </p>
+
+          <div style={styles.productList}>
+            {recommendations.map((product) => (
+              <ProductCard
+                key={`${product.restaurantId ?? id}-${product.id}`}
+                product={product}
+                onSelect={handleProductSelect}
+                selected={selectedProductKey === getProductKey(product)}
+                disabled={recommendationsLoading}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </section>
   );
 }
@@ -161,9 +250,9 @@ const styles = {
   menuTitle: {
     fontSize: '24px',
     fontWeight: '700',
-    color: '#202125',
+    color: 'var(--color-text)',
     marginBottom: '24px',
-    borderBottom: '2px solid #f0f0f0',
+    borderBottom: '2px solid var(--color-border)',
     paddingBottom: '12px',
   },
   productList: {
@@ -174,3 +263,4 @@ const styles = {
 };
 
 export default RestaurantPage;
+
