@@ -1,12 +1,14 @@
 ﻿import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 
-function LoginPage({ onLoginSuccess }) {
+function LoginPage() {
   const usernameRef = useRef(null);
   const passwordRef = useRef(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -69,7 +71,7 @@ function LoginPage({ onLoginSuccess }) {
         })
       });
 
-      const receivedToken = data?.token || data?.userId;
+      const receivedToken = data?.token;
 
       if (!receivedToken) {
         throw new Error('Token not received from server');
@@ -83,7 +85,7 @@ function LoginPage({ onLoginSuccess }) {
         localStorage.setItem('user', JSON.stringify(data.user));
       }
 
-      onLoginSuccess(String(receivedToken));
+      login(String(receivedToken), data?.user || null);
       navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed. Please check your details and try again.');
