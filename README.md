@@ -1,801 +1,731 @@
-# Exercise 4 - React Wolt-Style Web Application
+# Exercise 4 — Wolt Clone
 
-## Overview
+A full-stack food delivery web application inspired by Wolt, developed for the Advanced Systems Programming course.
 
-This repository contains the Exercise 4 project for the Advanced Systems Programming course.
+The project combines:
 
-Exercise 4 continues the previous project work.
-The repository currently contains the previous C++ TCP recommendation server, the Exercise 3 NodeJS and Express web server, and the work area for the Exercise 4 React web application.
+* A React frontend application.
+* A Node.js and Express REST API.
+* A C++ TCP recommendation server from the previous exercises.
+* Docker Compose for a complete local environment.
 
-The goal of Exercise 4 is to build a React-based web application inspired by Wolt.
-The React application communicates with the Exercise 3 web server, displays real dynamic data from the server, supports multiple users, and allows users to complete full application scenarios such as registration, login, restaurant browsing, menu viewing, ordering, search, restaurant management, theme switching, testing, Docker execution, and project documentation.
-
-The React application must not display hard-coded application data.
-For example, restaurants and products must come from the server API, and creating a restaurant or order must be done through the server.
+The application supports registration, login, restaurant browsing, product browsing, search, cart and checkout flow, previous orders, location-based restaurant sorting, dark/light mode, and integration with the recommendation service.
 
 ---
 
-## Current Project Status
+## Table of Contents
 
-This repository is in transition from Exercise 3 to Exercise 4.
-
-Currently included:
-
-* Existing Exercise 2 C++ TCP recommendation server.
-* Existing Exercise 3 NodeJS and Express web server.
-* REST API endpoints for users, authentication, restaurants, products, orders and search.
-* Docker files and docker-compose configuration.
-* Jira and Git workflow documentation.
-* Exercise 4 planning and implementation tasks tracked in Jira.
-
-Exercise 4 development adds:
-
-* React frontend application.
-* Login and register screens.
-* Home screen inspired by Wolt.
-* Dynamic restaurant and product display.
-* Search UI.
-* Order flow.
-* Previous orders screen.
-* Restaurant and menu management screens.
-* JWT-based authenticated requests.
-* Dark/light theme toggle.
-* Client-side and server-side validation.
-* Full E2E testing and screenshots.
-
-This README should be updated again before final submission after all Exercise 4 screens, screenshots, and final run instructions are completed.
+* [System Overview](#system-overview)
+* [Main Features](#main-features)
+* [Architecture](#architecture)
+* [Prerequisites](#prerequisites)
+* [Run the Full System with Docker](#run-the-full-system-with-docker)
+* [Environment Configuration](#environment-configuration)
+* [Application Usage](#application-usage)
+* [API Overview](#api-overview)
+* [Testing and Verification](#testing-and-verification)
+* [Screenshots](#screenshots)
+* [Project Structure](#project-structure)
+* [Runtime Data](#runtime-data)
+* [Troubleshooting](#troubleshooting)
 
 ---
 
-## Exercise 4 Requirements Summary
+## System Overview
 
-The Exercise 4 system should include:
+The application is a food delivery platform in which authenticated users can:
 
-* A React web application.
-* Proper component-based structure.
-* Usage of `useState`.
-* Usage of `useRef`.
-* Usage of React Router.
-* Login screen.
-* Register screen.
-* Home screen.
-* Restaurant browsing.
-* Restaurant menu view.
-* Order creation flow.
-* Previous orders view.
-* Search functionality.
-* Restaurant and product management.
-* JWT authentication.
-* Protected pages for logged-in users.
-* Dark/light mode toggle.
-* Client-side validation.
-* Server-side validation.
-* Dynamic data from the server.
-* No hard-coded restaurants/products/orders in the React application.
-* Docker Compose run instructions.
-* README documentation.
-* Jira workflow, feature branches and Pull Requests.
+1. Create an account and log in.
+2. Browse restaurants and filter them by cuisine.
+3. Search restaurants and products.
+4. Open a restaurant page and view its available menu items.
+5. Add products to the cart and create an order.
+6. View previous orders.
+7. Use browser geolocation to save their current location.
+8. View nearby restaurants ordered from closest to farthest.
+9. Switch between light mode and dark mode.
+10. Access the management route for restaurant and menu-related actions.
+
+The React client does not contain restaurant, product, order, or user data as static presentation data. It receives application data from the Express API.
+
+---
+
+## Main Features
+
+### Authentication and Protected Routes
+
+* Registration form with client-side validation.
+* Login form with validation and support for pressing Enter to submit.
+* JWT-based authentication.
+* Protected application pages for authenticated users.
+* Logout support.
+* Authenticated user data stored in the React authentication context.
+
+### Restaurant Browsing
+
+* Dynamic restaurant list loaded from the server API.
+* Restaurant cards with cuisine, address, and optional distance information.
+* Restaurant details page.
+* Restaurant menu/product display when products are available.
+* Empty state when a restaurant has no menu items.
+
+### Search
+
+* Search restaurants and products from the header or Search page.
+* Debounced search input.
+* Search results separated into restaurants and products.
+* Empty state when no matching result exists.
+
+### Categories
+
+* Browse restaurants by cuisine category.
+* Category filter updates the Nearby restaurants section.
+* Available categories are derived from server-provided restaurant data.
+
+### User and Restaurant Location
+
+* Restaurants include latitude and longitude coordinates.
+* The user can click **Use my location** to request browser location permission.
+* The browser location is saved to the authenticated user through a protected API endpoint.
+* Nearby restaurants are sorted by distance from the user’s saved location.
+* Distances are calculated client-side with the Haversine formula.
+* The application handles location permission denial, unavailable location, unsupported browsers, and request timeout gracefully.
+
+### Cart, Checkout, and Orders
+
+* Add available menu products to the cart.
+* Update cart quantities.
+* Checkout flow creates an authenticated order.
+* Order status screen handles successful and failed order flows.
+* Previous Orders screen shows both empty and populated states.
+* Orders are user-specific.
+
+### Recommendation Service
+
+* The Node.js web server communicates with the C++ TCP recommendation server.
+* Product views can be reported for authenticated users.
+* Recommendation endpoints can return products related to user viewing history.
+
+### Theme and Responsive UI
+
+* Light mode and dark mode.
+* Theme toggle stored in the client.
+* Responsive layouts for narrow screens.
+* Loading, error, and empty states across the application.
 
 ---
 
 ## Architecture
 
-The project contains three main parts:
+```text
+Browser
+  |
+  | React UI / React Router / Context state
+  v
+React Client
+  |
+  | HTTP JSON requests to /api
+  v
+Node.js + Express Web Server
+  |
+  | TCP requests for recommendation-related operations
+  v
+C++ TCP Recommendation Server
+```
 
-### 1. C++ TCP Recommendation Server
+### Components
 
-This part comes from the previous exercises.
-
-The C++ server is responsible for recommendation-related logic.
-It communicates over TCP using a simple text protocol.
-
-Main responsibilities:
-
-* Accept TCP client connections.
-* Parse commands.
-* Store user/product view history.
-* Return product recommendations.
-* Persist data when required.
-
-### 2. NodeJS and Express Web Server
-
-This part comes from Exercise 3.
-
-The Express server exposes REST API endpoints for the food delivery system.
-It is responsible for:
-
-* Users.
-* Authentication.
-* Restaurants.
-* Products.
-* Orders.
-* Search.
-* JSON responses.
-* Communication with the previous recommendation server when needed.
-
-The React application from Exercise 4 communicates with this web server.
-
-### 3. React Frontend Application
-
-This part is added in Exercise 4.
-
-The React application is responsible for the user interface.
-
-It should include:
-
-* Pages.
-* Components.
-* Layout.
-* Routing.
-* API calls.
-* Auth state.
-* Form validation.
-* Theme state.
-* User-facing error messages.
-* Loading and empty states.
+| Component            | Responsibility                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `client/`            | React frontend, routing, UI components, context, API calls, styles                    |
+| `web-server/`        | Express REST API for users, authentication, restaurants, products, search, and orders |
+| `src/`               | C++ TCP recommendation server from the previous exercises                             |
+| `docker-compose.yml` | Starts the full environment with both backend services                                |
+| `docs/`              | Additional documentation and screenshots                                              |
 
 ---
 
-## Project Structure
+## Prerequisites
 
-Current repository structure:
+For the recommended full Docker run, install:
 
-```text
-.
-|-- client/
-|-- data/
-|-- docs/
-|-- src/
-|-- tests/
-|-- web-server/
-|-- .gitignore
-|-- CMakeLists.txt
-|-- details.txt
-|-- docker-compose.yml
-|-- Dockerfile
-|-- Dockerfile.client
-|-- Dockerfile.test
-|-- Dockerfile.webserver
-|-- README.md
-```
+* Docker Desktop.
+* Docker Compose v2, included with current Docker Desktop installations.
+* A modern browser such as Chrome, Edge, or Firefox.
 
-Main directories:
+For optional frontend development outside Docker, install:
 
-```text
-src/
-  C++ TCP server source files from previous exercises.
+* Node.js 20 or later.
+* npm.
 
-web-server/
-  NodeJS and Express web server from Exercise 3.
+For optional C++ development and tests, install:
 
-client/
-  Frontend work area for the Exercise 4 React application.
-
-data/
-  Data files used by the previous server.
-
-tests/
-  Integration tests from previous exercises.
-
-docs/
-  Additional project documentation.
-```
-
-The exact React directory structure may be updated during development according to the Jira tasks.
-
-Recommended React structure:
-
-```text
-client/
-|-- public/
-|-- src/
-|   |-- components/
-|   |-- pages/
-|   |-- services/
-|   |-- context/
-|   |-- styles/
-|   |-- App.jsx
-|   |-- main.jsx
-|-- package.json
-```
+* CMake 3.10 or later.
+* A C++17-compatible compiler.
+* Python 3 for the C++ end-to-end test.
 
 ---
 
-## Exercise 2 TCP Server
+## Run the Full System with Docker
 
-The existing TCP server supports the following protocol.
+Docker Compose starts:
 
-Each command sent by the client ends with a newline character.
-Each response sent by the server also ends with a newline character.
+* `web-server` — Express API and built React client.
+* `ex2-server` — C++ TCP recommendation server.
 
-Supported commands:
+The React production build is served by the Express server, so the complete application is available through one browser address.
+
+### 1. Optional: create a local `.env` file
+
+Docker Compose includes default values, so this step is optional.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Do not commit `.env` to Git.
+
+### 2. Build and start all services
+
+```powershell
+docker compose up --build -d
+```
+
+### 3. Verify that the services are running
+
+```powershell
+docker compose ps
+```
+
+Expected services:
 
 ```text
-POST [userid] [productid1] [productid2] ...
-PATCH [userid] [productid1] [productid2] ...
-DELETE [userid] [productid1] [productid2] ...
-GET [userid] [productid]
-help
+web-server
+ex2-server
 ```
 
-### POST
+### 4. Verify the API health endpoint
 
-Creates a new user with watched products.
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
 
-Success:
+Expected response:
 
 ```text
-201 Created
+status service
+------ -------
+ok     food-delivery-api
 ```
 
-If the user already exists:
+### 5. Open the application
 
-```text
-404 Not Found
-```
-
-### PATCH
-
-Adds watched products to an existing user.
-
-Success:
-
-```text
-204 No Content
-```
-
-If the user does not exist:
-
-```text
-404 Not Found
-```
-
-### DELETE
-
-Removes watched products from a user's history.
-
-Success:
-
-```text
-204 No Content
-```
-
-If the user does not exist, or one of the products was not watched by the user:
-
-```text
-404 Not Found
-```
-
-### GET
-
-Returns recommendations for a user and product.
-
-Success format:
-
-```text
-200 Ok
-
-<recommendations>
-```
-
-If the user does not exist, or the user did not watch the requested product:
-
-```text
-404 Not Found
-```
-
-### Invalid Command
-
-```text
-400 Bad Request
-```
-
----
-
-## Build the C++ Recommendation Server
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-src/main.cpp \
-src/TcpServer.cpp \
-src/ClientSession.cpp \
-src/CommandParser.cpp \
-src/User.cpp \
-src/UserRepository.cpp \
-src/RecommendationEngine.cpp \
-src/Persistence.cpp \
--o server
-```
-
----
-
-## Run the C++ Recommendation Server
-
-```bash
-./server 5555
-```
-
----
-
-## Run the Python TCP Client
-
-```bash
-python3 src/client.py 127.0.0.1 5555
-```
-
-The client receives the server IP and port as command-line arguments.
-It sends each input line to the TCP server and prints the server response.
-
----
-
-## Exercise 3 Web Server API
-
-The Exercise 3 web server exposes REST API endpoints that are used by the Exercise 4 React application.
-
-All `/api` routes should return JSON responses.
-
-### Health
-
-```text
-GET /api/health
-```
-
-### Users
-
-```text
-POST /api/users
-GET  /api/users/:id
-```
-
-### Authentication
-
-```text
-POST /api/tokens
-```
-
-### Restaurants
-
-```text
-GET    /api/restaurants
-POST   /api/restaurants
-GET    /api/restaurants/:id
-PATCH  /api/restaurants/:id
-DELETE /api/restaurants/:id
-```
-
-### Products
-
-```text
-GET    /api/restaurants/:id/products
-POST   /api/restaurants/:id/products
-GET    /api/restaurants/:id/products/:pId
-PATCH  /api/restaurants/:id/products/:pId
-DELETE /api/restaurants/:id/products/:pId
-```
-
-### Orders
-
-```text
-POST   /api/orders
-GET    /api/orders
-GET    /api/orders/:id
-PATCH  /api/orders/:id
-DELETE /api/orders/:id
-```
-
-### Search
-
-```text
-GET /api/search/:query
-```
-
----
-
-## Authentication and JWT
-
-Exercise 4 requires authentication using JWT.
-
-Expected flow:
-
-1. A new user registers using `POST /api/users`.
-2. The user logs in using `POST /api/tokens`.
-3. The server returns a JWT.
-4. The React application stores the JWT.
-5. Future protected requests attach the JWT.
-6. Protected pages and API actions are available only to logged-in users.
-
-The application should decide for each action whether it can be performed by:
-
-* A guest user.
-* A registered and logged-in user.
-
-Protected pages should redirect unauthenticated users to the login screen.
-
-No real passwords, private data, API keys, tokens, real photos or sensitive information should be committed to the repository.
-
----
-
-## React Application
-
-The React application should provide a Wolt-style user interface.
-
-Required screens:
-
-* Login screen.
-* Register screen.
-* Home screen.
-* Restaurant page.
-* Menu/products page.
-* Order/cart flow.
-* Previous orders page.
-* Search results.
-* Restaurant management screen.
-* Product/menu management screen.
-
-Required behavior:
-
-* React Router is used for page navigation.
-* The application loads once and does not refresh the whole page when moving between pages.
-* Components are separated logically.
-* `useState` is used for dynamic UI state.
-* `useRef` is used where appropriate, especially in form-related logic.
-* The application communicates with the server using `fetch`.
-* Data is loaded from the server and rendered dynamically.
-* Loading, empty and error states are displayed clearly.
-* The user receives clear feedback after invalid actions.
-* The logged-in user's details appear in the top navigation area.
-* Logout clears the authentication state and returns the user to the login flow.
-* Dark/light theme can be changed from the top navigation after login.
-
----
-
-## Validation
-
-Both client-side and server-side validation are required.
-
-### Login
-
-Required:
-
-* Username.
-* Password.
-
-Invalid login should show a clear error message.
-
-### Register
-
-Required:
-
-* Username.
-* Password.
-* Confirm password.
-* Display name.
-* Profile image.
-
-The register screen should validate:
-
-* All fields are required.
-* Password strength rules.
-* Password confirmation.
-* Duplicate username error.
-* Image selection and preview.
-
-A user should not be able to register or log in without valid input.
-
----
-
-## Theme Support
-
-Exercise 4 requires a dark/light mode toggle.
-
-Expected behavior:
-
-* A button appears in the top navigation after login.
-* Clicking the button switches between light mode and dark mode.
-* Application colors change according to the selected theme.
-* The selected theme may be saved locally so it remains after refresh.
-
----
-
-## Running with Docker
-
-### Recommended: run all services with Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-Expected web server URL:
+Open the following address in the browser:
 
 ```text
 http://localhost:3000
 ```
 
-The exact Docker Compose behavior should be updated before final submission according to the final Exercise 4 implementation.
+### 6. View live logs
 
-### Run the previous C++ server separately
-
-```bash
-docker build -t recommender-server .
-docker run --rm -p 8080:8080 --name recommender-server recommender-server
+```powershell
+docker compose logs -f web-server ex2-server
 ```
 
-### Run the web server separately
+Press `Ctrl+C` to stop following logs without stopping the containers.
 
-```bash
-docker build -f Dockerfile.webserver -t web-server .
-docker run --rm -p 3000:3000 -e EX2_HOST=host.docker.internal -e EX2_PORT=8080 web-server
+### 7. Stop the application
+
+```powershell
+docker compose down
+```
+
+### 8. Clean restart
+
+Use this when a clean runtime environment is needed:
+
+```powershell
+docker compose down --remove-orphans
+docker compose up --build -d --force-recreate
+```
+
+> **Important:** users, orders, and other in-memory web-server data are reset when the relevant container is recreated. Create a fresh test user after a forced recreation.
+
+---
+
+## Environment Configuration
+
+The repository includes `.env.example` with safe local defaults.
+
+| Variable               |                     Default | Purpose                                                     |
+| ---------------------- | --------------------------: | ----------------------------------------------------------- |
+| `WEB_SERVER_HOST_PORT` |                      `3000` | Host port exposed by Docker for the web application and API |
+| `WEB_SERVER_PORT`      |                      `3000` | Internal Express server port inside the container           |
+| `EX2_SERVER_PORT`      |                      `8080` | Internal port of the C++ recommendation server              |
+| `EX2_HOST`             |                `ex2-server` | Docker service hostname of the recommendation server        |
+| `VITE_API_BASE_URL`    | `http://localhost:3000/api` | API base URL used when building the React client            |
+
+### Environment-file submission note
+
+* `.env` is ignored by Git and must not be committed to the repository.
+* `.env.example` is included in the repository so the project can be configured consistently.
+* For course submission requirements, provide environment configuration according to the course instructions, but do not add personal or secret values to Git history.
+
+---
+
+## Optional Frontend Development Mode
+
+The recommended full-system command is Docker Compose.
+
+For frontend development with Vite while the backend runs in Docker:
+
+```powershell
+docker compose up --build -d
+
+cd client
+npm install
+
+$env:VITE_API_BASE_URL = "http://localhost:3000/api"
+
+npm run dev
+```
+
+Then open:
+
+```text
+http://localhost:5173
+```
+
+For final testing and screenshots, use the complete Docker deployment at:
+
+```text
+http://localhost:3000
 ```
 
 ---
 
-## API Examples
+## Application Usage
 
-The following examples can be used to test the web server.
+### 1. Register
 
-### Create User
+1. Open `/register`.
+2. Enter a username, display name, password, and matching password confirmation.
+3. Optionally select a profile image.
+4. Click **Register**.
+5. Continue to Login.
 
-```bash
-curl -i -X POST http://localhost:3000/api/users \
--H "Content-Type: application/json" \
--d '{"username":"maya","password":"1234","name":"Maya Kaykov","phone":"0500000000","address":"Israel"}'
-```
+### 2. Login
 
-Expected result:
+1. Open `/login`.
+2. Enter a valid username and password.
+3. Click **Log In** or press Enter.
+4. The application redirects to the Home page.
 
-```text
-HTTP/1.1 201 Created
-Location: /api/users/<userId>
-```
+### 3. Browse Restaurants
 
-### Get User By ID
+1. Open the Home page.
+2. View restaurant cards loaded from the API.
+3. Click a restaurant to open its details page.
+4. Browse menu products when they are available.
 
-```bash
-curl -i http://localhost:3000/api/users/1
-```
+### 4. Filter by Category
 
-Expected result:
+1. On the Home page, select a cuisine category such as Italian, American, or Japanese.
+2. The Nearby restaurants section updates to show only restaurants in that category.
+3. Click **All** to remove the filter.
 
-```text
-HTTP/1.1 200 OK
-```
+### 5. Search
 
-### User Not Found
+1. Open the Search page or use the header search bar.
+2. Type part of a restaurant or product name.
+3. Review restaurant and product results.
+4. Click a matching restaurant or product to continue browsing.
 
-```bash
-curl -i http://localhost:3000/api/users/999
-```
+### 6. Save Location and Sort Nearby Restaurants
 
-Expected result:
+1. Log in.
+2. Open the Home page.
+3. Click **Use my location**.
+4. Approve the browser location permission.
+5. The location is stored for the authenticated user.
+6. The Nearby restaurants section displays restaurants from closest to farthest.
+7. Each restaurant with coordinates displays its distance in kilometers.
+8. Click **Update my location** later to save a new location.
 
-```text
-HTTP/1.1 404 Not Found
-```
+### 7. Cart and Checkout
 
-### Login
+1. Open a restaurant that has products.
+2. Add one or more products to the cart.
+3. Review quantities and total price.
+4. Continue to Checkout.
+5. Confirm the order.
+6. Review the success or failure status screen.
 
-```bash
-curl -i -X POST http://localhost:3000/api/tokens \
--H "Content-Type: application/json" \
--d '{"username":"maya","password":"1234"}'
-```
+### 8. Previous Orders
 
-Expected result:
+1. Open **Orders** from the navigation bar.
+2. A new user sees an empty state.
+3. After checkout, the created order appears with its status and total.
 
-```text
-HTTP/1.1 200 OK
-```
+### 9. Theme Toggle
 
-### Invalid Login
+1. Click **Dark** to enable dark mode.
+2. Click **Light** to return to light mode.
 
-```bash
-curl -i -X POST http://localhost:3000/api/tokens \
--H "Content-Type: application/json" \
--d '{"username":"maya","password":"wrong"}'
-```
+---
 
-Expected result:
+## API Overview
 
-```text
-HTTP/1.1 401 Unauthorized
-```
-
-### Get Restaurants
-
-```bash
-curl -i http://localhost:3000/api/restaurants
-```
-
-Expected result:
+Base URL:
 
 ```text
-HTTP/1.1 200 OK
+http://localhost:3000/api
 ```
 
-### Search
+### Health
 
-```bash
-curl -i http://localhost:3000/api/search/pizza
+| Method | Endpoint  | Description                   |
+| ------ | --------- | ----------------------------- |
+| `GET`  | `/health` | Returns service health status |
+
+### Users and Authentication
+
+| Method  | Endpoint             | Description                                             |
+| ------- | -------------------- | ------------------------------------------------------- |
+| `POST`  | `/users`             | Creates a user                                          |
+| `GET`   | `/users/:id`         | Returns a user by ID                                    |
+| `PATCH` | `/users/me/location` | Saves latitude and longitude for the authenticated user |
+| `POST`  | `/tokens`            | Logs in and returns a JWT plus user information         |
+
+### Restaurants and Products
+
+| Method   | Endpoint                                         | Description                                  |
+| -------- | ------------------------------------------------ | -------------------------------------------- |
+| `GET`    | `/restaurants`                                   | Returns all restaurants                      |
+| `POST`   | `/restaurants`                                   | Creates a restaurant                         |
+| `GET`    | `/restaurants/:id`                               | Returns a restaurant                         |
+| `PATCH`  | `/restaurants/:id`                               | Updates a restaurant                         |
+| `DELETE` | `/restaurants/:id`                               | Deletes a restaurant                         |
+| `GET`    | `/restaurants/:id/products`                      | Returns products for a restaurant            |
+| `POST`   | `/restaurants/:id/products`                      | Creates a product                            |
+| `GET`    | `/restaurants/:id/products/:pId`                 | Returns a product                            |
+| `PATCH`  | `/restaurants/:id/products/:pId`                 | Updates a product                            |
+| `DELETE` | `/restaurants/:id/products/:pId`                 | Deletes a product                            |
+| `GET`    | `/restaurants/:id/products/:pId/recommendations` | Returns authenticated recommendation results |
+
+### Search and Orders
+
+| Method   | Endpoint         | Description                             |
+| -------- | ---------------- | --------------------------------------- |
+| `GET`    | `/search/:query` | Searches restaurants and products       |
+| `POST`   | `/orders`        | Creates an authenticated order          |
+| `GET`    | `/orders`        | Returns the authenticated user’s orders |
+| `GET`    | `/orders/:id`    | Returns one authenticated user order    |
+| `PATCH`  | `/orders/:id`    | Updates an authenticated user order     |
+| `DELETE` | `/orders/:id`    | Deletes an authenticated user order     |
+
+---
+
+## Testing and Verification
+
+### Build the React client
+
+```powershell
+cd client
+npm install
+npm run build
+cd ..
 ```
 
-Expected result:
+### Check the Node.js source syntax
 
-```text
-HTTP/1.1 200 OK
+```powershell
+node --check .\web-server\src\server.js
+node --check .\web-server\src\app.js
+node --check .\web-server\src\controllers\userController.js
+node --check .\web-server\src\controllers\restaurantController.js
+node --check .\web-server\src\controllers\orderController.js
+```
+
+### Run the C++ test suite
+
+```powershell
+cmake -S . -B build
+cmake --build build
+cmake --build build --target run_tests
+```
+
+### Docker smoke test
+
+```powershell
+docker compose up --build -d
+
+docker compose ps
+
+Invoke-RestMethod http://localhost:3000/api/health
 ```
 
 ---
 
-## Testing
+## Screenshots
 
-The project includes integration tests from the previous exercises.
-
-### Build the C++ server before running integration tests
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-src/main.cpp \
-src/TcpServer.cpp \
-src/ClientSession.cpp \
-src/CommandParser.cpp \
-src/User.cpp \
-src/UserRepository.cpp \
-src/RecommendationEngine.cpp \
-src/Persistence.cpp \
--o server
-```
-
-### Multiple Commands Test
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-tests/integration/test_multiple_commands.cpp \
--o test_multiple_commands
-
-./test_multiple_commands
-```
-
-### Full Scenario Test
-
-```bash
-g++ -std=c++17 -Wall -Wextra -I src \
-tests/integration/test_full_scenario.cpp \
--o test_full_scenario
-
-./test_full_scenario
-```
-
-### Exercise 4 E2E Testing Plan
-
-The final Exercise 4 submission should include manual or documented E2E testing for:
-
-* Register/login/logout scenario.
-* Protected pages without login.
-* Restaurant browsing and menu scenario.
-* Search scenario.
-* Create order scenario.
-* Previous orders scenario.
-* Restaurant and product management scenario.
-* Invalid inputs and visible error messages.
-* Docker Compose startup.
-* README screenshots.
-
-Screenshots should be added before final submission.
-
----
-
-## Repository and Git Policy
-
-This repository is used for Exercise 4 and continues the previous exercise codebase.
-
-Development is done using feature branches named after Jira issue keys.
-
-Example feature branches:
+All screenshots should be saved under:
 
 ```text
-SCRUM-224-create-react-frontend-project-structure
-SCRUM-276-create-app-shell-and-shared-layout
-SCRUM-328-add-jira-git-workflow-explanation-to-readme
+docs/screenshots/
 ```
 
-All changes are merged into `main` only through Pull Requests after code review.
+The image sections below are prepared in advance.
+When an image is ready, remove the surrounding `<!--` and `-->` markers around the matching Markdown image line.
 
-Each Pull Request must be reviewed and approved by team members other than the student who opened the Pull Request.
+### 1. Docker Services and Health Check
 
-The repository should remain private.
+Shows both Docker services running and the successful health endpoint response.
 
-Do not commit:
+<!--
+![Docker services and API health check](docs/screenshots/01-docker-health.png)
+-->
 
-* Passwords.
-* Tokens.
-* API keys.
-* Private information.
-* Real user data.
-* Real private images.
-* `node_modules`.
-* Build artifacts.
-* Generated binaries.
+### 2. Login Screen
+
+Shows the clean Login page before a user signs in.
+
+<!--
+![Login screen](docs/screenshots/02-login.png)
+-->
+
+### 3. Register Screen
+
+Shows the clean Register page and its client-side form fields.
+
+<!--
+![Register screen](docs/screenshots/03-register.png)
+-->
+
+### 4. Home Page — Light Mode
+
+Shows the authenticated Home page with the hero section, categories, restaurant cards, and navigation.
+
+<!--
+![Home page in light mode](docs/screenshots/04-home-light.png)
+-->
+
+### 5. Home Page — Dark Mode
+
+Shows that dark mode changes the application layout, cards, navigation, and colors.
+
+<!--
+![Home page in dark mode](docs/screenshots/05-home-dark.png)
+-->
+
+### 6. Category Filtering
+
+Shows a selected cuisine category and the filtered Nearby restaurants section.
+
+<!--
+![Category filtering](docs/screenshots/06-category-filter.png)
+-->
+
+### 7. Search Results
+
+Shows a restaurant search query and matching result.
+
+<!--
+![Restaurant search results](docs/screenshots/07-search-restaurants.png)
+-->
+
+### 8. Restaurant Menu and Cart
+
+Shows a restaurant with available products, products added to the cart, quantities, and total price.
+
+<!--
+![Restaurant menu and cart](docs/screenshots/08-restaurant-menu-cart.png)
+-->
+
+### 9. Checkout Summary
+
+Shows the checkout page before the user confirms the order.
+
+<!--
+![Checkout summary](docs/screenshots/09-checkout-summary.png)
+-->
+
+### 10. Successful Order Status
+
+Shows the confirmation message and generated order identifier after a successful checkout.
+
+<!--
+![Successful order status](docs/screenshots/10-order-success.png)
+-->
+
+### 11. Previous Orders — Empty State
+
+Shows the Previous Orders page for a user with no orders.
+
+<!--
+![Previous orders empty state](docs/screenshots/11-orders-empty.png)
+-->
+
+### 12. Previous Orders — Order History
+
+Shows an existing order with its status and total price.
+
+<!--
+![Previous orders history](docs/screenshots/12-orders-history.png)
+-->
+
+### 13. Nearby Restaurants by Saved Location
+
+Shows restaurants sorted by distance from the user’s saved browser location, including kilometer labels.
+
+<!--
+![Nearby restaurants sorted by saved location](docs/screenshots/13-nearby-distance.png)
+-->
+
+### 14. Restaurant Management
+
+Shows the Management route after restaurant and product management actions are finalized.
+
+<!--
+![Restaurant management](docs/screenshots/14-management.png)
+-->
+
+### 15. Responsive Mobile Layout
+
+Shows a narrow-screen version of the application, preferably the Home page or Login page.
+
+<!--
+![Responsive mobile layout](docs/screenshots/15-mobile-layout.png)
+-->
 
 ---
 
-## Jira and Git Workflow
-
-This project is developed using Jira and GitHub as part of a Scrum-based workflow.
-
-### Jira Structure
-
-The project is divided into:
-
-* Epics.
-* User Stories.
-* Tasks.
-* Subtasks.
-
-Each Epic represents a major area of the system, such as:
-
-* React setup and infrastructure.
-* Authentication and user management.
-* Home page and restaurants.
-* Orders.
-* Search.
-* Restaurant management.
-* Theme and design.
-* Docker, testing and documentation.
-
-Each User Story describes a user-facing capability.
-Each Subtask represents a smaller technical step required to complete that story.
-
-### Jira Workflow
-
-The Jira workflow is:
+## Project Structure
 
 ```text
-To Do -> In Progress -> Review Code -> Done
+.
+├── client/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── css/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   └── vite.config.js
+├── web-server/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   └── utilities/
+│   └── package.json
+├── src/
+│   └── C++ TCP recommendation server source files
+├── tests/
+│   └── C++ unit, integration, and end-to-end tests
+├── docs/
+│   ├── file-format.md
+│   └── screenshots/
+├── docker-compose.yml
+├── Dockerfile
+├── Dockerfile.webserver
+├── .env.example
+└── README.md
 ```
-
-Rules:
-
-* Move an issue to `In Progress` only when work actually starts.
-* Move an issue to `Review Code` only after opening a Pull Request.
-* Move an issue to `Done` only after the Pull Request is approved and merged.
-* Each issue should be assigned before work starts.
-* Each issue should be linked to a feature branch.
-* Blocked issues should be linked in Jira using `blocks` / `is blocked by`.
-* Jira activity comments should be updated while working.
-
-### Pull Request Process
-
-For each implemented task:
-
-1. A dedicated feature branch is created.
-2. The code is committed with a clear commit message.
-3. The branch is pushed to GitHub.
-4. A Pull Request is opened.
-5. Team members review the code.
-6. After approval, the branch is merged into `main`.
-7. The Jira issue is updated and moved to `Done`.
-
-### Blockers
-
-Jira blockers are used to show task dependencies.
-
-For example:
-
-* JWT-related tasks block protected route tasks.
-* React setup tasks block page implementation tasks.
-* Feature implementation tasks block E2E testing tasks.
-* Docker tasks block Docker screenshot documentation.
-* Testing and documentation tasks block the final submission task.
 
 ---
 
-## Notes
+## Runtime Data
 
-* The C++ TCP server is based on previous exercises.
-* The NodeJS and Express web server is based on Exercise 3.
-* The React frontend is the main new part of Exercise 4.
-* The React frontend must communicate with the Exercise 3 web server.
-* The React frontend must show dynamic data from the server.
-* The React frontend must not hard-code restaurants, products or orders.
-* The application should behave like a complete working app.
-* The README should be updated again after the final Exercise 4 implementation is completed.
+The Exercise 4 web server uses runtime in-memory repositories for users and orders.
+
+This means:
+
+* Users created during a Docker run are temporary.
+* Orders created during a Docker run are temporary.
+* Recreating the web-server container resets those runtime entities.
+* The default restaurant seed data remains available after a fresh container start.
+
+This behavior is expected for the current exercise and does not require MongoDB or another database.
+
+---
+
+## Troubleshooting
+
+### `http://localhost:3000` does not open
+
+Check the containers:
+
+```powershell
+docker compose ps
+```
+
+Check the API:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
+
+Check logs:
+
+```powershell
+docker compose logs --tail=100 web-server
+```
+
+### Docker build fails because of a local Docker cache issue
+
+Restart Docker Desktop, then run:
+
+```powershell
+docker builder prune -af
+docker buildx prune -af
+docker compose build --no-cache
+docker compose up -d --force-recreate
+```
+
+### The user cannot log in after Docker recreation
+
+A clean recreation resets web-server in-memory users. Register a new user and log in again.
+
+### Browser location is denied
+
+Use the browser site settings to allow location access for `http://localhost:3000`, then click **Use my location** again.
+
+---
+
+## Development Workflow
+
+Development is managed through Jira tasks, feature branches, Pull Requests, and code review.
+
+Typical workflow:
+
+```text
+Create Jira task
+→ Create feature branch
+→ Implement one focused change
+→ Build and test
+→ Open Pull Request
+→ Code review
+→ Merge into main
+```
+
+---
+
+## Course Submission Checklist
+
+* [ ] `.env.example` is included.
+* [ ] No personal or secret `.env` file is committed to Git.
+* [ ] Docker Compose builds and starts both services.
+* [ ] `http://localhost:3000/api/health` returns `ok`.
+* [ ] The full application opens at `http://localhost:3000`.
+* [ ] README Docker instructions were tested from a clean state.
+* [ ] All required screenshots were copied into `docs/screenshots/`.
+* [ ] All screenshot comments were converted into rendered Markdown images.
+* [ ] Login, Register, Home, Search, Restaurant, Cart, Checkout, Orders, Location, Theme, and Management flows were verified.
+* [ ] Final build passes with `npm run build`.
