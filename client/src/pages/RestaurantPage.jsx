@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
+import CheckoutButton from '../components/CheckoutButton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
@@ -131,17 +132,21 @@ function RestaurantPage() {
         <h2 style={styles.menuTitle}>Menu Items</h2>
 
         {products.length > 0 ? (
-          <div style={styles.productList}>
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onSelect={handleProductSelect}
-                selected={selectedProductKey === getProductKey(product)}
-                disabled={recommendationsLoading}
-              />
-            ))}
-          </div>
+          <>
+            <div style={styles.productList}>
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onSelect={handleProductSelect}
+                  selected={selectedProductKey === getProductKey(product)}
+                  disabled={recommendationsLoading}
+                />
+              ))}
+            </div>
+
+            <CheckoutButton restaurantId={restaurant.id} />
+          </>
         ) : (
           <EmptyState
             title="No products yet"
@@ -263,4 +268,3 @@ const styles = {
 };
 
 export default RestaurantPage;
-
