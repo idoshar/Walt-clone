@@ -1,12 +1,23 @@
+FROM node:20-alpine AS client-build
+
+WORKDIR /client
+
+COPY client/package*.json ./
+RUN npm install
+
+COPY client ./
+RUN npm run build
+
+
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY web-server/package.json ./
-
+COPY web-server/package*.json ./
 RUN npm install --omit=dev
 
 COPY web-server/src ./src
+COPY --from=client-build /client/dist ./client/dist
 
 EXPOSE 3000
 
