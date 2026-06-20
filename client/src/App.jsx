@@ -8,6 +8,7 @@ import RestaurantPage from './pages/RestaurantPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import { useAuth } from './context/AuthContext.jsx';
 import RestaurantManagementPage from './pages/RestaurantManagementPage.jsx';
+import OrdersPage from './pages/OrdersPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -69,6 +70,15 @@ function App() {
         <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
+
+        <Route
+          path="/orders"
+          element={
+            <RequireAuth>
+              <OrdersPage />
+            </RequireAuth>
+          }
+        />
       </Route>
     </Routes>
   );
