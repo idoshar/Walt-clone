@@ -16,14 +16,18 @@ function isValidItem(item) {
 }
 
 function requireUserId(req, res) {
-    const userId = req.headers['x-user-id'];
+    const userId = req.user && req.user.sub;
+
     if (!userId) {
-        res.status(400).json({ error: 'Missing x-user-id header' });
+        res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Missing authenticated user'
+        });
         return null;
     }
+
     return userId;
 }
-
 
 function createOrder(req, res) {
     const userId = requireUserId(req, res);
