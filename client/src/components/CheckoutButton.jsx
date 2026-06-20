@@ -1,28 +1,19 @@
-import { createOrder } from '../api/orderApi.js';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
 
-function CheckoutButton({ restaurantId }) {
-  const { cartItems, setCartItems } = useCart();
+function CheckoutButton() {
+  const { cartItems } = useCart();
+  const navigate = useNavigate();
 
-  async function handleCheckout() {
-    await createOrder({
-      restaurantId,
-      items: cartItems.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
-        price: item.price
-      }))
-    });
-
-    setCartItems([]);
-    alert('Order created successfully');
+  function handleGoToCheckout() {
+    navigate('/checkout');
   }
 
   return (
     <button
       type="button"
       className="checkout-button"
-      onClick={handleCheckout}
+      onClick={handleGoToCheckout}
       disabled={cartItems.length === 0}
     >
       Checkout
