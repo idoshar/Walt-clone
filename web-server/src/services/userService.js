@@ -1,4 +1,4 @@
-﻿const userRepository = require('../repositories/userRepository');
+const userRepository = require('../repositories/userRepository');
 
 function validateRequiredString(value, fieldName) {
     if (typeof value !== 'string' || value.trim() === '') {
@@ -8,9 +8,58 @@ function validateRequiredString(value, fieldName) {
     }
 }
 
+function normalizeCoordinate(value, fieldName, minimum, maximum) {
+    if (value === null || value === undefined || value === '') {
+        const error = new Error(`${fieldName} is required`);
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const coordinate = Number(value);
+
+    if (!Number.isFinite(coordinate) || coordinate < minimum || coordinate > maximum) {
+        const error = new Error(`${fieldName} must be a valid coordinate`);
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return coordinate;
+}
+
+function getOptionalLocation(userData) {
+    const hasLatitude =
+        Object.prototype.hasOwnProperty.call(userData, 'latitude') &&
+        userData.latitude !== null &&
+        userData.latitude !== undefined;
+
+    const hasLongitude =
+        Object.prototype.hasOwnProperty.call(userData, 'longitude') &&
+        userData.longitude !== null &&
+        userData.longitude !== undefined;
+
+    if (!hasLatitude && !hasLongitude) {
+        return {
+            latitude: null,
+            longitude: null
+        };
+    }
+
+    if (!hasLatitude || !hasLongitude) {
+        const error = new Error('latitude and longitude must be provided together');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return {
+        latitude: normalizeCoordinate(userData.latitude, 'latitude', -90, 90),
+        longitude: normalizeCoordinate(userData.longitude, 'longitude', -180, 180)
+    };
+}
+
 class UserService {
     createUser(userData) {
-        const { username, password, fullName, phone, address } = userData || {};
+        const data = userData || {};
+        const { username, password, fullName, phone, address } = data;
 
         validateRequiredString(username, 'username');
         validateRequiredString(password, 'password');
@@ -19,23 +68,48 @@ class UserService {
         validateRequiredString(address, 'address');
 
         const existingUser = userRepository.findByUsername(username.trim());
+
         if (existingUser) {
             const error = new Error('username already exists');
             error.statusCode = 409;
             throw error;
         }
 
+        const location = getOptionalLocation(data);
+
         return userRepository.create({
             username: username.trim(),
             password: password.trim(),
             fullName: fullName.trim(),
             phone: phone.trim(),
-            address: address.trim()
+            address: address.trim(),
+            latitude: location.latitude,
+            longitude: location.longitude
         });
     }
 
     getUserById(id) {
         const user = userRepository.findById(id);
+
+        if (!user) {
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        return user;
+    }
+
+    updateCurrentUserLocation(userId, locationData) {
+        const data = locationData || {};
+
+        const latitude = normalizeCoordinate(data.latitude, 'latitude', -90, 90);
+        const longitude = normalizeCoordinate(data.longitude, 'longitude', -180, 180);
+
+        const user = userRepository.update(userId, {
+            latitude,
+            longitude
+        });
 
         if (!user) {
             const error = new Error('User not found');

@@ -18,14 +18,26 @@ export function AuthProvider({ children }) {
     }
   });
 
+  function saveUser(receivedUser) {
+    localStorage.setItem('user', JSON.stringify(receivedUser));
+    setUser(receivedUser);
+  }
+
   function login(receivedToken, receivedUser) {
     localStorage.setItem('jwt', receivedToken);
     setToken(receivedToken);
 
     if (receivedUser) {
-      localStorage.setItem('user', JSON.stringify(receivedUser));
-      setUser(receivedUser);
+      saveUser(receivedUser);
     }
+  }
+
+  function updateUser(updatedUser) {
+    if (!updatedUser) {
+      return;
+    }
+
+    saveUser(updatedUser);
   }
 
   function logout() {
@@ -37,7 +49,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
