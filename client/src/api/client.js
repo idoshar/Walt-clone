@@ -1,4 +1,4 @@
-﻿const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('jwt');
@@ -32,8 +32,8 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     const message =
-      data?.error ||
       data?.message ||
+      data?.error ||
       `Request failed with status ${response.status}`;
 
     throw new Error(message);
