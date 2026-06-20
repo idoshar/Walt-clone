@@ -6,14 +6,14 @@ function OrderStatusPage() {
   const navigate = useNavigate();
   
   const [isDarkMode, setIsDarkMode] = useState(
-    document.body.classList.contains('dark') || document.body.classList.contains('dark-mode')
+    document.documentElement.dataset.theme === 'dark'
   );
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      setIsDarkMode(document.body.classList.contains('dark') || document.body.classList.contains('dark-mode'));
+      setIsDarkMode(document.documentElement.dataset.theme === 'dark');
     });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, []);
 
