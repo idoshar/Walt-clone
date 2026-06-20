@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   font-family: Arial, Helvetica, sans-serif;
 
   --color-bg: #f8f9fa;
@@ -1535,4 +1535,11 @@ input {
     width: 100%;
     justify-content: center;
   }
+}
+
+body.dark, body.dark-mode,
+body.dark #root, body.dark-mode #root,
+body.dark main, body.dark-mode main,
+body.dark .layout, body.dark-mode .layout {
+  background-color: #121212 !important;
 }
