@@ -1,22 +1,43 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
+
+function isTokenExpired(token) {
+  if (!token) return true;
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const { exp } = JSON.parse(jsonPayload);
+    if (!exp) return false;
+    return Date.now() >= exp * 1000;
+  } catch {
+    return true;
+  }
+}
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem('jwt') || '');
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
-
-    if (!savedUser) {
-      return null;
-    }
-
+    if (!savedUser) return null;
     try {
       return JSON.parse(savedUser);
     } catch {
       return null;
     }
   });
+
+  useEffect(() => {
+    if (token && isTokenExpired(token)) {
+      logout();
+    }
+  }, [token]);
 
   function saveUser(receivedUser) {
     localStorage.setItem('user', JSON.stringify(receivedUser));
@@ -26,17 +47,13 @@ export function AuthProvider({ children }) {
   function login(receivedToken, receivedUser) {
     localStorage.setItem('jwt', receivedToken);
     setToken(receivedToken);
-
     if (receivedUser) {
       saveUser(receivedUser);
     }
   }
 
   function updateUser(updatedUser) {
-    if (!updatedUser) {
-      return;
-    }
-
+    if (!updatedUser) return;
     saveUser(updatedUser);
   }
 
