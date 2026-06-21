@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ex2-server
     expose:
       - "${EX2_SERVER_PORT:-8080}"
     command: ["./todo_server", "${EX2_SERVER_PORT:-8080}"]
@@ -20,12 +19,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_DATABASE: "${MONGODB_DB_NAME:-food_delivery}"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
 
   web-server:
     build:
       context: .
       dockerfile: Dockerfile.webserver
-    container_name: web-server
     ports:
       - "${WEB_SERVER_HOST_PORT:-3000}:${WEB_SERVER_PORT:-3000}"
     environment:
