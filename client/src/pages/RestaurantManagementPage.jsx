@@ -130,9 +130,7 @@ function RestaurantManagementPage() {
           onSubmit={handleSaveRestaurant}
         />
 
-        <button type="button" onClick={() => setEditingRestaurant(null)}>
-          New Restaurant
-        </button>
+
       </section>
 
       <section>
