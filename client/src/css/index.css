@@ -2738,3 +2738,113 @@ body.dark .product-card {
     width: 100%;
   }
 }
+
+
+/* SCRUM-324 readable previous-order history */
+.orders-list {
+  display: grid;
+  gap: 16px;
+}
+
+.order-history-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+}
+
+.order-history-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.order-history-header h3,
+.order-history-id,
+.order-history-item-count,
+.order-history-items p,
+.order-history-total {
+  margin: 0;
+}
+
+.order-history-id {
+  margin-bottom: 6px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.order-history-header h3 {
+  font-size: 20px;
+}
+
+.order-history-item-count {
+  margin-top: 5px;
+  color: var(--color-text-muted);
+}
+
+.order-history-status {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.order-history-items {
+  padding: 14px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-history-items ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-history-items li,
+.order-history-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.order-history-items li {
+  color: var(--color-text-muted);
+}
+
+.order-history-items li strong,
+.order-history-total strong {
+  color: var(--color-text);
+}
+
+.order-history-total {
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
+
+.order-history-total strong {
+  color: var(--color-primary);
+  font-size: 19px;
+}
+
+@media (max-width: 640px) {
+  .order-history-card {
+    padding: 18px;
+  }
+
+  .order-history-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .order-history-status {
+    width: fit-content;
+  }
+}

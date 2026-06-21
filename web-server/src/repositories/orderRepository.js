@@ -1,4 +1,4 @@
-﻿const Order = require('../models/Order');
+const Order = require('../models/Order');
 const { generateId } = require('../utilities/idGenerator');
 
 
@@ -8,7 +8,7 @@ class OrderRepository {
         this.orders = new Map();
     }
 
-    create({ userId, restaurantId, items }) {
+    create({ userId, restaurantId, restaurantName, items }) {
         const totalPrice = items.reduce(
             (sum, item) => sum + Number(item.price) * Number(item.quantity),
             0
@@ -18,6 +18,7 @@ class OrderRepository {
             id: generateId(),
             userId: Number(userId),
             restaurantId: Number(restaurantId),
+            restaurantName,
             items,
             totalPrice,
             status: 'created'
@@ -46,8 +47,14 @@ class OrderRepository {
         const order = this.orders.get(String(id));
         if (!order) return null;
 
-        const { id: _id, userId: _uid, restaurantId: _rid, createdAt: _ca, ...safeUpdates } =
-            updates;
+        const {
+            id: _id,
+            userId: _uid,
+            restaurantId: _rid,
+            restaurantName: _restaurantName,
+            createdAt: _ca,
+            ...safeUpdates
+        } = updates;
 
         Object.assign(order, safeUpdates);
         return order;

@@ -1,6 +1,7 @@
-﻿const orderRepository = require('../repositories/orderRepository');
+const orderRepository = require('../repositories/orderRepository');
 const userRepository = require('../repositories/userRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
+const productRepository = require('../repositories/productRepository');
 
 
 function resolveUser(userId) {
@@ -27,6 +28,23 @@ function requireUserId(req, res) {
     }
 
     return userId;
+}
+
+function createItemSnapshots(restaurantId, items) {
+    return items.map((item) => {
+        const product = productRepository.findById(restaurantId, item.productId);
+
+        if (!product) {
+            return null;
+        }
+
+        return {
+            productId: String(item.productId),
+            productName: product.name || 'Menu item',
+            quantity: Number(item.quantity),
+            price: Number(item.price)
+        };
+    });
 }
 
 function createOrder(req, res) {
@@ -56,13 +74,20 @@ function createOrder(req, res) {
         });
     }
 
-    const normalizedItems = items.map((item) => ({
-        productId: String(item.productId),
-        quantity: Number(item.quantity),
-        price: Number(item.price)
-    }));
+    const itemSnapshots = createItemSnapshots(restaurantId, items);
 
-    const order = orderRepository.create({ userId, restaurantId, items: normalizedItems });
+    if (itemSnapshots.some((item) => item === null)) {
+        return res.status(400).json({
+            error: 'Each item must reference an existing product in the selected restaurant'
+        });
+    }
+
+    const order = orderRepository.create({
+        userId,
+        restaurantId,
+        restaurantName: restaurant.name,
+        items: itemSnapshots
+    });
 
     return res
         .status(201)
@@ -134,12 +159,15 @@ function updateOrder(req, res) {
             });
         }
 
-        updates.items = items.map((item) => ({
-            productId: String(item.productId),
-            quantity: Number(item.quantity),
-            price: Number(item.price)
-        }));
+        const itemSnapshots = createItemSnapshots(order.restaurantId, items);
 
+        if (itemSnapshots.some((item) => item === null)) {
+            return res.status(400).json({
+                error: 'Each item must reference an existing product in the selected restaurant'
+            });
+        }
+
+        updates.items = itemSnapshots;
         updates.totalPrice = updates.items.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0

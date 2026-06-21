@@ -68,7 +68,7 @@ async function createOrder(token, price) {
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({
       restaurantId: 1,
-      items: [{ productId: 'pizza-margherita', quantity: 1, price }]
+      items: [{ productId: 'pizza-margherita', quantity: 2, price }]
     })
   });
 
@@ -102,15 +102,26 @@ async function main() {
     expect(Array.isArray(data), 'orders response is not array');
   });
 
-  await scenario('created order appears in previous orders', async () => {
+  await scenario('created order stores restaurant and menu item snapshots', async () => {
     orderA = await createOrder(tokenA, 25);
 
+    expect(orderA.restaurantName === 'Pizza Roma', `expected Pizza Roma, got ${orderA.restaurantName}`);
+    expect(orderA.items?.[0]?.productName === 'Margherita Pizza', 'missing product name snapshot');
+    expect(orderA.items?.[0]?.quantity === 2, 'wrong item quantity snapshot');
+  });
+
+  await scenario('created order appears in previous orders with readable details', async () => {
     const { response, data } = await request('/api/orders', {
       headers: { Authorization: `Bearer ${tokenA}` }
     });
 
     expect(response.status === 200, `expected 200, got ${response.status}`);
-    expect(data.some((order) => String(order.id) === String(orderA.id)), 'created order not found');
+
+    const previousOrder = data.find((order) => String(order.id) === String(orderA.id));
+    expect(previousOrder, 'created order not found');
+    expect(previousOrder.restaurantName === 'Pizza Roma', 'previous order is missing restaurant name');
+    expect(previousOrder.items?.[0]?.productName === 'Margherita Pizza', 'previous order is missing product name');
+    expect(previousOrder.items?.[0]?.quantity === 2, 'previous order is missing item quantity');
   });
 
   await scenario('get previous order by id succeeds for owner', async () => {
@@ -120,6 +131,7 @@ async function main() {
 
     expect(response.status === 200, `expected 200, got ${response.status}`);
     expect(String(data.id) === String(orderA.id), 'wrong order returned');
+    expect(data.restaurantName === 'Pizza Roma', 'order details are missing restaurant name');
   });
 
   await scenario('another user cannot see first user order by id', async () => {
