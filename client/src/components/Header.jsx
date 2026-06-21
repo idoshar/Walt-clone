@@ -55,35 +55,44 @@ function Header({ token, onLogout }) {
       <nav className="navbar-actions" aria-label="Main navigation">
         {token ? (
           <>
-            <NavLink to="/" end className="nav-link">Home</NavLink>
-            <NavLink to="/search" className="nav-link">Search</NavLink>
-            <NavLink to="/orders" className="nav-link">Orders</NavLink>
-            <NavLink to="/management" className="nav-link">Management</NavLink>
+            <div className="primary-nav-links">
+              <NavLink to="/" end className="nav-link">Home</NavLink>
+              <NavLink to="/search" className="nav-link">Search</NavLink>
+              <NavLink to="/orders" className="nav-link">Orders</NavLink>
+              <NavLink to="/management" className="nav-link">Management</NavLink>
+            </div>
 
-            <CartDropdown />
-            <ThemeToggle />
+            <div className="navbar-utilities">
+              <CartDropdown />
+              <ThemeToggle />
 
-            <div className="user-area">
-              {userImage ? (
-                <img src={userImage} alt={userLabel} className="user-avatar" />
-              ) : (
-                <span className="user-avatar" aria-hidden="true">
-                  {userLabel.charAt(0).toUpperCase()}
-                </span>
-              )}
+              <div className="user-area">
+                {userImage ? (
+                  <img src={userImage} alt={userLabel} className="user-avatar" />
+                ) : (
+                  <span className="user-avatar" aria-hidden="true">
+                    {userLabel.charAt(0).toUpperCase()}
+                  </span>
+                )}
 
-              <span className="user-label">{userLabel}</span>
+                <span className="user-label">{userLabel}</span>
 
-              <button type="button" onClick={onLogout} className="logout-button">
-                Log Out
-              </button>
+                <button type="button" onClick={onLogout} className="logout-button">
+                  Log Out
+                </button>
+              </div>
             </div>
           </>
         ) : (
           <>
-            <ThemeToggle />
-            <NavLink to="/login" className="nav-link">Login</NavLink>
-            <NavLink to="/register" className="nav-link register-link">Register</NavLink>
+            <div className="navbar-utilities">
+              <ThemeToggle />
+            </div>
+
+            <div className="primary-nav-links">
+              <NavLink to="/login" className="nav-link">Login</NavLink>
+              <NavLink to="/register" className="nav-link register-link">Register</NavLink>
+            </div>
           </>
         )}
       </nav>

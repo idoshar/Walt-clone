@@ -2848,3 +2848,221 @@ body.dark .product-card {
     width: fit-content;
   }
 }
+
+/* SCRUM-341 responsive navigation and light-theme visual polish */
+:root:not([data-theme='dark']) {
+  --color-surface-muted: #f7fcfe;
+  --color-text-muted: #52697a;
+  --color-border: #d9e6eb;
+  --color-border-strong: #bdd9e5;
+  --color-input-border: #c9dde6;
+  --color-hover-bg: #eaf8fc;
+  --color-info-bg: #e6f7fd;
+}
+
+/* Keep the cart visually connected to the primary Wolt-blue action language. */
+.cart-panel {
+  border-color: var(--color-border-strong);
+}
+
+.cart-panel-header h3,
+.cart-restaurant-meta h4 {
+  color: var(--color-primary);
+}
+
+.cart-group-count,
+.cart-item-info span {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.cart-restaurant-total {
+  color: var(--color-primary);
+}
+
+.cart-empty-all-button {
+  border-color: var(--color-primary);
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.cart-empty-all-button:hover {
+  background-color: var(--color-hover-bg);
+  color: var(--color-primary);
+}
+
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .navbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .logo {
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .navbar-actions {
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: center;
+    width: 100%;
+    gap: 8px 6px;
+  }
+
+  .nav-link {
+    justify-self: center;
+    min-width: 0;
+    padding: 7px 0;
+    font-size: 12px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .cart-dropdown {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .theme-toggle-button {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    width: 42px;
+    min-width: 42px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .theme-toggle-button > span:last-child {
+    display: none;
+  }
+
+  .navbar-actions > .theme-toggle-button:first-child {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .user-area {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .logout-button {
+    padding: 8px 11px;
+    white-space: nowrap;
+  }
+
+  .header-search {
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    gap: 8px;
+  }
+
+  .header-search-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .header-search-button {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .cart-panel {
+    top: 12px;
+    bottom: 12px;
+    max-height: none;
+  }
+}
+
+/* SCRUM-341 follow-up: give compact screens a deliberate header hierarchy. */
+.primary-nav-links,
+.navbar-utilities {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .navbar-actions {
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .primary-nav-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+    width: 100%;
+    gap: 4px;
+  }
+
+  .primary-nav-links .nav-link {
+    min-width: 0;
+    padding: 8px 2px;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .navbar-utilities {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .navbar-utilities .cart-dropdown,
+  .navbar-utilities .theme-toggle-button,
+  .navbar-utilities .user-area {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: auto;
+  }
+
+  .navbar-utilities .theme-toggle-button {
+    width: 42px;
+    min-width: 42px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .navbar-utilities .user-area {
+    margin-left: auto;
+    gap: 8px;
+  }
+
+  .header-search {
+    grid-row: 3;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    max-width: none;
+  }
+
+  .header-search-button {
+    min-width: 68px;
+  }
+}
