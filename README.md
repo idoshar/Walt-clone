@@ -9,7 +9,7 @@ The project combines:
 * A C++ TCP recommendation server from the previous exercises.
 * Docker Compose for a complete local environment.
 
-The application supports registration, login, restaurant browsing, product browsing, search, cart and checkout flow, previous orders, location-based restaurant sorting, dark/light mode, and integration with the recommendation service.
+The application supports registration, login, restaurant browsing, product browsing, search, cart and checkout flow, detailed previous orders, restaurant and menu management, location-based restaurant sorting, dark/light mode, and integration with the recommendation service.
 
 ---
 
@@ -44,7 +44,7 @@ The application is a food delivery platform in which authenticated users can:
 7. Use browser geolocation to save their current location.
 8. View nearby restaurants ordered from closest to farthest.
 9. Switch between light mode and dark mode.
-10. Access the management route for restaurant and menu-related actions.
+10. Create and manage personally owned restaurants and menu items from the Management route.
 
 The React client does not contain restaurant, product, order, or user data as static presentation data. It receives application data from the Express API.
 
@@ -98,7 +98,21 @@ The React client does not contain restaurant, product, order, or user data as st
 * Checkout flow creates an authenticated order.
 * Order status screen handles successful and failed order flows.
 * Previous Orders screen shows both empty and populated states.
+* Each completed order preserves restaurant and menu item snapshots so the history remains readable even if menu data changes later.
+* Previous Orders cards display restaurant name, item count, menu item names, quantities, status, and total price.
 * Orders are user-specific.
+
+### Restaurant Management
+
+* **My Restaurants** workspace for restaurants owned by the authenticated user.
+* Create a restaurant with its details and an optional direct image URL.
+* Search personally owned restaurants by name, cuisine, or address.
+* Manage a restaurant directly from its card: edit restaurant details and manage its menu.
+* Add, edit, and delete menu items with names, descriptions, prices, categories, and optional image URLs.
+* New owner-created restaurants begin as **Draft** and are private until they contain at least one menu item.
+* Restaurants with one or more menu items become **Published** and are visible to customers through browsing and search.
+* Restaurant and menu write operations are enforced server-side so only the owner can manage them.
+* Deleting a restaurant also removes its menu items.
 
 ### Recommendation Service
 
@@ -366,9 +380,21 @@ http://localhost:3000
 
 1. Open **Orders** from the navigation bar.
 2. A new user sees an empty state.
-3. After checkout, the created order appears with its status and total.
+3. After checkout, the created order appears with the restaurant name, item count, ordered menu items and quantities, status, and total price.
+4. Order history uses a snapshot captured at checkout, so it remains readable even if restaurant or menu data changes later.
 
-### 9. Theme Toggle
+### 9. Restaurant Management
+
+1. Log in and open **Management** from the navigation bar.
+2. Select **Create Restaurant** and enter restaurant details. An image URL is optional.
+3. A newly created restaurant starts as **Draft** and is visible only in **My Restaurants**.
+4. Select **Manage Restaurant** on a restaurant card.
+5. Use **Edit Restaurant Details** to update restaurant information.
+6. Use **Manage Menu** to add, edit, or delete menu items.
+7. Add the first menu item to publish the restaurant. Published restaurants appear in public browsing and search results.
+8. Use the **Search your restaurants** field to filter your own restaurants by name, cuisine, or address.
+
+### 10. Theme Toggle
 
 1. Click **Dark** to enable dark mode.
 2. Click **Light** to return to light mode.
@@ -400,30 +426,33 @@ http://localhost:3000/api
 
 ### Restaurants and Products
 
-| Method   | Endpoint                                         | Description                                  |
-| -------- | ------------------------------------------------ | -------------------------------------------- |
-| `GET`    | `/restaurants`                                   | Returns all restaurants                      |
-| `POST`   | `/restaurants`                                   | Creates a restaurant                         |
-| `GET`    | `/restaurants/:id`                               | Returns a restaurant                         |
-| `PATCH`  | `/restaurants/:id`                               | Updates a restaurant                         |
-| `DELETE` | `/restaurants/:id`                               | Deletes a restaurant                         |
-| `GET`    | `/restaurants/:id/products`                      | Returns products for a restaurant            |
-| `POST`   | `/restaurants/:id/products`                      | Creates a product                            |
-| `GET`    | `/restaurants/:id/products/:pId`                 | Returns a product                            |
-| `PATCH`  | `/restaurants/:id/products/:pId`                 | Updates a product                            |
-| `DELETE` | `/restaurants/:id/products/:pId`                 | Deletes a product                            |
-| `GET`    | `/restaurants/:id/products/:pId/recommendations` | Returns authenticated recommendation results |
+| Method   | Endpoint                                         | Description                                                          |
+| -------- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| `GET`    | `/restaurants`                                   | Returns public published restaurants with at least one menu item     |
+| `GET`    | `/restaurants/mine`                              | Returns the authenticated user's owned restaurants and product counts |
+| `POST`   | `/restaurants`                                   | Creates an owner-managed Draft restaurant                            |
+| `GET`    | `/restaurants/:id`                               | Returns one public published restaurant                              |
+| `PATCH`  | `/restaurants/:id`                               | Updates a restaurant owned by the authenticated user                 |
+| `DELETE` | `/restaurants/:id`                               | Deletes an owned restaurant and its menu items                       |
+| `GET`    | `/restaurants/:id/products`                      | Returns products for a restaurant                                    |
+| `POST`   | `/restaurants/:id/products`                      | Creates a menu item for an owned restaurant                          |
+| `GET`    | `/restaurants/:id/products/:pId`                 | Returns one product                                                  |
+| `PATCH`  | `/restaurants/:id/products/:pId`                 | Updates a menu item for an owned restaurant                          |
+| `DELETE` | `/restaurants/:id/products/:pId`                 | Deletes a menu item for an owned restaurant                          |
+| `GET`    | `/restaurants/:id/products/:pId/recommendations` | Returns authenticated recommendation results                         |
+
+> Restaurant and menu write endpoints require JWT authentication and enforce ownership on the server.
 
 ### Search and Orders
 
-| Method   | Endpoint         | Description                             |
-| -------- | ---------------- | --------------------------------------- |
-| `GET`    | `/search/:query` | Searches restaurants and products       |
-| `POST`   | `/orders`        | Creates an authenticated order          |
-| `GET`    | `/orders`        | Returns the authenticated user’s orders |
-| `GET`    | `/orders/:id`    | Returns one authenticated user order    |
-| `PATCH`  | `/orders/:id`    | Updates an authenticated user order     |
-| `DELETE` | `/orders/:id`    | Deletes an authenticated user order     |
+| Method   | Endpoint         | Description                                                          |
+| -------- | ---------------- | -------------------------------------------------------------------- |
+| `GET`    | `/search/:query` | Searches public published restaurants and their available products  |
+| `POST`   | `/orders`        | Creates an authenticated order and stores display snapshots         |
+| `GET`    | `/orders`        | Returns the authenticated user's detailed order history             |
+| `GET`    | `/orders/:id`    | Returns one authenticated user order                                |
+| `PATCH`  | `/orders/:id`    | Updates an authenticated user order                                 |
+| `DELETE` | `/orders/:id`    | Deletes an authenticated user order                                 |
 
 ---
 
@@ -446,6 +475,24 @@ node --check .\web-server\src\app.js
 node --check .\web-server\src\controllers\userController.js
 node --check .\web-server\src\controllers\restaurantController.js
 node --check .\web-server\src\controllers\orderController.js
+```
+
+### Run the API scenario checks
+
+Start Docker Compose first, then run:
+
+```powershell
+node tests/scrum-323-create-order.test.js
+node tests/scrum-324-previous-orders.test.js
+node tests/scrum-325-management.test.js
+```
+
+Expected summaries:
+
+```text
+SCRUM-323 SUMMARY: 10 passed, 0 failed
+SCRUM-324 SUMMARY: 7 passed, 0 failed
+SCRUM-325 SUMMARY: 17 passed, 0 failed
 ```
 
 ### Run the C++ test suite
@@ -569,7 +616,7 @@ Shows the Previous Orders page for a user with no orders.
 
 ### 12. Previous Orders — Order History
 
-Shows an existing order with its status and total price.
+Shows an existing order with restaurant name, ordered menu items and quantities, status, and total price.
 
 <!--
 ![Previous orders history](docs/screenshots/12-orders-history.png)
@@ -585,7 +632,7 @@ Shows restaurants sorted by distance from the user’s saved browser location, i
 
 ### 14. Restaurant Management
 
-Shows the Management route for creating, editing and deleting restaurants and menu products.
+Shows the Management route with My Restaurants, owner-side search, Draft/Published status, and restaurant/menu management actions.
 
 <!--
 ![Restaurant management](docs/screenshots/14-management.png)
@@ -644,14 +691,15 @@ Shows a narrow-screen version of the application, preferably the Home page or Lo
 
 ## Runtime Data
 
-The Exercise 4 web server uses runtime in-memory repositories for users and orders.
+The Exercise 4 web server uses runtime in-memory repositories for users, orders, owner-created restaurants, and owner-created menu items.
 
 This means:
 
 * Users created during a Docker run are temporary.
 * Orders created during a Docker run are temporary.
+* Owner-created restaurants and menu items are temporary.
 * Recreating the web-server container resets those runtime entities.
-* The default restaurant seed data remains available after a fresh container start.
+* The default restaurant and menu seed data remains available after a fresh container start.
 
 This behavior is expected for the current exercise and does not require MongoDB or another database.
 
@@ -728,5 +776,6 @@ Create Jira task
 * [ ] README Docker instructions were tested from a clean state.
 * [ ] All required screenshots were copied into `docs/screenshots/`.
 * [ ] All screenshot comments were converted into rendered Markdown images.
-* [ ] Login, Register, Home, Search, Restaurant, Cart, Checkout, Orders, Location, Theme, and Management flows were verified.
+* [ ] Login, Register, Home, Search, Restaurant, Cart, Checkout, detailed Orders, Location, Theme, and Management flows were verified.
+* [ ] API scenario checks pass: SCRUM-323, SCRUM-324, and SCRUM-325.
 * [ ] Final build passes with `npm run build`.
