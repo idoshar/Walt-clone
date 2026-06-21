@@ -19,4 +19,4 @@ RUN g++ -std=c++17 -Wall -Wextra -I src \
 
 EXPOSE 8080
 
-CMD ["./server", "8080"]
+CMD ["./todo_server", "8080"]
