@@ -1,8 +1,18 @@
-﻿class Order {
-    constructor({ id, userId, restaurantId, items, totalPrice, status = 'created', createdAt }) {
+class Order {
+    constructor({
+        id,
+        userId,
+        restaurantId,
+        restaurantName,
+        items,
+        totalPrice,
+        status = 'created',
+        createdAt
+    }) {
         this.id = id;
         this.userId = userId;
         this.restaurantId = restaurantId;
+        this.restaurantName = restaurantName || '';
         this.items = items;
         this.totalPrice = totalPrice;
         this.status = status;
@@ -14,6 +24,7 @@
             id: this.id,
             userId: this.userId,
             restaurantId: this.restaurantId,
+            restaurantName: this.restaurantName,
             items: this.items,
             totalPrice: this.totalPrice,
             status: this.status,
