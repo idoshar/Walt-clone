@@ -523,128 +523,97 @@ All screenshots should be saved under:
 docs/screenshots/
 ```
 
-The image sections below are prepared in advance.
-When an image is ready, remove the surrounding `<!--` and `-->` markers around the matching Markdown image line.
+The screenshots below document the main application flows and the Docker deployment.
 
 ### 1. Docker Services and Health Check
 
 Shows both Docker services running and the successful health endpoint response.
 
-<!--
 ![Docker services and API health check](docs/screenshots/01-docker-health.png)
--->
 
 ### 2. Login Screen
 
 Shows the clean Login page before a user signs in.
 
-<!--
 ![Login screen](docs/screenshots/02-login.png)
--->
 
 ### 3. Register Screen
 
 Shows the clean Register page and its client-side form fields.
 
-<!--
 ![Register screen](docs/screenshots/03-register.png)
--->
 
 ### 4. Home Page — Light Mode
 
 Shows the authenticated Home page with the hero section, categories, restaurant cards, and navigation.
 
-<!--
 ![Home page in light mode](docs/screenshots/04-home-light.png)
--->
 
 ### 5. Home Page — Dark Mode
 
 Shows that dark mode changes the application layout, cards, navigation, and colors.
 
-<!--
 ![Home page in dark mode](docs/screenshots/05-home-dark.png)
--->
 
 ### 6. Category Filtering
 
 Shows a selected cuisine category and the filtered Nearby restaurants section.
 
-<!--
 ![Category filtering](docs/screenshots/06-category-filter.png)
--->
 
 ### 7. Search Results
 
 Shows a restaurant search query and matching result.
 
-<!--
 ![Restaurant search results](docs/screenshots/07-search-restaurants.png)
--->
 
 ### 8. Restaurant Menu and Cart
 
 Shows a restaurant with available products, products added to the cart, quantities, and total price.
 
-<!--
 ![Restaurant menu and cart](docs/screenshots/08-restaurant-menu-cart.png)
--->
 
 ### 9. Checkout Summary
 
 Shows the checkout page before the user confirms the order.
 
-<!--
 ![Checkout summary](docs/screenshots/09-checkout-summary.png)
--->
 
 ### 10. Successful Order Status
 
 Shows the confirmation message and generated order identifier after a successful checkout.
 
-<!--
 ![Successful order status](docs/screenshots/10-order-success.png)
--->
 
 ### 11. Previous Orders — Empty State
 
 Shows the Previous Orders page for a user with no orders.
 
-<!--
 ![Previous orders empty state](docs/screenshots/11-orders-empty.png)
--->
 
 ### 12. Previous Orders — Order History
 
 Shows an existing order with restaurant name, ordered menu items and quantities, status, and total price.
 
-<!--
 ![Previous orders history](docs/screenshots/12-orders-history.png)
--->
 
 ### 13. Nearby Restaurants by Saved Location
 
 Shows restaurants sorted by distance from the user’s saved browser location, including kilometer labels.
 
-<!--
 ![Nearby restaurants sorted by saved location](docs/screenshots/13-nearby-distance.png)
--->
 
 ### 14. Restaurant Management
 
 Shows the Management route with My Restaurants, owner-side search, Draft/Published status, and restaurant/menu management actions.
 
-<!--
 ![Restaurant management](docs/screenshots/14-management.png)
--->
 
 ### 15. Responsive Mobile Layout
 
-Shows a narrow-screen version of the application, preferably the Home page or Login page.
+Shows the responsive Restaurant page layout on a narrow mobile viewport.
 
-<!--
 ![Responsive mobile layout](docs/screenshots/15-mobile-layout.png)
--->
 
 ---
 
