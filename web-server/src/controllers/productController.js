@@ -165,7 +165,11 @@ async function getProductRecommendations(req, res, next) {
 
         const recommendedProducts = recommendationIds
             .map((id) => productRepository.findByRecommendationId(id))
-            .filter(Boolean);
+            .filter((recommendedProduct) =>
+                recommendedProduct &&
+                String(recommendedProduct.restaurantId) === String(req.params.id) &&
+                String(recommendedProduct.id) !== String(req.params.pId)
+            );
 
         return ok(res, recommendedProducts);
     } catch (err) {
@@ -238,3 +242,4 @@ module.exports = {
     updateProduct,
     deleteProduct,
 };
+
