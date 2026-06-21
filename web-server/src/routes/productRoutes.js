@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 
 const router = express.Router({ mergeParams: true });
 const productController = require('../controllers/productController');
@@ -8,7 +8,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.get('/', productController.getAllProducts);
 
 // POST   /api/restaurants/:id/products
-router.post('/', productController.createProduct);
+router.post('/', authMiddleware, productController.createProduct);
 
 // GET    /api/restaurants/:id/products/:pId/recommendations
 router.get(
@@ -21,9 +21,9 @@ router.get(
 router.get('/:pId', productController.getProductById);
 
 // PATCH  /api/restaurants/:id/products/:pId
-router.patch('/:pId', productController.updateProduct);
+router.patch('/:pId', authMiddleware, productController.updateProduct);
 
 // DELETE /api/restaurants/:id/products/:pId
-router.delete('/:pId', productController.deleteProduct);
+router.delete('/:pId', authMiddleware, productController.deleteProduct);
 
 module.exports = router;

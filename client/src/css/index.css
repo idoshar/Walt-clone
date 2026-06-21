@@ -2229,3 +2229,512 @@ body.dark .product-card {
     height: 28px;
   }
 }
+
+/* SCRUM-340 restaurant management modal workflow */
+.modal-open {
+  overflow: hidden;
+}
+
+.management-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px 56px;
+}
+
+.management-page-header {
+  margin-bottom: 24px;
+}
+
+.management-eyebrow {
+  margin: 0 0 10px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.management-page-header h1 {
+  margin: 0;
+}
+
+.management-page-header > p:last-child {
+  max-width: 650px;
+  margin: 12px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.management-control-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-surface), var(--color-info-bg));
+  box-shadow: var(--shadow-card);
+}
+
+.management-control-card h2 {
+  margin: 0;
+}
+
+.management-control-card p {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.management-control-actions,
+.management-menu-item-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.management-primary-action,
+.management-secondary-action {
+  min-height: 44px;
+  padding: 10px 16px;
+}
+
+.management-feedback {
+  margin: 18px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+
+.app-modal-backdrop {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-color: rgba(8, 16, 24, 0.58);
+}
+
+.app-modal {
+  width: min(100%, 560px);
+  max-height: min(760px, calc(100dvh - 48px));
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.app-modal-large {
+  width: min(100%, 820px);
+}
+
+.app-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.app-modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.app-modal-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-modal-close-button:hover {
+  background-color: var(--color-hover-bg);
+}
+
+.app-modal-content {
+  padding: 24px;
+}
+
+.management-modal-intro {
+  margin: 0 0 18px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.management-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 24px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.management-empty-state strong {
+  font-size: 17px;
+}
+
+.management-empty-state p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.management-restaurant-list,
+.management-menu-list {
+  display: grid;
+  gap: 14px;
+}
+
+.management-restaurant-option,
+.management-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.management-restaurant-option h3,
+.management-menu-item h3 {
+  margin: 0;
+}
+
+.management-restaurant-option p,
+.management-menu-item p {
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.management-restaurant-option span {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.management-menu-item strong {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--color-primary);
+}
+
+.management-action-summary {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-info-bg);
+}
+
+.management-action-summary p {
+  margin: 4px 0;
+  color: var(--color-text-muted);
+}
+
+.management-action-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.management-action-button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.management-action-button:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-hover-bg);
+}
+
+.management-action-button span {
+  font-weight: 800;
+}
+
+.management-action-button small {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.management-danger-button {
+  min-height: 40px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.management-danger-button:hover {
+  filter: brightness(0.96);
+}
+
+.management-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.management-menu-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .management-page {
+    padding: 28px 16px 40px;
+  }
+
+  .management-control-card,
+  .management-restaurant-option,
+  .management-menu-item,
+  .management-menu-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .management-control-actions,
+  .management-menu-item-actions {
+    width: 100%;
+  }
+
+  .management-control-actions button,
+  .management-menu-item-actions button,
+  .management-menu-header button {
+    width: 100%;
+  }
+
+  .app-modal-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .app-modal {
+    max-height: calc(100dvh - 24px);
+    border-radius: var(--radius-lg) var(--radius-lg) 12px 12px;
+  }
+
+  .app-modal-header,
+  .app-modal-content {
+    padding: 18px;
+  }
+}
+
+/* SCRUM-340 ownership, draft visibility and restaurant card refinements */
+.management-restaurants-section {
+  margin-top: 30px;
+}
+
+.management-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.management-section-heading h2 {
+  margin: 0;
+}
+
+.management-restaurant-search {
+  max-width: 420px;
+  margin: 0 0 18px;
+}
+
+.management-restaurant-search input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+}
+
+.management-restaurant-search input:focus {
+  border-color: var(--color-primary);
+}
+
+.management-restaurant-search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.management-restaurant-count {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.management-restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.management-restaurant-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.management-restaurant-image {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background-color: var(--color-info-bg);
+}
+
+.management-restaurant-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px;
+}
+
+.management-restaurant-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.management-restaurant-card h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.management-restaurant-card p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.management-restaurant-card small {
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.management-restaurant-card .management-primary-action {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.management-status,
+.management-menu-item-count {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.management-status {
+  padding: 5px 8px;
+  border-radius: var(--radius-round);
+}
+
+.management-status-draft {
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.management-status-published {
+  background-color: var(--color-hover-bg);
+  color: var(--color-text);
+}
+
+.management-menu-item-count {
+  color: var(--color-text-muted);
+}
+
+.management-post-create-prompt p {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.management-prompt-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .management-section-heading,
+  .management-restaurant-card-topline {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .management-restaurant-count {
+    width: fit-content;
+  }
+
+  .management-restaurant-search {
+    max-width: none;
+  }
+
+  .management-prompt-actions {
+    flex-direction: column-reverse;
+  }
+
+  .management-prompt-actions button {
+    width: 100%;
+  }
+}

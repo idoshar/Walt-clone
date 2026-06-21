@@ -1,5 +1,6 @@
 const responseHelper = require('../utilities/responseHelper');
 const restaurantRepository = require('../repositories/restaurantRepository');
+const productRepository = require('../repositories/productRepository');
 const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
 const { validateObject, validateRequiredFields } = require('../utilities/validationHelper');
@@ -43,14 +44,33 @@ function getLocationFields(body) {
     };
 }
 
+function getProductCount(restaurantId) {
+    return productRepository.findAllByRestaurant(restaurantId).length;
+}
+
+function isPublicRestaurant(restaurant) {
+    return getProductCount(restaurant.id) > 0;
+}
+
+function toManagementResponseObject(restaurant) {
+    return {
+        ...restaurant.toResponseObject(),
+        productCount: getProductCount(restaurant.id)
+    };
+}
+
 function canManageRestaurant(req, restaurant) {
-  const userId = req.user?.sub || req.user?.id;
+    const userId = req.user?.sub || req.user?.id;
 
-  if (!restaurant.ownerId || !userId) {
-    return false;
-  }
+    if (!restaurant.ownerId || !userId) {
+        return false;
+    }
 
-  return String(restaurant.ownerId) === String(userId);
+    return String(restaurant.ownerId) === String(userId);
+}
+
+function normalizeImage(value) {
+    return typeof value === 'string' ? value.trim() : '';
 }
 
 class RestaurantController {
@@ -60,10 +80,32 @@ class RestaurantController {
                 ? restaurantRepository.getAll()
                 : restaurantRepository.findAll();
 
-            return responseHelper.ok(
-                res,
-                restaurants.map((restaurant) => restaurant.toResponseObject())
-            );
+            const publicRestaurants = restaurants
+                .filter(isPublicRestaurant)
+                .map((restaurant) => restaurant.toResponseObject());
+
+            return responseHelper.ok(res, publicRestaurants);
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    getMyRestaurants(req, res, next) {
+        try {
+            const userId = req.user?.sub || req.user?.id;
+            const restaurants = restaurantRepository.getAll
+                ? restaurantRepository.getAll()
+                : restaurantRepository.findAll();
+
+            const myRestaurants = restaurants
+                .filter(
+                    (restaurant) =>
+                        !restaurant.isDefault &&
+                        String(restaurant.ownerId) === String(userId)
+                )
+                .map(toManagementResponseObject);
+
+            return responseHelper.ok(res, myRestaurants);
         } catch (err) {
             next(err);
         }
@@ -73,7 +115,7 @@ class RestaurantController {
         try {
             const restaurant = restaurantRepository.findById(req.params.id);
 
-            if (!restaurant) {
+            if (!restaurant || !isPublicRestaurant(restaurant)) {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
@@ -110,6 +152,7 @@ class RestaurantController {
                 phone: req.body.phone || '',
                 cuisine: req.body.cuisine || '',
                 description: req.body.description || '',
+                image: normalizeImage(req.body.image),
                 ...(locationResult.coordinates || {}),
                 ownerId: String(req.user?.sub || req.user?.id || ''),
                 isDefault: false
@@ -117,7 +160,10 @@ class RestaurantController {
 
             restaurantRepository.create(restaurant);
 
-            return responseHelper.created(res, `/api/restaurants/${restaurant.id}`);
+            return res
+                .status(201)
+                .location(`/api/restaurants/${restaurant.id}`)
+                .json(toManagementResponseObject(restaurant));
         } catch (err) {
             next(err);
         }
@@ -150,8 +196,19 @@ class RestaurantController {
                 return responseHelper.badRequest(res, locationResult.error);
             }
 
+            const {
+                id: _id,
+                ownerId: _ownerId,
+                isDefault: _isDefault,
+                ...safeUpdates
+            } = req.body;
+
+            if (Object.prototype.hasOwnProperty.call(safeUpdates, 'image')) {
+                safeUpdates.image = normalizeImage(safeUpdates.image);
+            }
+
             const updates = {
-                ...req.body,
+                ...safeUpdates,
                 ...(locationResult.coordinates || {})
             };
 
@@ -178,6 +235,7 @@ class RestaurantController {
                 });
             }
 
+            productRepository.removeAllByRestaurant(req.params.id);
             restaurantRepository.deleteById(req.params.id);
 
             return responseHelper.noContent(res);

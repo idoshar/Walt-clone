@@ -7,6 +7,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.post('/', authMiddleware, restaurantController.createRestaurant);
+router.get('/mine', authMiddleware, restaurantController.getMyRestaurants);
 
 router.get('/', restaurantController.getAllRestaurants);
 router.get('/:id', restaurantController.getRestaurantById);
