@@ -102,10 +102,10 @@ int main() {
 
     check("Command 7: help on same connection",
           client.sendCommand("help"),
-          "DELETE, arguments: [userid] [productid1] [productid2] ...\n"
-          "GET, arguments: [userid] [productid]\n"
-          "PATCH, arguments: [userid] [productid1] [productid2] ...\n"
-          "POST, arguments: [userid] [productid1] [productid2] ...\n"
+          "DELETE [userid] [productid1] [productid2] ...\n"
+          "GET [userid] [productid]\n"
+          "PATCH [userid] [productid1] [productid2] ...\n"
+          "POST [userid] [productid1] [productid2] ...\n"
           "help\n");
 
     kill(serverPid, SIGTERM);
