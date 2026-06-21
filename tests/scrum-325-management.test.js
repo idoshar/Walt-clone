@@ -68,7 +68,7 @@ async function createUserAndToken(prefix) {
 }
 
 async function createRestaurant(token, name) {
-  const { response } = await request('/api/restaurants', {
+  const { response, data } = await request('/api/restaurants', {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({
@@ -76,16 +76,20 @@ async function createRestaurant(token, name) {
       address: 'Test Street 1',
       phone: '03-0000000',
       cuisine: 'Test',
-      description: 'Created by management test'
+      description: 'Created by management test',
+      image: 'https://example.com/restaurant.jpg'
     })
   });
 
   expect(response.status === 201, `create restaurant expected 201, got ${response.status}`);
+  expect(data?.id, 'created restaurant response is missing an id');
+  expect(data.image === 'https://example.com/restaurant.jpg', 'restaurant image was not saved');
+  expect(data.productCount === 0, 'new restaurant should start with zero menu items');
 
-  const restaurantId = getIdFromLocation(response);
-  expect(restaurantId, 'missing restaurant id from Location header');
+  const locationId = getIdFromLocation(response);
+  expect(String(locationId) === String(data.id), 'Location header does not match response id');
 
-  return restaurantId;
+  return data.id;
 }
 
 async function createProduct(token, restaurantId, name) {
@@ -96,7 +100,8 @@ async function createProduct(token, restaurantId, name) {
       name,
       price: 42,
       description: 'Test product',
-      category: 'Test'
+      category: 'Test',
+      image: 'https://example.com/product.jpg'
     })
   });
 
@@ -119,12 +124,17 @@ async function main() {
     expect(ownerToken.split('.').length === 3, 'token is not JWT');
   });
 
-  await scenario('public restaurants list works', async () => {
+  await scenario('public restaurants list contains seeded restaurants with menu items', async () => {
     const { response, data } = await request('/api/restaurants');
 
     expect(response.status === 200, `expected 200, got ${response.status}`);
     expect(Array.isArray(data), 'restaurants response is not array');
-    expect(data.some((r) => r.isDefault === true), 'default restaurants should exist');
+    expect(data.some((restaurant) => restaurant.isDefault === true), 'default restaurants should exist');
+  });
+
+  await scenario('my restaurants endpoint requires JWT', async () => {
+    const { response } = await request('/api/restaurants/mine');
+    expect(response.status === 401, `expected 401, got ${response.status}`);
   });
 
   await scenario('create restaurant without JWT is rejected', async () => {
@@ -146,15 +156,26 @@ async function main() {
     expect(response.status === 400, `expected 400, got ${response.status}`);
   });
 
-  await scenario('create restaurant with JWT succeeds and has ownerId', async () => {
+  await scenario('new restaurant is a private draft until it has menu items', async () => {
     restaurantId = await createRestaurant(ownerToken, `My Test Restaurant ${Date.now()}`);
 
-    const { response, data } = await request(`/api/restaurants/${restaurantId}`);
+    const myRestaurants = await request('/api/restaurants/mine', {
+      headers: { Authorization: `Bearer ${ownerToken}` }
+    });
 
-    expect(response.status === 200, `expected 200, got ${response.status}`);
-    expect(String(data.id) === String(restaurantId), 'wrong restaurant returned');
-    expect(data.isDefault === false, 'created restaurant should not be default');
-    expect(data.ownerId, 'created restaurant missing ownerId');
+    expect(myRestaurants.response.status === 200, `expected 200, got ${myRestaurants.response.status}`);
+    const draft = myRestaurants.data.find((restaurant) => String(restaurant.id) === String(restaurantId));
+    expect(draft, 'draft is missing from the owner management list');
+    expect(draft.productCount === 0, 'draft should have zero menu items');
+
+    const publicRestaurants = await request('/api/restaurants');
+    expect(
+      !publicRestaurants.data.some((restaurant) => String(restaurant.id) === String(restaurantId)),
+      'draft should not be visible in the public restaurants list'
+    );
+
+    const directRestaurant = await request(`/api/restaurants/${restaurantId}`);
+    expect(directRestaurant.response.status === 404, 'draft should not be reachable on the public restaurant page');
   });
 
   await scenario('owner can update own restaurant', async () => {
@@ -188,36 +209,93 @@ async function main() {
     expect(response.status === 403, `expected 403, got ${response.status}`);
   });
 
-  await scenario('create product for managed restaurant succeeds', async () => {
-    productId = await createProduct(ownerToken, restaurantId, `My Test Product ${Date.now()}`);
-    expect(productId, 'product id missing');
+  await scenario('creating a product without JWT is rejected', async () => {
+    const { response } = await request(`/api/restaurants/${restaurantId}/products`, {
+      method: 'POST',
+      body: JSON.stringify({ name: 'No Token Product', price: 42 })
+    });
+
+    expect(response.status === 401, `expected 401, got ${response.status}`);
   });
 
-  await scenario('get products includes created product', async () => {
+  await scenario('other user cannot create a product for owner restaurant', async () => {
+    const { response } = await request(`/api/restaurants/${restaurantId}/products`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${otherToken}` },
+      body: JSON.stringify({ name: 'Wrong User Product', price: 42 })
+    });
+
+    expect(response.status === 403, `expected 403, got ${response.status}`);
+  });
+
+  await scenario('create product publishes the restaurant', async () => {
+    productId = await createProduct(ownerToken, restaurantId, `My Test Product ${Date.now()}`);
+
+    const publicRestaurants = await request('/api/restaurants');
+    expect(
+      publicRestaurants.data.some((restaurant) => String(restaurant.id) === String(restaurantId)),
+      'restaurant should become visible after the first menu item is created'
+    );
+
+    const directRestaurant = await request(`/api/restaurants/${restaurantId}`);
+    expect(directRestaurant.response.status === 200, `expected 200, got ${directRestaurant.response.status}`);
+  });
+
+  await scenario('get products includes created product and stored image', async () => {
     const { response, data } = await request(`/api/restaurants/${restaurantId}/products`);
 
     expect(response.status === 200, `expected 200, got ${response.status}`);
     expect(Array.isArray(data), 'products response is not array');
-    expect(data.some((product) => String(product.id) === String(productId)), 'created product not found');
+    const product = data.find((currentProduct) => String(currentProduct.id) === String(productId));
+    expect(product, 'created product not found');
+    expect(product.image === 'https://example.com/product.jpg', 'product image was not saved');
   });
 
-  await scenario('update product succeeds', async () => {
-    const { response } = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
+  await scenario('other user cannot update or delete owner menu items', async () => {
+    const update = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${otherToken}` },
+      body: JSON.stringify({ price: 55 })
+    });
+
+    const deletion = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${otherToken}` }
+    });
+
+    expect(update.response.status === 403, `update expected 403, got ${update.response.status}`);
+    expect(deletion.response.status === 403, `delete expected 403, got ${deletion.response.status}`);
+  });
+
+  await scenario('owner can update and delete own menu item', async () => {
+    const update = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${ownerToken}` },
       body: JSON.stringify({ price: 55 })
     });
 
-    expect(response.status === 204, `expected 204, got ${response.status}`);
-  });
+    expect(update.response.status === 204, `update expected 204, got ${update.response.status}`);
 
-  await scenario('delete product succeeds', async () => {
-    const { response } = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
+    const deletion = await request(`/api/restaurants/${restaurantId}/products/${productId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${ownerToken}` }
     });
 
-    expect(response.status === 204, `expected 204, got ${response.status}`);
+    expect(deletion.response.status === 204, `delete expected 204, got ${deletion.response.status}`);
+  });
+
+  await scenario('deleting the final menu item returns restaurant to draft status', async () => {
+    const publicRestaurants = await request('/api/restaurants');
+    expect(
+      !publicRestaurants.data.some((restaurant) => String(restaurant.id) === String(restaurantId)),
+      'restaurant should not remain public after the last menu item is removed'
+    );
+
+    const myRestaurants = await request('/api/restaurants/mine', {
+      headers: { Authorization: `Bearer ${ownerToken}` }
+    });
+    const draft = myRestaurants.data.find((restaurant) => String(restaurant.id) === String(restaurantId));
+    expect(draft?.productCount === 0, 'owner should still see restaurant as a draft');
   });
 
   await scenario('owner can delete own restaurant', async () => {
@@ -231,6 +309,10 @@ async function main() {
 
   const passed = results.filter(Boolean).length;
   console.log(`\nSCRUM-325 SUMMARY: ${passed} passed, ${results.length - passed} failed`);
+
+  if (passed !== results.length) {
+    process.exitCode = 1;
+  }
 }
 
 main();

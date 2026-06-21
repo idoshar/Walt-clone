@@ -6,6 +6,7 @@ class Restaurant {
         phone,
         cuisine,
         description = '',
+        image = '',
         latitude = null,
         longitude = null,
         ownerId = null,
@@ -17,6 +18,7 @@ class Restaurant {
         this.phone = phone;
         this.cuisine = cuisine;
         this.description = description;
+        this.image = image;
         this.latitude = latitude;
         this.longitude = longitude;
         this.ownerId = ownerId;
@@ -31,6 +33,7 @@ class Restaurant {
             phone: this.phone,
             cuisine: this.cuisine,
             description: this.description,
+            image: this.image,
             latitude: this.latitude,
             longitude: this.longitude,
             ownerId: this.ownerId,

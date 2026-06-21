@@ -4,6 +4,10 @@ export function getRestaurants() {
   return apiRequest('/restaurants');
 }
 
+export function getMyRestaurants() {
+  return apiRequest('/restaurants/mine');
+}
+
 export function getRestaurantById(id) {
   return apiRequest(`/restaurants/${id}`);
 }

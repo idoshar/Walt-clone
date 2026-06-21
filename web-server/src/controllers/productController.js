@@ -1,4 +1,4 @@
-﻿const productRepository = require('../repositories/productRepository');
+const productRepository = require('../repositories/productRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const ex2 = require('../services/exercise2Client');
 const { generateId } = require('../utilities/idGenerator');
@@ -14,26 +14,58 @@ const {
     validateRequiredFields,
 } = require('../utilities/validationHelper');
 
-function requireRestaurant(req, res) {
+function findRestaurant(req, res) {
     const restaurant = restaurantRepository.findById(req.params.id);
 
     if (!restaurant) {
         notFound(res, 'Restaurant not found');
-        return false;
+        return null;
     }
 
-    return true;
+    return restaurant;
+}
+
+function canManageRestaurant(req, restaurant) {
+    const userId = req.user?.sub || req.user?.id;
+
+    return Boolean(
+        restaurant.ownerId &&
+        userId &&
+        String(restaurant.ownerId) === String(userId)
+    );
+}
+
+function requireManagedRestaurant(req, res) {
+    const restaurant = findRestaurant(req, res);
+
+    if (!restaurant) {
+        return null;
+    }
+
+    if (!canManageRestaurant(req, restaurant)) {
+        res.status(403).json({
+            error: 'Forbidden',
+            message: 'You can manage only your own restaurants'
+        });
+        return null;
+    }
+
+    return restaurant;
 }
 
 function getAllProducts(req, res) {
-    if (!requireRestaurant(req, res)) return;
+    const restaurant = findRestaurant(req, res);
+
+    if (!restaurant) {
+        return;
+    }
 
     const products = productRepository.findAllByRestaurant(req.params.id);
     return ok(res, products);
 }
 
 function createProduct(req, res) {
-    if (!requireRestaurant(req, res)) return;
+    if (!requireManagedRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
 
@@ -47,7 +79,7 @@ function createProduct(req, res) {
         return badRequest(res, fieldError);
     }
 
-    const { name, price, description = '', category = '' } = req.body;
+    const { name, price, description = '', category = '', image = '' } = req.body;
 
     if (typeof price !== 'number' || price < 0) {
         return badRequest(res, 'price must be a non-negative number');
@@ -60,6 +92,7 @@ function createProduct(req, res) {
         price,
         description,
         category,
+        image: typeof image === 'string' ? image.trim() : ''
     };
 
     productRepository.save(req.params.id, product);
@@ -71,7 +104,7 @@ function createProduct(req, res) {
 }
 
 function getProductById(req, res) {
-    if (!requireRestaurant(req, res)) return;
+    if (!findRestaurant(req, res)) return;
 
     const product = productRepository.findById(req.params.id, req.params.pId);
 
@@ -94,7 +127,7 @@ function getProductById(req, res) {
 
 async function getProductRecommendations(req, res, next) {
     try {
-        if (!requireRestaurant(req, res)) return;
+        if (!findRestaurant(req, res)) return;
 
         const sourceProduct = productRepository.findById(
             req.params.id,
@@ -141,7 +174,7 @@ async function getProductRecommendations(req, res, next) {
 }
 
 function updateProduct(req, res) {
-    if (!requireRestaurant(req, res)) return;
+    if (!requireManagedRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
 
@@ -167,6 +200,11 @@ function updateProduct(req, res) {
         ...safeUpdates
     } = req.body;
 
+    if (Object.prototype.hasOwnProperty.call(safeUpdates, 'image')) {
+        safeUpdates.image =
+            typeof safeUpdates.image === 'string' ? safeUpdates.image.trim() : '';
+    }
+
     const updated = productRepository.update(
         req.params.id,
         req.params.pId,
@@ -181,7 +219,7 @@ function updateProduct(req, res) {
 }
 
 function deleteProduct(req, res) {
-    if (!requireRestaurant(req, res)) return;
+    if (!requireManagedRestaurant(req, res)) return;
 
     const deleted = productRepository.remove(req.params.id, req.params.pId);
 

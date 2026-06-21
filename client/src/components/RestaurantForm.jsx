@@ -6,7 +6,8 @@ function RestaurantForm({ initialRestaurant, onSubmit }) {
     address: initialRestaurant?.address || '',
     phone: initialRestaurant?.phone || '',
     cuisine: initialRestaurant?.cuisine || '',
-    description: initialRestaurant?.description || ''
+    description: initialRestaurant?.description || '',
+    image: initialRestaurant?.image || ''
   });
 
   const [errors, setErrors] = useState({});
@@ -29,7 +30,7 @@ function RestaurantForm({ initialRestaurant, onSubmit }) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    
+
     const newErrors = {};
     if (!restaurant.name.trim()) newErrors.name = 'Restaurant name is required';
     if (!restaurant.address.trim()) newErrors.address = 'Address is required';
@@ -41,7 +42,10 @@ function RestaurantForm({ initialRestaurant, onSubmit }) {
       return;
     }
 
-    onSubmit(restaurant);
+    onSubmit({
+      ...restaurant,
+      image: restaurant.image.trim()
+    });
     setErrors({});
   }
 
@@ -92,6 +96,19 @@ function RestaurantForm({ initialRestaurant, onSubmit }) {
       </div>
 
       <div style={styles.inputGroup}>
+        <input
+          name="image"
+          placeholder="Image URL (optional)"
+          value={restaurant.image}
+          onChange={handleChange}
+          style={styles.input}
+        />
+        <span style={styles.helperText}>
+          Leave this empty to use the app&apos;s default restaurant image.
+        </span>
+      </div>
+
+      <div style={styles.inputGroup}>
         <textarea
           name="description"
           placeholder="Description"
@@ -139,13 +156,18 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid #cbd5e1',
     fontSize: '14px',
-    minHeight: '8px',
+    minHeight: '88px',
     fontFamily: 'inherit'
   },
   errorText: {
     color: '#ef4444',
     fontSize: '12px',
     fontWeight: '500'
+  },
+  helperText: {
+    color: '#5e646e',
+    fontSize: '12px',
+    lineHeight: '1.4'
   },
   button: {
     backgroundColor: '#009de0',
