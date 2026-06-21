@@ -459,3 +459,9 @@ dist/
 
 # Environment files
 .env
+# Project-specific C++ build artifacts
+/build/
+/server
+/test_full_scenario
+/test_multiple_commands
+/et --hard HEAD@{1}
