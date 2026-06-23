@@ -9,6 +9,16 @@ services:
     restart: unless-stopped
 
   mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     image: mongo:7.0
     environment:
       MONGO_INITDB_DATABASE: "${MONGODB_DB_NAME:-food_delivery}"
