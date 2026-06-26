@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "food-delivery-web-server",
   "version": "1.0.0",
   "description": "Exercise 3 NodeJS Express MVC web server for food delivery API",
@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mongoose": "^9.7.2"
   }
 }
