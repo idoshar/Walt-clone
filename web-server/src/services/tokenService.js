@@ -41,7 +41,7 @@ function createJwt(user) {
 }
 
 class TokenService {
-    login(body) {
+    async login(body) {
         const { username, password } = body || {};
 
         if (typeof username !== 'string' || username.trim() === '') {
@@ -56,7 +56,7 @@ class TokenService {
             throw err;
         }
 
-        const user = userRepository.findByUsername(username.trim());
+        const user = await userRepository.findByUsername(username.trim());
 
         if (!user || user.password !== password.trim()) {
             const err = new Error('Invalid username or password');

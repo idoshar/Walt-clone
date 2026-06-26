@@ -1,52 +1,37 @@
 const Order = require('../models/Order');
 const { generateId } = require('../utilities/idGenerator');
 
-
 class OrderRepository {
-    constructor() {
-        /** @type {Map<string, Order>} */
-        this.orders = new Map();
-    }
-
-    create({ userId, restaurantId, restaurantName, items }) {
+    async create({ userId, restaurantId, restaurantName, items }) {
         const totalPrice = items.reduce(
             (sum, item) => sum + Number(item.price) * Number(item.quantity),
             0
         );
 
-        const order = new Order({
+        return Order.create({
             id: generateId(),
-            userId: Number(userId),
-            restaurantId: Number(restaurantId),
+            userId: String(userId),
+            restaurantId: String(restaurantId),
             restaurantName,
             items,
             totalPrice,
             status: 'created'
         });
-
-        this.orders.set(order.id, order);
-        return order;
     }
 
-
-    findById(id) {
-        return this.orders.get(String(id)) || null;
+    async findById(id) {
+        return Order.findOne({ id: String(id) });
     }
 
-    findByUserId(userId) {
-        return Array.from(this.orders.values()).filter(
-            (order) => String(order.userId) === String(userId)
-        );
+    async findByUserId(userId) {
+        return Order.find({ userId: String(userId) }).sort({ createdAt: -1 });
     }
 
-    findAll() {
-        return Array.from(this.orders.values());
+    async findAll() {
+        return Order.find({}).sort({ createdAt: -1 });
     }
 
-    update(id, updates) {
-        const order = this.orders.get(String(id));
-        if (!order) return null;
-
+    async update(id, updates) {
         const {
             id: _id,
             userId: _uid,
@@ -56,12 +41,16 @@ class OrderRepository {
             ...safeUpdates
         } = updates;
 
-        Object.assign(order, safeUpdates);
-        return order;
+        return Order.findOneAndUpdate(
+            { id: String(id) },
+            safeUpdates,
+            { new: true, runValidators: true }
+        );
     }
 
-    delete(id) {
-        return this.orders.delete(String(id));
+    async delete(id) {
+        const result = await Order.deleteOne({ id: String(id) });
+        return result.deletedCount > 0;
     }
 }
 

@@ -2,15 +2,11 @@ const mongoose = require('mongoose');
 
 const orderItemSchema = new mongoose.Schema(
     {
-        id: {
+        productId: {
             type: String,
             required: true
         },
-        restaurantId: {
-            type: Number,
-            required: true
-        },
-        name: {
+        productName: {
             type: String,
             required: true,
             trim: true
@@ -24,16 +20,6 @@ const orderItemSchema = new mongoose.Schema(
             type: Number,
             required: true,
             min: 1
-        },
-        category: {
-            type: String,
-            default: '',
-            trim: true
-        },
-        image: {
-            type: String,
-            default: '',
-            trim: true
         }
     },
     {
@@ -50,12 +36,12 @@ const orderSchema = new mongoose.Schema(
             index: true
         },
         userId: {
-            type: Number,
+            type: String,
             required: true,
             index: true
         },
         restaurantId: {
-            type: Number,
+            type: String,
             required: true,
             index: true
         },

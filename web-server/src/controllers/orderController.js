@@ -4,7 +4,7 @@ const restaurantRepository = require('../repositories/restaurantRepository');
 const productRepository = require('../repositories/productRepository');
 
 
-function resolveUser(userId) {
+async function resolveUser(userId) {
     return userRepository.findById(userId);
 }
 
@@ -30,28 +30,33 @@ function requireUserId(req, res) {
     return userId;
 }
 
-function createItemSnapshots(restaurantId, items) {
-    return items.map((item) => {
-        const product = productRepository.findById(restaurantId, item.productId);
+async function createItemSnapshots(restaurantId, items) {
+    const snapshots = [];
+
+    for (const item of items) {
+        const product = await productRepository.findById(restaurantId, item.productId);
 
         if (!product) {
-            return null;
+            snapshots.push(null);
+            continue;
         }
 
-        return {
+        snapshots.push({
             productId: String(item.productId),
             productName: product.name || 'Menu item',
             quantity: Number(item.quantity),
             price: Number(item.price)
-        };
-    });
+        });
+    }
+
+    return snapshots;
 }
 
-function createOrder(req, res) {
+async function createOrder(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
-    const user = resolveUser(userId);
+    const user = await resolveUser(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const { restaurantId, items } = req.body || {};
@@ -60,7 +65,7 @@ function createOrder(req, res) {
         return res.status(400).json({ error: 'restaurantId is required' });
     }
 
-    const restaurant = restaurantRepository.findById(restaurantId);
+    const restaurant = await restaurantRepository.findById(restaurantId);
     if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -74,7 +79,7 @@ function createOrder(req, res) {
         });
     }
 
-    const itemSnapshots = createItemSnapshots(restaurantId, items);
+    const itemSnapshots = await createItemSnapshots(restaurantId, items);
 
     if (itemSnapshots.some((item) => item === null)) {
         return res.status(400).json({
@@ -82,7 +87,7 @@ function createOrder(req, res) {
         });
     }
 
-    const order = orderRepository.create({
+    const order = await orderRepository.create({
         userId,
         restaurantId,
         restaurantName: restaurant.name,
@@ -96,20 +101,20 @@ function createOrder(req, res) {
 }
 
 
-function getUserOrders(req, res) {
+async function getUserOrders(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
-    const orders = orderRepository.findByUserId(userId);
+    const orders = await orderRepository.findByUserId(userId);
     return res.status(200).json(orders.map((o) => o.toResponseObject()));
 }
 
 
-function getOrderById(req, res) {
+async function getOrderById(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
-    const order = orderRepository.findById(req.params.id);
+    const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
         return res.status(404).json({ error: 'Order not found' });
@@ -119,11 +124,11 @@ function getOrderById(req, res) {
 }
 
 
-function updateOrder(req, res) {
+async function updateOrder(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
-    const order = orderRepository.findById(req.params.id);
+    const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
         return res.status(404).json({ error: 'Order not found' });
@@ -159,7 +164,7 @@ function updateOrder(req, res) {
             });
         }
 
-        const itemSnapshots = createItemSnapshots(order.restaurantId, items);
+        const itemSnapshots = await createItemSnapshots(order.restaurantId, items);
 
         if (itemSnapshots.some((item) => item === null)) {
             return res.status(400).json({
@@ -174,23 +179,23 @@ function updateOrder(req, res) {
         );
     }
 
-    orderRepository.update(order.id, updates);
+    await orderRepository.update(order.id, updates);
 
     return res.status(204).send();
 }
 
 
-function deleteOrder(req, res) {
+async function deleteOrder(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
-    const order = orderRepository.findById(req.params.id);
+    const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
         return res.status(404).json({ error: 'Order not found' });
     }
 
-    orderRepository.delete(order.id);
+    await orderRepository.delete(order.id);
 
     return res.status(204).send();
 }

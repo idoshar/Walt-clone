@@ -1,9 +1,9 @@
 const userService = require('../services/userService');
 
 class UserController {
-    createUser(req, res, next) {
+    async createUser(req, res, next) {
         try {
-            const user = userService.createUser(req.body);
+            const user = await userService.createUser(req.body);
 
             res.status(201)
                 .location(`/api/users/${user.id}`)
@@ -13,16 +13,16 @@ class UserController {
         }
     }
 
-    getUserById(req, res, next) {
+    async getUserById(req, res, next) {
         try {
-            const user = userService.getUserById(req.params.id);
+            const user = await userService.getUserById(req.params.id);
             res.status(200).json(user.toResponseObject());
         } catch (err) {
             next(err);
         }
     }
 
-    updateCurrentUserLocation(req, res, next) {
+    async updateCurrentUserLocation(req, res, next) {
         try {
             const userId = req.user?.sub;
 
@@ -33,7 +33,7 @@ class UserController {
                 });
             }
 
-            const user = userService.updateCurrentUserLocation(userId, req.body);
+            const user = await userService.updateCurrentUserLocation(userId, req.body);
             return res.status(200).json(user.toResponseObject());
         } catch (err) {
             next(err);
