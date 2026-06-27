@@ -84,6 +84,7 @@ class UserService {
             phone: data.phone.trim(),
             address: data.address.trim(),
             image: data.image || '',
+            role: data.role || 'customer',
             latitude: data.latitude || null,
             longitude: data.longitude || null
         });

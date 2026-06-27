@@ -39,6 +39,12 @@ const userSchema = new mongoose.Schema(
             default: '',
             trim: true
         },
+        role: {
+            type: String,
+            enum: ['customer', 'owner', 'admin'],
+            default: 'customer',
+            index: true
+        },
         latitude: {
             type: Number,
             default: null
@@ -61,6 +67,7 @@ userSchema.methods.toResponseObject = function toResponseObject() {
         phone: this.phone,
         address: this.address,
         image: this.image,
+        role: this.role,
         latitude: this.latitude,
         longitude: this.longitude
     };
