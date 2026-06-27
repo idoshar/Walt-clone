@@ -1,12 +1,7 @@
 import { apiRequest } from './client';
 
+// Normalises whatever shape the server returns into a plain array.
 function extractCollection(response) {
-export function getMyRestaurants(token) {
-  return apiRequest('/restaurants/mine', {
-    token,
-  });
-}
-function extractRestaurants(response) {
   if (Array.isArray(response)) {
     return response;
   }
@@ -23,10 +18,7 @@ function normalizeId(value) {
 }
 
 export async function getRestaurants({ signal } = {}) {
-  const response = await apiRequest('/restaurants', {
-    signal,
-  });
-
+  const response = await apiRequest('/restaurants', { signal });
   return extractCollection(response);
 }
 
@@ -56,4 +48,33 @@ export async function getRestaurantProducts(restaurantId, { signal } = {}) {
   );
 
   return extractCollection(response);
+}
+
+export function getMyRestaurants(token) {
+  return apiRequest('/restaurants/mine', { token });
+}
+
+export async function createRestaurant(data, token) {
+  return apiRequest('/restaurants', {
+    method: 'POST',
+    token,
+    body: data,
+  });
+}
+
+export async function updateRestaurant(restaurantId, data, token) {
+  const normalizedId = normalizeId(restaurantId);
+  return apiRequest(`/restaurants/${encodeURIComponent(normalizedId)}`, {
+    method: 'PUT',
+    token,
+    body: data,
+  });
+}
+
+export async function deleteRestaurant(restaurantId, token) {
+  const normalizedId = normalizeId(restaurantId);
+  return apiRequest(`/restaurants/${encodeURIComponent(normalizedId)}`, {
+    method: 'DELETE',
+    token,
+  });
 }
