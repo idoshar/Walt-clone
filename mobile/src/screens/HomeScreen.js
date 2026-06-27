@@ -183,43 +183,54 @@ export default function HomeScreen({ navigation }) {
 
             <ThemeToggle compact />
           </View>
+        </View>
 
-          <View style={styles.headerActions}>
+        <View style={styles.headerActions}>
+          <Pressable
+            accessibilityLabel="Open cart"
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('Cart')}
+            style={({ pressed }) => [
+              styles.cartButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('MyRestaurants')}
+            style={({ pressed }) => [
+              styles.myRestaurantsButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.myRestaurantsButtonText}>🍽️ My Restaurants</Text>
+          </Pressable>
+
+          {isAdmin ? (
             <Pressable
-              accessibilityLabel="Open cart"
               accessibilityRole="button"
-              onPress={() => navigation.navigate('Cart')}
+              onPress={() => navigation.navigate('Admin')}
               style={({ pressed }) => [
-                styles.cartButton,
+                styles.adminButton,
                 pressed ? styles.pressedButton : null,
               ]}
             >
-              <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
+              <Text style={styles.adminButtonText}>Admin</Text>
             </Pressable>
-            {isAdmin ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => navigation.navigate('Admin')}
-                style={({ pressed }) => [
-                  styles.adminButton,
-                  pressed ? styles.pressedButton : null,
-                ]}
-              >
-                <Text style={styles.adminButtonText}>Admin</Text>
-              </Pressable>
-            ) : null}
+          ) : null}
 
-            <Pressable
-              accessibilityRole="button"
-              onPress={signOut}
-              style={({ pressed }) => [
-                styles.signOutButton,
-                pressed ? styles.pressedButton : null,
-              ]}
-            >
-              <Text style={styles.signOutText}>Sign out</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={signOut}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
         </View>
 
         <AppCard style={styles.locationCard}>
@@ -454,7 +465,8 @@ function createStyles(colors) {
     },
     headerActions: {
       flexDirection: 'row',
-      gap: 8,
+      alignItems: 'center',
+      gap: 10,
     },
     cartButton: {
       alignItems: 'center',
@@ -469,6 +481,21 @@ function createStyles(colors) {
     },
     cartButtonText: {
       color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },    myRestaurantsButton: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 40,
+    },
+    myRestaurantsButtonText: {
+      color: colors.text,
       fontSize: 13,
       fontWeight: '800',
     },

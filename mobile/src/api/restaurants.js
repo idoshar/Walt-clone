@@ -16,10 +16,12 @@ function normalizeId(value) {
   return String(value || '').trim();
 }
 
-export function getMyRestaurants(token) {
-  return apiRequest('/restaurants/mine', {
+export async function getMyRestaurants(token) {
+  const response = await apiRequest('/restaurants/mine', {
     token,
   });
+
+  return extractCollection(response);
 }
 
 export async function getRestaurants({ signal } = {}) {
