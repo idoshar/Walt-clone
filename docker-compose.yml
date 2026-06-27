@@ -36,6 +36,11 @@ services:
       VITE_API_BASE_URL: "${VITE_API_BASE_URL:-http://localhost:3000/api}"
       MONGODB_URI: "${MONGODB_URI:-mongodb://mongo:27017/food_delivery}"
       MONGODB_DB_NAME: "${MONGODB_DB_NAME:-food_delivery}"
+      INITIAL_ADMIN_USERNAME: "${INITIAL_ADMIN_USERNAME:-}"
+      INITIAL_ADMIN_PASSWORD: "${INITIAL_ADMIN_PASSWORD:-}"
+      INITIAL_ADMIN_FULL_NAME: "${INITIAL_ADMIN_FULL_NAME:-}"
+      INITIAL_ADMIN_PHONE: "${INITIAL_ADMIN_PHONE:-}"
+      INITIAL_ADMIN_ADDRESS: "${INITIAL_ADMIN_ADDRESS:-}"
     depends_on:
       ex2-server:
         condition: service_started
