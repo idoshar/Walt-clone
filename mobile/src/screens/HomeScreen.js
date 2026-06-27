@@ -125,6 +125,13 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate('MyRestaurants')}
+              style={styles.myRestaurantsButton}
+            >
+              <Text style={styles.myRestaurantsButtonText}>My Restaurants</Text>
+            </Pressable>
+
             {user?.role === 'admin' && (
               <Pressable
                 onPress={() => navigation.navigate('Admin')}
@@ -237,6 +244,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 8,
+  },
+  myRestaurantsButton: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  myRestaurantsButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   adminButton: {
     borderRadius: 10,
