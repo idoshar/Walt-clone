@@ -11,9 +11,13 @@ import {
 
 import { getMyRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
+import ThemeToggle from '../components/ThemeToggle'; // מייבאים את כפתור החלפת התמה
+import { useAppTheme } from '../theme/ThemeContext';
 
 export default function MyRestaurantsScreen({ navigation }) {
   const { token } = useAuth();
+  const { theme } = useAppTheme();
+  const styles = createStyles(theme.colors);
 
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +44,7 @@ export default function MyRestaurantsScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.helperText}>Loading your restaurants...</Text>
       </View>
     );
@@ -80,12 +84,15 @@ export default function MyRestaurantsScreen({ navigation }) {
       <View style={styles.headerRow}>
         <Text style={styles.screenTitle}>My Restaurants</Text>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('CreateRestaurant')}
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <ThemeToggle compact /> {/* כפתור החלפת דארק מוד */}
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('CreateRestaurant')}
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -146,133 +153,140 @@ export default function MyRestaurantsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    backgroundColor: '#f7f8fa',
-  },
-  listContent: {
-    paddingBottom: 24,
-  },
-  center: {
-    flex: 1,
-    padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f7f8fa',
-  },
-  headerRow: {
-    marginBottom: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#111827',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 8,
-    textAlign: 'center',
-    color: '#111827',
-  },
-  helperText: {
-    marginTop: 8,
-    color: '#5f6b7a',
-    textAlign: 'center',
-  },
-  errorText: {
-    color: '#b00020',
-    textAlign: 'center',
-    marginVertical: 12,
-  },
-  primaryButton: {
-    marginTop: 18,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#009de0',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  addButton: {
-    paddingVertical: 9,
-    paddingHorizontal: 15,
-    borderRadius: 14,
-    backgroundColor: '#009de0',
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: '800',
-  },
-  card: {
-    marginBottom: 16,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  restaurantImage: {
-    width: '100%',
-    height: 190,
-    backgroundColor: '#eef1f4',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    height: 190,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#eef1f4',
-  },
-  imagePlaceholderText: {
-    color: '#5f6b7a',
-    fontWeight: '700',
-  },
-  cardContent: {
-    padding: 16,
-  },
-  cardTopRow: {
-    marginBottom: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  restaurantName: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#111827',
-    marginRight: 10,
-  },
-  countBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: '#e6f6fd',
-  },
-  countBadgeText: {
-    color: '#009de0',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  metaText: {
-    color: '#4b5563',
-    marginBottom: 5,
-    fontSize: 15,
-  },
-  addressText: {
-    color: '#6b7280',
-    fontSize: 14,
-  },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      backgroundColor: colors.background,
+    },
+    listContent: {
+      paddingBottom: 24,
+    },
+    center: {
+      flex: 1,
+      padding: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
+    headerRow: {
+      marginBottom: 18,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    screenTitle: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      marginBottom: 8,
+      textAlign: 'center',
+      color: colors.text,
+    },
+    helperText: {
+      marginTop: 8,
+      color: colors.textMuted || '#5f6b7a',
+      textAlign: 'center',
+    },
+    errorText: {
+      color: colors.danger || '#b00020',
+      textAlign: 'center',
+      marginVertical: 12,
+    },
+    primaryButton: {
+      marginTop: 18,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      backgroundColor: colors.primary || '#009de0',
+    },
+    primaryButtonText: {
+      color: colors.onPrimary || '#fff',
+      fontWeight: '700',
+    },
+    addButton: {
+      paddingVertical: 9,
+      paddingHorizontal: 15,
+      borderRadius: 14,
+      backgroundColor: colors.primary || '#009de0',
+    },
+    addButtonText: {
+      color: colors.onPrimary || '#fff',
+      fontWeight: '800',
+    },
+    card: {
+      marginBottom: 16,
+      borderRadius: 20,
+      backgroundColor: colors.surface || '#fff',
+      overflow: 'hidden',
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+    },
+    restaurantImage: {
+      width: '100%',
+      height: 190,
+      backgroundColor: colors.border || '#eef1f4',
+    },
+    imagePlaceholder: {
+      width: '100%',
+      height: 190,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.border || '#eef1f4',
+    },
+    imagePlaceholderText: {
+      color: colors.textMuted || '#5f6b7a',
+      fontWeight: '700',
+    },
+    cardContent: {
+      padding: 16,
+    },
+    cardTopRow: {
+      marginBottom: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    restaurantName: {
+      flex: 1,
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.text,
+      marginRight: 10,
+    },
+    countBadge: {
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 999,
+      backgroundColor: colors.primarySoft || '#e6f6fd',
+    },
+    countBadgeText: {
+      color: colors.primary || '#009de0',
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    metaText: {
+      color: colors.textMuted || '#4b5563',
+      marginBottom: 5,
+      fontSize: 15,
+    },
+    addressText: {
+      color: colors.textMuted || '#6b7280',
+      fontSize: 14,
+    },
+  });
+}

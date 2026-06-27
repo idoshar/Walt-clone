@@ -181,40 +181,43 @@ export default function HomeScreen({ navigation }) {
 
             <ThemeToggle compact />
           </View>
+        </View>
 
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={() => navigation.navigate('MyRestaurants')}
-              style={styles.myRestaurantsButton}
-            >
-              <Text style={styles.myRestaurantsButtonText}>My Restaurants</Text>
-            </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('MyRestaurants')}
+            style={({ pressed }) => [
+              styles.myRestaurantsButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.myRestaurantsButtonText}>🍽️ My Restaurants</Text>
+          </Pressable>
 
-            {user?.role === 'admin' && (
-            {isAdmin ? (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => navigation.navigate('Admin')}
-                style={({ pressed }) => [
-                  styles.adminButton,
-                  pressed ? styles.pressedButton : null,
-                ]}
-              >
-                <Text style={styles.adminButtonText}>Admin</Text>
-              </Pressable>
-            ) : null}
-
+          {isAdmin ? (
             <Pressable
               accessibilityRole="button"
-              onPress={signOut}
+              onPress={() => navigation.navigate('Admin')}
               style={({ pressed }) => [
-                styles.signOutButton,
+                styles.adminButton,
                 pressed ? styles.pressedButton : null,
               ]}
             >
-              <Text style={styles.signOutText}>Sign out</Text>
+              <Text style={styles.adminButtonText}>Admin</Text>
             </Pressable>
-          </View>
+          ) : null}
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={signOut}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
         </View>
 
         <AppCard style={styles.locationCard}>
@@ -404,107 +407,6 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f7f7f7',
-  },
-  content: {
-    flexGrow: 1,
-    padding: 24,
-    gap: 16,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: 15,
-    marginTop: 4,
-  },
-  headerActions: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  myRestaurantsButton: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  myRestaurantsButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  adminButton: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  adminButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  signOutButton: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  signOutText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  statusCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    gap: 16,
-  },
-  statusLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  statusText: {
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  message: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  button: {
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingVertical: 14,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  restaurantRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#e5e5e5',
-    paddingTop: 12,
-    gap: 4,
-  },
-  restaurantName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  restaurantDistance: {
-    fontSize: 14,
-  },
-  apiText: {
-    fontSize: 12,
-    marginTop: 8,
-  },
-});
 function createStyles(colors) {
   return StyleSheet.create({
     container: {
@@ -550,7 +452,24 @@ function createStyles(colors) {
     },
     headerActions: {
       flexDirection: 'row',
-      gap: 8,
+      alignItems: 'center',
+      gap: 10,
+    },
+    myRestaurantsButton: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 40,
+    },
+    myRestaurantsButtonText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '800',
     },
     adminButton: {
       alignItems: 'center',
