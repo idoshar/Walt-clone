@@ -29,6 +29,7 @@ function createJwt(user) {
         sub: String(user.id),
         username: user.username,
         fullName: user.fullName,
+        role: user.role,
         iat: now,
         exp: now + JWT_EXPIRES_IN_SECONDS
     };
@@ -74,6 +75,7 @@ class TokenService {
                 phone: user.phone,
                 address: user.address,
                 image: user.image,
+                role: user.role,
                 latitude: user.latitude,
                 longitude: user.longitude
             }
