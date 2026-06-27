@@ -12,6 +12,8 @@ import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
 import CartScreen from '../screens/CartScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
+import OrderDetailsScreen from '../screens/OrderDetailsScreen';
+import OrdersScreen from '../screens/OrdersScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
@@ -84,6 +86,18 @@ function AppNavigator({ screenOptions }) {
         component={CheckoutScreen}
         name="Checkout"
         options={{ title: 'Checkout' }}
+      />
+
+      <Stack.Screen
+        component={OrdersScreen}
+        name="MyOrders"
+        options={{ title: 'My orders' }}
+      />
+
+      <Stack.Screen
+        component={OrderDetailsScreen}
+        name="OrderDetails"
+        options={{ title: 'Order details' }}
       />
 
       <Stack.Screen
