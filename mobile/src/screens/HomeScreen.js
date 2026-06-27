@@ -205,7 +205,7 @@ export default function HomeScreen({ navigation }) {
               pressed ? styles.pressedButton : null,
             ]}
           >
-            <Text style={styles.myRestaurantsButtonText}>🍽️ My Restaurants</Text>
+            <Text style={styles.myRestaurantsButtonText}>My Restaurants</Text>
           </Pressable>
 
           {isAdmin ? (
@@ -233,6 +233,24 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </View>
 
+        <Pressable
+          accessibilityLabel="Open order history"
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('MyOrders')}
+          style={({ pressed }) => [
+            styles.myOrdersCard,
+            pressed ? styles.pressedButton : null,
+          ]}
+        >
+          <View style={styles.myOrdersText}>
+            <Text style={styles.myOrdersTitle}>My orders</Text>
+            <Text style={styles.myOrdersMessage}>
+              View your previous orders and their current status.
+            </Text>
+          </View>
+
+          <Text style={styles.myOrdersAction}>View</Text>
+        </Pressable>
         <AppCard style={styles.locationCard}>
           <View style={styles.locationIcon}>
             <Text style={styles.locationIconText}>{'\u{1F4CD}'}</Text>
@@ -533,7 +551,36 @@ function createStyles(colors) {
     pressedButton: {
       opacity: 0.72,
     },
-    locationCard: {
+    myOrdersCard: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 18,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 14,
+      justifyContent: 'space-between',
+      padding: 16,
+    },
+    myOrdersText: {
+      flex: 1,
+      gap: 4,
+    },
+    myOrdersTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: '800',
+    },
+    myOrdersMessage: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    myOrdersAction: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+    },    locationCard: {
       alignItems: 'center',
       flexDirection: 'row',
       gap: 12,
