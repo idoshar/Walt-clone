@@ -16,6 +16,8 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from '../auth/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const INITIAL_FORM = {
   username: '',
@@ -31,10 +33,13 @@ const IMAGE_PICKER_OPTIONS = {
   allowsEditing: true,
   aspect: [1, 1],
   quality: 0.7,
+  base64: true,
 };
 
 export default function RegisterScreen() {
   const { signUp } = useAuth();
+  const { theme } = useAppTheme();
+  const styles = createStyles(theme.colors);
 
   const [form, setForm] = useState(INITIAL_FORM);
   const [fieldErrors, setFieldErrors] = useState({});
@@ -165,9 +170,22 @@ export default function RegisterScreen() {
       return;
     }
 
+    const imageMimeType = selectedAsset.mimeType || 'image/jpeg';
+    const imageDataUri = selectedAsset.base64
+      ? `data:${imageMimeType};base64,${selectedAsset.base64}`
+      : '';
+
+    if (!imageDataUri) {
+      setImageError(
+        'The selected image could not be prepared for upload. Please choose it again.'
+      );
+      return;
+    }
+
     setProfileImage({
       name: selectedAsset.fileName || 'Profile image',
       uri: selectedAsset.uri,
+      dataUri: imageDataUri,
     });
 
     setImageError('');
@@ -258,6 +276,28 @@ export default function RegisterScreen() {
     setMessage('');
   }
 
+  function showRegistrationError(error) {
+    const serverMessage =
+      typeof error?.message === 'string' && error.message.trim()
+        ? error.message.trim()
+        : 'Could not create the account.';
+
+    if (
+      error?.status === 409 ||
+      /username already exists/i.test(serverMessage)
+    ) {
+      setFieldErrors((currentErrors) => ({
+        ...currentErrors,
+        username: 'This username is already taken. Please choose another one.',
+      }));
+
+      setMessage('Please choose a different username.');
+      return;
+    }
+
+    setMessage(serverMessage);
+  }
+
   async function handleRegister() {
     if (isSubmitting) {
       return;
@@ -282,9 +322,10 @@ export default function RegisterScreen() {
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
+        image: profileImage?.dataUri || '',
       });
     } catch (error) {
-      setMessage(error.message || 'Could not create the account.');
+      showRegistrationError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -303,14 +344,21 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background },
+      ]}
     >
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Create account</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Create account</Text>
+            <ThemeToggle compact />
+          </View>
+
           <Text style={styles.subtitle}>
             Register and continue directly to the app.
           </Text>
@@ -569,173 +617,198 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f7f7f7',
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    gap: 18,
-    padding: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: '#5f6368',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  imageSection: {
-    alignItems: 'center',
-    borderColor: '#e2e2e2',
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 10,
-    padding: 16,
-  },
-  avatarButton: {
-    borderRadius: 56,
-  },
-  avatarButtonPressed: {
-    opacity: 0.72,
-  },
-  avatarPreview: {
-    borderRadius: 56,
-    height: 112,
-    width: 112,
-  },
-  avatarPlaceholder: {
-    alignItems: 'center',
-    backgroundColor: '#edf7fc',
-    borderColor: '#009de0',
-    borderRadius: 56,
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    height: 112,
-    justifyContent: 'center',
-    width: 112,
-  },
-  avatarPlus: {
-    color: '#007cb3',
-    fontSize: 30,
-    fontWeight: '400',
-    lineHeight: 34,
-  },
-  avatarPlaceholderText: {
-    color: '#007cb3',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  fieldGroup: {
-    gap: 6,
-  },
-  fieldLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  input: {
-    borderColor: '#d7d7d7',
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 16,
-    padding: 14,
-  },
-  inputError: {
-    borderColor: '#c62828',
-  },
-  fieldHelper: {
-    color: '#5f6368',
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  fieldError: {
-    color: '#c62828',
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  message: {
-    color: '#c62828',
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  primaryButton: {
-    alignItems: 'center',
-    backgroundColor: '#009de0',
-    borderRadius: 10,
-    paddingVertical: 14,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  removeImageButton: {
-    paddingVertical: 4,
-  },
-  removeImageButtonText: {
-    color: '#c62828',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  buttonDisabled: {
-    opacity: 0.55,
-  },
-  modalBackdrop: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    flex: 1,
-    justifyContent: 'flex-end',
-    padding: 20,
-  },
-  modalSheet: {
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    gap: 12,
-    padding: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    fontSize: 21,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    color: '#5f6368',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  modalActionButton: {
-    alignItems: 'center',
-    backgroundColor: '#edf7fc',
-    borderRadius: 10,
-    paddingVertical: 14,
-  },
-  modalActionText: {
-    color: '#007cb3',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  modalCancelButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  modalCancelText: {
-    color: '#5f6368',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    content: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      padding: 24,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 20,
+      borderWidth: 1,
+      gap: 18,
+      padding: 24,
+    },
+    headerRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    title: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 28,
+      fontWeight: '800',
+      letterSpacing: -0.4,
+    },
+    subtitle: {
+      color: colors.textMuted,
+      fontSize: 16,
+      lineHeight: 22,
+      marginBottom: 4,
+    },
+    imageSection: {
+      alignItems: 'center',
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      gap: 10,
+      padding: 16,
+    },
+    avatarButton: {
+      borderRadius: 56,
+    },
+    avatarButtonPressed: {
+      opacity: 0.72,
+    },
+    avatarPreview: {
+      borderRadius: 56,
+      height: 112,
+      width: 112,
+    },
+    avatarPlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 56,
+      borderStyle: 'dashed',
+      borderWidth: 1,
+      height: 112,
+      justifyContent: 'center',
+      width: 112,
+    },
+    avatarPlus: {
+      color: colors.primary,
+      fontSize: 30,
+      fontWeight: '400',
+      lineHeight: 34,
+    },
+    avatarPlaceholderText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    fieldGroup: {
+      gap: 6,
+    },
+    fieldLabel: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    input: {
+      backgroundColor: colors.surfaceRaised,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      color: colors.text,
+      fontSize: 16,
+      minHeight: 52,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    fieldHelper: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: 'center',
+    },
+    fieldError: {
+      color: colors.danger,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: 'center',
+    },
+    message: {
+      color: colors.danger,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+    },
+    primaryButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      minHeight: 52,
+      paddingVertical: 14,
+    },
+    primaryButtonText: {
+      color: colors.onPrimary,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    removeImageButton: {
+      paddingVertical: 4,
+    },
+    removeImageButtonText: {
+      color: colors.danger,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    buttonDisabled: {
+      opacity: 0.55,
+    },
+    modalBackdrop: {
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.55)',
+      flex: 1,
+      justifyContent: 'flex-end',
+      padding: 20,
+    },
+    modalSheet: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 20,
+      borderWidth: 1,
+      gap: 12,
+      padding: 20,
+      width: '100%',
+    },
+    modalTitle: {
+      color: colors.text,
+      fontSize: 21,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    modalSubtitle: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 4,
+      textAlign: 'center',
+    },
+    modalActionButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 14,
+      borderWidth: 1,
+      paddingVertical: 14,
+    },
+    modalActionText: {
+      color: colors.primary,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    modalCancelButton: {
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    modalCancelText: {
+      color: colors.textMuted,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+  });
+}

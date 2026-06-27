@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
+  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,9 +10,14 @@ import {
 } from 'react-native';
 
 import { useAuth } from '../auth/AuthContext';
+import AppButton from '../components/AppButton';
+import AppCard from '../components/AppCard';
+import ThemeToggle from '../components/ThemeToggle';
+import { useAppTheme } from '../theme/ThemeContext';
 
 export default function LoginScreen({ navigation }) {
   const { signIn } = useAuth();
+  const { theme } = useAppTheme();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -39,110 +43,202 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Wolt Delivery</Text>
-        <Text style={styles.subtitle}>Sign in to continue</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardContainer}
+      >
+        <View style={styles.content}>
+          <View style={styles.topRow}>
+            <View style={styles.brandBlock}>
+              <Text style={[styles.brandName, { color: theme.colors.primary }]}>
+                Wolt Delivery
+              </Text>
+              <Text style={[styles.brandTagline, { color: theme.colors.textMuted }]}>
+                Your next meal, delivered.
+              </Text>
+            </View>
 
-        <TextInput
-          autoCapitalize="none"
-          autoCorrect={false}
-          editable={!isSubmitting}
-          onChangeText={setUsername}
-          placeholder="Username"
-          style={styles.input}
-          value={username}
-        />
+            <ThemeToggle compact />
+          </View>
 
-        <TextInput
-          editable={!isSubmitting}
-          onChangeText={setPassword}
-          placeholder="Password"
-          secureTextEntry
-          style={styles.input}
-          value={password}
-        />
+          <AppCard style={styles.card}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
+              Welcome back
+            </Text>
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
+              Sign in to browse restaurants and manage your orders.
+            </Text>
 
-        <Pressable
-          disabled={isSubmitting}
-          onPress={handleLogin}
-          style={styles.primaryButton}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator />
-          ) : (
-            <Text style={styles.primaryButtonText}>Sign in</Text>
-          )}
-        </Pressable>
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>
+                Username
+              </Text>
 
-        <Pressable
-          disabled={isSubmitting}
-          onPress={() => navigation.navigate('Register')}
-          style={styles.secondaryButton}
-        >
-          <Text style={styles.secondaryButtonText}>
-            New here? Create an account
+              <TextInput
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isSubmitting}
+                onChangeText={(value) => {
+                  setUsername(value);
+                  setMessage('');
+                }}
+                placeholder="Enter your username"
+                placeholderTextColor={theme.colors.textMuted}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.colors.surfaceRaised,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                  },
+                ]}
+                value={username}
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={[styles.fieldLabel, { color: theme.colors.text }]}>
+                Password
+              </Text>
+
+              <TextInput
+                autoCapitalize="none"
+                editable={!isSubmitting}
+                onChangeText={(value) => {
+                  setPassword(value);
+                  setMessage('');
+                }}
+                placeholder="Enter your password"
+                placeholderTextColor={theme.colors.textMuted}
+                secureTextEntry
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.colors.surfaceRaised,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.text,
+                  },
+                ]}
+                value={password}
+                onSubmitEditing={handleLogin}
+                returnKeyType="done"
+              />
+            </View>
+
+            {message ? (
+              <View
+                style={[
+                  styles.messageBox,
+                  { backgroundColor: theme.colors.dangerSoft },
+                ]}
+              >
+                <Text style={[styles.message, { color: theme.colors.danger }]}>
+                  {message}
+                </Text>
+              </View>
+            ) : null}
+
+            <AppButton
+              disabled={isSubmitting}
+              loading={isSubmitting}
+              onPress={handleLogin}
+              title="Sign in"
+            />
+
+            <AppButton
+              disabled={isSubmitting}
+              onPress={() => navigation.navigate('Register')}
+              title="Create a new account"
+              variant="secondary"
+            />
+          </AppCard>
+
+          <Text style={[styles.footer, { color: theme.colors.textMuted }]}>
+            Food delivery, restaurants and orders in one place.
           </Text>
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    backgroundColor: '#f7f7f7',
+  safeArea: {
+    flex: 1,
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
   },
+  topRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  brandBlock: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  brandName: {
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -0.8,
+  },
+  brandTagline: {
+    fontSize: 15,
+    marginTop: 4,
+  },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    gap: 14,
+    gap: 18,
     padding: 24,
-    width: '100%',
   },
   title: {
-    fontSize: 30,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: -8,
+  },
+  fieldGroup: {
+    gap: 7,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   input: {
-    borderColor: '#d7d7d7',
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     fontSize: 16,
-    padding: 14,
+    minHeight: 52,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  messageBox: {
+    borderRadius: 12,
+    padding: 12,
   },
   message: {
     fontSize: 14,
+    fontWeight: '600',
     lineHeight: 20,
   },
-  primaryButton: {
-    alignItems: 'center',
-    borderRadius: 10,
-    paddingVertical: 14,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
+  footer: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 18,
+    textAlign: 'center',
   },
 });
