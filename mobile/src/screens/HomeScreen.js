@@ -486,7 +486,6 @@ function createStyles(colors) {
       alignItems: 'center',
       gap: 10,
     },
-    myRestaurantsButton: {
     cartButton: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
