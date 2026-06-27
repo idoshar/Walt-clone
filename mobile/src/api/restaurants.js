@@ -1,12 +1,6 @@
 import { apiRequest } from './client';
 
 function extractCollection(response) {
-export function getMyRestaurants(token) {
-  return apiRequest('/restaurants/mine', {
-    token,
-  });
-}
-function extractRestaurants(response) {
   if (Array.isArray(response)) {
     return response;
   }
@@ -20,6 +14,12 @@ function extractRestaurants(response) {
 
 function normalizeId(value) {
   return String(value || '').trim();
+}
+
+export function getMyRestaurants(token) {
+  return apiRequest('/restaurants/mine', {
+    token,
+  });
 }
 
 export async function getRestaurants({ signal } = {}) {
