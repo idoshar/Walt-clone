@@ -1,303 +1,186 @@
-const store = new Map();
+const Product = require('../models/Product');
+const { getNextSequence } = require('../services/sequenceService');
 
-// Product IDs in the web server are strings, while Exercise 2 requires
-// positive numeric product IDs. These maps keep the translation internal.
-const recommendationIdByProductKey = new Map();
-const productLocationByRecommendationId = new Map();
-let nextRecommendationId = 1;
-
-// Map<restaurantId -> Map<productId -> product>>
-function _normalizeRestaurantId(restaurantId) {
-    return Number(restaurantId);
+function normalizeRestaurantId(restaurantId) {
+    return String(restaurantId);
 }
 
-function _normalizeProductId(productId) {
+function normalizeProductId(productId) {
     return String(productId);
 }
 
-function _getProductKey(restaurantId, productId) {
-    return `${_normalizeRestaurantId(restaurantId)}:${_normalizeProductId(productId)}`;
-}
+function normalizeRecommendationId(recommendationId) {
+    const value = Number(recommendationId);
 
-function _getRestaurantMap(restaurantId) {
-    return store.get(_normalizeRestaurantId(restaurantId)) || null;
-}
-
-function _getOrCreateRestaurantMap(restaurantId) {
-    const normalizedRestaurantId = _normalizeRestaurantId(restaurantId);
-
-    if (!store.has(normalizedRestaurantId)) {
-        store.set(normalizedRestaurantId, new Map());
+    if (!Number.isSafeInteger(value) || value <= 0) {
+        return null;
     }
 
-    return store.get(normalizedRestaurantId);
+    return value;
 }
 
-function _assignRecommendationId(restaurantId, productId) {
-    const normalizedRestaurantId = _normalizeRestaurantId(restaurantId);
-    const normalizedProductId = _normalizeProductId(productId);
-    const productKey = _getProductKey(normalizedRestaurantId, normalizedProductId);
-
-    const existingRecommendationId = recommendationIdByProductKey.get(productKey);
-
-    if (existingRecommendationId) {
-        return existingRecommendationId;
+function toResponseObject(product) {
+    if (!product) {
+        return null;
     }
 
-    const recommendationId = nextRecommendationId++;
+    return {
+        id: product.id,
+        restaurantId: product.restaurantId,
+        name: product.name,
+        price: product.price,
+        description: product.description,
+        category: product.category,
+        image: product.image,
+        recommendationId: product.recommendationId
+    };
+}
 
-    recommendationIdByProductKey.set(productKey, recommendationId);
-    productLocationByRecommendationId.set(recommendationId, {
+function escapeRegularExpression(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function findAllByRestaurant(restaurantId) {
+    const products = await Product.find({
+        restaurantId: normalizeRestaurantId(restaurantId)
+    })
+        .sort({ createdAt: 1, _id: 1 })
+        .lean();
+
+    return products.map(toResponseObject);
+}
+
+async function findAll() {
+    const products = await Product.find({})
+        .sort({ createdAt: 1, _id: 1 })
+        .lean();
+
+    return products.map(toResponseObject);
+}
+
+async function findById(restaurantId, productId) {
+    const product = await Product.findOne({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        id: normalizeProductId(productId)
+    }).lean();
+
+    return toResponseObject(product);
+}
+
+async function findByRecommendationId(recommendationId) {
+    const normalizedRecommendationId =
+        normalizeRecommendationId(recommendationId);
+
+    if (!normalizedRecommendationId) {
+        return null;
+    }
+
+    const product = await Product.findOne({
+        recommendationId: normalizedRecommendationId
+    }).lean();
+
+    return toResponseObject(product);
+}
+
+async function getRecommendationId(restaurantId, productId) {
+    const product = await findById(restaurantId, productId);
+
+    return product ? product.recommendationId : null;
+}
+
+async function save(restaurantId, product) {
+    const normalizedRestaurantId = normalizeRestaurantId(restaurantId);
+    const normalizedProductId = normalizeProductId(product.id);
+
+    const existingProduct = await Product.findOne({
         restaurantId: normalizedRestaurantId,
-        productId: normalizedProductId
-    });
+        id: normalizedProductId
+    }).lean();
 
-    return recommendationId;
-}
-
-function _removeRecommendationId(restaurantId, productId) {
-    const productKey = _getProductKey(restaurantId, productId);
-    const recommendationId = recommendationIdByProductKey.get(productKey);
-
-    if (!recommendationId) {
-        return;
+    if (existingProduct) {
+        return toResponseObject(existingProduct);
     }
 
-    recommendationIdByProductKey.delete(productKey);
-    productLocationByRecommendationId.delete(recommendationId);
-}
-
-function findAllByRestaurant(restaurantId) {
-    const map = _getRestaurantMap(restaurantId);
-
-    if (!map) {
-        return [];
-    }
-
-    return Array.from(map.values());
-}
-
-function findAll() {
-    const products = [];
-
-    for (const restaurantProducts of store.values()) {
-        products.push(...restaurantProducts.values());
-    }
-
-    return products;
-}
-
-function findById(restaurantId, productId) {
-    const map = _getRestaurantMap(restaurantId);
-
-    if (!map) {
-        return null;
-    }
-
-    return map.get(_normalizeProductId(productId)) || null;
-}
-
-function findByRecommendationId(recommendationId) {
-    const normalizedRecommendationId = Number(recommendationId);
-
-    if (
-        !Number.isSafeInteger(normalizedRecommendationId) ||
-        normalizedRecommendationId <= 0
-    ) {
-        return null;
-    }
-
-    const location = productLocationByRecommendationId.get(
-        normalizedRecommendationId
+    const recommendationId = await getNextSequence(
+        'productRecommendationId'
     );
 
-    if (!location) {
-        return null;
-    }
+    const savedProduct = await Product.create({
+        id: normalizedProductId,
+        restaurantId: normalizedRestaurantId,
+        name: product.name,
+        price: product.price,
+        description: product.description || '',
+        category: product.category || '',
+        image: product.image || '',
+        recommendationId
+    });
 
-    return findById(location.restaurantId, location.productId);
+    return toResponseObject(savedProduct.toObject());
 }
 
-function getRecommendationId(restaurantId, productId) {
-    const product = findById(restaurantId, productId);
+async function update(restaurantId, productId, updates) {
+    const {
+        id: _id,
+        restaurantId: _restaurantId,
+        recommendationId: _recommendationId,
+        ...safeUpdates
+    } = updates;
 
-    if (!product) {
-        return null;
-    }
-
-    return _assignRecommendationId(restaurantId, productId);
-}
-
-function save(restaurantId, product) {
-    const map = _getOrCreateRestaurantMap(restaurantId);
-    const productId = _normalizeProductId(product.id);
-
-    const productToSave = {
-        ...product,
-        id: productId,
-        restaurantId: _normalizeRestaurantId(restaurantId)
-    };
-
-    map.set(productId, productToSave);
-    _assignRecommendationId(restaurantId, productId);
-
-    return productToSave;
-}
-
-function update(restaurantId, productId, updates) {
-    const map = _getRestaurantMap(restaurantId);
-
-    if (!map) {
-        return null;
-    }
-
-    const normalizedProductId = _normalizeProductId(productId);
-    const product = map.get(normalizedProductId);
-
-    if (!product) {
-        return null;
-    }
-
-    const updated = {
-        ...product,
-        ...updates,
-        id: product.id,
-        restaurantId: product.restaurantId
-    };
-
-    map.set(normalizedProductId, updated);
-
-    return updated;
-}
-
-function remove(restaurantId, productId) {
-    const map = _getRestaurantMap(restaurantId);
-
-    if (!map) {
-        return false;
-    }
-
-    const normalizedProductId = _normalizeProductId(productId);
-    const deleted = map.delete(normalizedProductId);
-
-    if (deleted) {
-        _removeRecommendationId(restaurantId, normalizedProductId);
-    }
-
-    return deleted;
-}
-
-function removeAllByRestaurant(restaurantId) {
-    const map = _getRestaurantMap(restaurantId);
-
-    if (map) {
-        for (const productId of map.keys()) {
-            _removeRecommendationId(restaurantId, productId);
+    const updatedProduct = await Product.findOneAndUpdate(
+        {
+            restaurantId: normalizeRestaurantId(restaurantId),
+            id: normalizeProductId(productId)
+        },
+        safeUpdates,
+        {
+            new: true,
+            runValidators: true
         }
-    }
+    ).lean();
 
-    store.delete(_normalizeRestaurantId(restaurantId));
+    return toResponseObject(updatedProduct);
 }
 
-function search(query) {
-    const normalizedQuery = String(query || '').trim().toLowerCase();
+async function remove(restaurantId, productId) {
+    const result = await Product.deleteOne({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        id: normalizeProductId(productId)
+    });
+
+    return result.deletedCount > 0;
+}
+
+async function removeAllByRestaurant(restaurantId) {
+    await Product.deleteMany({
+        restaurantId: normalizeRestaurantId(restaurantId)
+    });
+}
+
+async function search(query) {
+    const normalizedQuery = String(query || '').trim();
 
     if (!normalizedQuery) {
         return [];
     }
 
-    return findAll().filter((product) => {
-        const name = String(product.name || '').toLowerCase();
-        const description = String(product.description || '').toLowerCase();
+    const expression = new RegExp(
+        escapeRegularExpression(normalizedQuery),
+        'i'
+    );
 
-        return name.includes(normalizedQuery) || description.includes(normalizedQuery);
-    });
+    const products = await Product.find({
+        $or: [
+            { name: expression },
+            { description: expression }
+        ]
+    })
+        .sort({ createdAt: 1, _id: 1 })
+        .lean();
+
+    return products.map(toResponseObject);
 }
 
-
-/* SCRUM-332 demo menu seed */
-const DEMO_PRODUCTS = [
-    {
-        restaurantId: 1,
-        id: 'pizza-margherita',
-        name: 'Margherita Pizza',
-        price: 52,
-        description: 'Tomato sauce, mozzarella, basil and olive oil',
-        category: 'Pizza'
-    },
-    {
-        restaurantId: 1,
-        id: 'pasta-alfredo',
-        name: 'Pasta Alfredo',
-        price: 48,
-        description: 'Creamy parmesan sauce with fresh pasta',
-        category: 'Pasta'
-    },
-    {
-        restaurantId: 1,
-        id: 'tiramisu',
-        name: 'Classic Tiramisu',
-        price: 32,
-        description: 'Coffee-soaked ladyfingers with mascarpone cream',
-        category: 'Dessert'
-    },
-    {
-        restaurantId: 2,
-        id: 'classic-burger',
-        name: 'Classic Beef Burger',
-        price: 58,
-        description: 'Grilled beef patty, lettuce, tomato and house sauce',
-        category: 'Burger'
-    },
-    {
-        restaurantId: 2,
-        id: 'crispy-fries',
-        name: 'Crispy Fries',
-        price: 18,
-        description: 'Golden fries served with ketchup',
-        category: 'Side'
-    },
-    {
-        restaurantId: 2,
-        id: 'chicken-burger',
-        name: 'Crispy Chicken Burger',
-        price: 55,
-        description: 'Crispy chicken, coleslaw and spicy mayo',
-        category: 'Burger'
-    },
-    {
-        restaurantId: 3,
-        id: 'salmon-avocado-roll',
-        name: 'Salmon Avocado Roll',
-        price: 46,
-        description: 'Fresh salmon, avocado and sushi rice',
-        category: 'Sushi'
-    },
-    {
-        restaurantId: 3,
-        id: 'spicy-tuna-roll',
-        name: 'Spicy Tuna Roll',
-        price: 49,
-        description: 'Tuna, cucumber and spicy sauce',
-        category: 'Sushi'
-    },
-    {
-        restaurantId: 3,
-        id: 'edamame',
-        name: 'Edamame',
-        price: 16,
-        description: 'Steamed soybeans with sea salt',
-        category: 'Side'
-    }
-];
-
-function seedDemoProducts() {
-    DEMO_PRODUCTS.forEach(({ restaurantId, ...product }) => {
-        save(restaurantId, product);
-    });
-}
-
-seedDemoProducts();
 module.exports = {
     findAllByRestaurant,
     findAll,

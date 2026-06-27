@@ -3,7 +3,10 @@ const restaurantRepository = require('../repositories/restaurantRepository');
 const productRepository = require('../repositories/productRepository');
 const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
-const { validateObject, validateRequiredFields } = require('../utilities/validationHelper');
+const {
+    validateObject,
+    validateRequiredFields
+} = require('../utilities/validationHelper');
 
 function getLocationFields(body) {
     const hasLatitude = Object.prototype.hasOwnProperty.call(body, 'latitude');
@@ -44,18 +47,19 @@ function getLocationFields(body) {
     };
 }
 
-function getProductCount(restaurantId) {
-    return productRepository.findAllByRestaurant(restaurantId).length;
+async function getProductCount(restaurantId) {
+    const products = await productRepository.findAllByRestaurant(restaurantId);
+    return products.length;
 }
 
-function isPublicRestaurant(restaurant) {
-    return getProductCount(restaurant.id) > 0;
+async function isPublicRestaurant(restaurant) {
+    return (await getProductCount(restaurant.id)) > 0;
 }
 
-function toManagementResponseObject(restaurant) {
+async function toManagementResponseObject(restaurant) {
     return {
         ...restaurant.toResponseObject(),
-        productCount: getProductCount(restaurant.id)
+        productCount: await getProductCount(restaurant.id)
     };
 }
 
@@ -74,15 +78,22 @@ function normalizeImage(value) {
 }
 
 class RestaurantController {
-    getAllRestaurants(req, res, next) {
+    async getAllRestaurants(req, res, next) {
         try {
             const restaurants = restaurantRepository.getAll
                 ? restaurantRepository.getAll()
                 : restaurantRepository.findAll();
 
-            const publicRestaurants = restaurants
-                .filter(isPublicRestaurant)
-                .map((restaurant) => restaurant.toResponseObject());
+            const visibility = await Promise.all(
+                restaurants.map(async (restaurant) => ({
+                    restaurant,
+                    visible: await isPublicRestaurant(restaurant)
+                }))
+            );
+
+            const publicRestaurants = visibility
+                .filter(({ visible }) => visible)
+                .map(({ restaurant }) => restaurant.toResponseObject());
 
             return responseHelper.ok(res, publicRestaurants);
         } catch (err) {
@@ -90,20 +101,22 @@ class RestaurantController {
         }
     }
 
-    getMyRestaurants(req, res, next) {
+    async getMyRestaurants(req, res, next) {
         try {
             const userId = req.user?.sub || req.user?.id;
             const restaurants = restaurantRepository.getAll
                 ? restaurantRepository.getAll()
                 : restaurantRepository.findAll();
 
-            const myRestaurants = restaurants
-                .filter(
-                    (restaurant) =>
-                        !restaurant.isDefault &&
-                        String(restaurant.ownerId) === String(userId)
-                )
-                .map(toManagementResponseObject);
+            const managedRestaurants = restaurants.filter(
+                (restaurant) =>
+                    !restaurant.isDefault &&
+                    String(restaurant.ownerId) === String(userId)
+            );
+
+            const myRestaurants = await Promise.all(
+                managedRestaurants.map(toManagementResponseObject)
+            );
 
             return responseHelper.ok(res, myRestaurants);
         } catch (err) {
@@ -111,11 +124,11 @@ class RestaurantController {
         }
     }
 
-    getRestaurantById(req, res, next) {
+    async getRestaurantById(req, res, next) {
         try {
             const restaurant = restaurantRepository.findById(req.params.id);
 
-            if (!restaurant || !isPublicRestaurant(restaurant)) {
+            if (!restaurant || !(await isPublicRestaurant(restaurant))) {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
@@ -125,7 +138,7 @@ class RestaurantController {
         }
     }
 
-    createRestaurant(req, res, next) {
+    async createRestaurant(req, res, next) {
         try {
             const objectError = validateObject(req.body);
 
@@ -163,13 +176,13 @@ class RestaurantController {
             return res
                 .status(201)
                 .location(`/api/restaurants/${restaurant.id}`)
-                .json(toManagementResponseObject(restaurant));
+                .json(await toManagementResponseObject(restaurant));
         } catch (err) {
             next(err);
         }
     }
 
-    updateRestaurant(req, res, next) {
+    async updateRestaurant(req, res, next) {
         try {
             const existingRestaurant = restaurantRepository.findById(req.params.id);
 
@@ -220,7 +233,7 @@ class RestaurantController {
         }
     }
 
-    deleteRestaurant(req, res, next) {
+    async deleteRestaurant(req, res, next) {
         try {
             const restaurant = restaurantRepository.findById(req.params.id);
 
@@ -235,7 +248,7 @@ class RestaurantController {
                 });
             }
 
-            productRepository.removeAllByRestaurant(req.params.id);
+            await productRepository.removeAllByRestaurant(req.params.id);
             restaurantRepository.deleteById(req.params.id);
 
             return responseHelper.noContent(res);
