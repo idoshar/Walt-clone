@@ -486,6 +486,7 @@ function createStyles(colors) {
       alignItems: 'center',
       gap: 10,
     },
+    myRestaurantsButton: {
     cartButton: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
@@ -501,7 +502,8 @@ function createStyles(colors) {
       color: colors.primary,
       fontSize: 13,
       fontWeight: '800',
-    },    myRestaurantsButton: {
+    },    
+     myRestaurantsButton: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
       borderRadius: 12,
@@ -509,11 +511,15 @@ function createStyles(colors) {
       paddingHorizontal: 16,
       paddingVertical: 10,
       alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
       justifyContent: 'center',
       minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
     },
     myRestaurantsButtonText: {
-      color: colors.text,
+      color: colors.onPrimary,
       fontSize: 13,
       fontWeight: '800',
     },
