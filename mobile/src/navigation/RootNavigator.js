@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
 import CartScreen from '../screens/CartScreen';
+import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
@@ -77,6 +78,12 @@ function AppNavigator({ screenOptions }) {
         component={CartScreen}
         name="Cart"
         options={{ title: 'Your cart' }}
+      />
+
+      <Stack.Screen
+        component={CheckoutScreen}
+        name="Checkout"
+        options={{ title: 'Checkout' }}
       />
 
       <Stack.Screen
