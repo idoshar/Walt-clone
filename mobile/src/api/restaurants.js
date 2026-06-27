@@ -1,6 +1,12 @@
 import { apiRequest } from './client';
 
 function extractCollection(response) {
+export function getMyRestaurants(token) {
+  return apiRequest('/restaurants/mine', {
+    token,
+  });
+}
+function extractRestaurants(response) {
   if (Array.isArray(response)) {
     return response;
   }
