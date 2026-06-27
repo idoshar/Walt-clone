@@ -1,5 +1,4 @@
-﻿import { NavigationContainer } from '@react-navigation/native';
-import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 import {
@@ -12,8 +11,10 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
 import CartScreen from '../screens/CartScreen';
+import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
+import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
 import { createNavigationTheme } from '../theme/colors';
@@ -72,6 +73,7 @@ function AppNavigator({ screenOptions }) {
         name="RestaurantDetails"
         options={{ title: 'Restaurant' }}
       />
+
       <Stack.Screen
         component={CartScreen}
         name="Cart"
@@ -79,10 +81,17 @@ function AppNavigator({ screenOptions }) {
       />
 
       <Stack.Screen
+        component={CheckoutScreen}
+        name="Checkout"
+        options={{ title: 'Checkout' }}
+      />
+
+      <Stack.Screen
         component={MyRestaurantsScreen}
         name="MyRestaurants"
         options={{ title: 'My Restaurants' }}
       />
+
       {user?.role === 'admin' && (
         <Stack.Screen
           component={AdminScreen}

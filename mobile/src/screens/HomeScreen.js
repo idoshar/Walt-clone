@@ -14,6 +14,7 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../cart/CartContext';
 import AppCard from '../components/AppCard';
 import AppState from '../components/AppState';
 import ThemeToggle from '../components/ThemeToggle';
@@ -51,6 +52,7 @@ function getRestaurantInitial(restaurant) {
 
 export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
+  const { itemCount } = useCart();
   const { theme } = useAppTheme();
   const styles = createStyles(theme.colors);
 
@@ -185,6 +187,17 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.headerActions}>
           <Pressable
+            accessibilityLabel="Open cart"
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('Cart')}
+            style={({ pressed }) => [
+              styles.cartButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
+          </Pressable>
+          <Pressable
             accessibilityRole="button"
             onPress={() => navigation.navigate('MyRestaurants')}
             style={({ pressed }) => [
@@ -222,7 +235,7 @@ export default function HomeScreen({ navigation }) {
 
         <AppCard style={styles.locationCard}>
           <View style={styles.locationIcon}>
-            <Text style={styles.locationIconText}>⌖</Text>
+            <Text style={styles.locationIconText}>{'\u{1F4CD}'}</Text>
           </View>
 
           <View style={styles.locationTextContainer}>
@@ -455,7 +468,22 @@ function createStyles(colors) {
       alignItems: 'center',
       gap: 10,
     },
-    myRestaurantsButton: {
+    cartButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 12,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    cartButtonText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },    myRestaurantsButton: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
       borderRadius: 12,

@@ -27,7 +27,38 @@ function getInitial(item) {
   return item?.name?.trim()?.charAt(0)?.toUpperCase() || 'P';
 }
 
-export default function CartScreen() {
+function groupItemsByRestaurant(items) {
+  const groups = new Map();
+
+  items.forEach((item) => {
+    const restaurantId = String(item.restaurantId || '').trim();
+    const groupKey = restaurantId || item.restaurantName || 'unknown';
+
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, {
+        restaurantId,
+        restaurantName: item.restaurantName || 'Restaurant',
+        items: [],
+      });
+    }
+
+    groups.get(groupKey).items.push(item);
+  });
+
+  return Array.from(groups.values()).map((group) => ({
+    ...group,
+    itemCount: group.items.reduce(
+      (total, item) => total + item.quantity,
+      0
+    ),
+    totalPrice: group.items.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    ),
+  }));
+}
+
+export default function CartScreen({ navigation }) {
   const {
     items,
     itemCount,
@@ -40,6 +71,11 @@ export default function CartScreen() {
 
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
+
+  const restaurantGroups = useMemo(
+    () => groupItemsByRestaurant(items),
+    [items]
+  );
 
   function confirmClearCart() {
     if (items.length === 0) {
@@ -80,6 +116,7 @@ export default function CartScreen() {
 
             {items.length > 0 ? (
               <Pressable
+                accessibilityRole="button"
                 onPress={confirmClearCart}
                 style={({ pressed }) => [
                   styles.clearButton,
@@ -101,88 +138,144 @@ export default function CartScreen() {
           </View>
         ) : (
           <>
-            {items.map((item) => (
-              <View key={item.key} style={styles.itemCard}>
-                {hasImage(item) ? (
-                  <Image
-                    source={{ uri: item.image }}
-                    style={styles.itemImage}
-                  />
-                ) : (
-                  <View style={styles.itemImagePlaceholder}>
-                    <Text style={styles.itemImageInitial}>
-                      {getInitial(item)}
+            {restaurantGroups.map((group) => (
+              <View
+                key={group.restaurantId || group.restaurantName}
+                style={styles.restaurantSection}
+              >
+                <View style={styles.restaurantHeader}>
+                  <View style={styles.restaurantHeaderText}>
+                    <Text numberOfLines={1} style={styles.restaurantTitle}>
+                      {group.restaurantName}
+                    </Text>
+                    <Text style={styles.restaurantSubtitle}>
+                      {group.itemCount} item
+                      {group.itemCount === 1 ? '' : 's'} ·{' '}
+                      {formatPrice(group.totalPrice)}
                     </Text>
                   </View>
-                )}
+                </View>
 
-                <View style={styles.itemContent}>
-                  <Text numberOfLines={1} style={styles.itemName}>
-                    {item.name}
-                  </Text>
+                {group.items.map((item) => (
+                  <View key={item.key} style={styles.itemCard}>
+                    {hasImage(item) ? (
+                      <Image
+                        source={{ uri: item.image }}
+                        style={styles.itemImage}
+                      />
+                    ) : (
+                      <View style={styles.itemImagePlaceholder}>
+                        <Text style={styles.itemImageInitial}>
+                          {getInitial(item)}
+                        </Text>
+                      </View>
+                    )}
 
-                  <Text numberOfLines={1} style={styles.restaurantName}>
-                    {item.restaurantName}
-                  </Text>
+                    <View style={styles.itemContent}>
+                      <Text numberOfLines={1} style={styles.itemName}>
+                        {item.name}
+                      </Text>
 
-                  <Text style={styles.itemPrice}>
-                    {formatPrice(item.price)} each
-                  </Text>
+                      <Text style={styles.itemPrice}>
+                        {formatPrice(item.price)} each
+                      </Text>
 
-                  <View style={styles.itemFooter}>
-                    <View style={styles.quantityControl}>
+                      <View style={styles.itemFooter}>
+                        <View style={styles.quantityControl}>
+                          <Pressable
+                            accessibilityLabel={`Decrease ${item.name} quantity`}
+                            accessibilityRole="button"
+                            onPress={() => decreaseQuantity(item.key)}
+                            style={({ pressed }) => [
+                              styles.quantityButton,
+                              pressed ? styles.pressedButton : null,
+                            ]}
+                          >
+                            <Text style={styles.quantityButtonText}>-</Text>
+                          </Pressable>
+
+                          <Text style={styles.quantityText}>
+                            {item.quantity}
+                          </Text>
+
+                          <Pressable
+                            accessibilityLabel={`Increase ${item.name} quantity`}
+                            accessibilityRole="button"
+                            onPress={() => increaseQuantity(item.key)}
+                            style={({ pressed }) => [
+                              styles.quantityButton,
+                              pressed ? styles.pressedButton : null,
+                            ]}
+                          >
+                            <Text style={styles.quantityButtonText}>+</Text>
+                          </Pressable>
+                        </View>
+
+                        <Text style={styles.itemTotal}>
+                          {formatPrice(item.price * item.quantity)}
+                        </Text>
+                      </View>
+
                       <Pressable
-                        accessibilityLabel={`Decrease ${item.name} quantity`}
-                        onPress={() => decreaseQuantity(item.key)}
+                        accessibilityRole="button"
+                        onPress={() => removeItem(item.key)}
                         style={({ pressed }) => [
-                          styles.quantityButton,
+                          styles.removeButton,
                           pressed ? styles.pressedButton : null,
                         ]}
                       >
-                        <Text style={styles.quantityButtonText}>−</Text>
-                      </Pressable>
-
-                      <Text style={styles.quantityText}>{item.quantity}</Text>
-
-                      <Pressable
-                        accessibilityLabel={`Increase ${item.name} quantity`}
-                        onPress={() => increaseQuantity(item.key)}
-                        style={({ pressed }) => [
-                          styles.quantityButton,
-                          pressed ? styles.pressedButton : null,
-                        ]}
-                      >
-                        <Text style={styles.quantityButtonText}>+</Text>
+                        <Text style={styles.removeButtonText}>Remove</Text>
                       </Pressable>
                     </View>
-
-                    <Text style={styles.itemTotal}>
-                      {formatPrice(item.price * item.quantity)}
-                    </Text>
                   </View>
+                ))}
 
-                  <Pressable
-                    onPress={() => removeItem(item.key)}
-                    style={({ pressed }) => [
-                      styles.removeButton,
-                      pressed ? styles.pressedButton : null,
-                    ]}
-                  >
-                    <Text style={styles.removeButtonText}>Remove</Text>
-                  </Pressable>
+                <View style={styles.restaurantTotalRow}>
+                  <Text style={styles.restaurantTotalLabel}>
+                    {group.restaurantName} total
+                  </Text>
+                  <Text style={styles.restaurantTotalPrice}>
+                    {formatPrice(group.totalPrice)}
+                  </Text>
                 </View>
+
+                <Pressable
+                  accessibilityLabel={`Checkout from ${group.restaurantName}`}
+                  accessibilityRole="button"
+                  disabled={!group.restaurantId}
+                  onPress={() =>
+                    navigation.navigate('Checkout', {
+                      restaurantId: group.restaurantId,
+                    })
+                  }
+                  style={({ pressed }) => [
+                    styles.checkoutButton,
+                    !group.restaurantId ? styles.disabledButton : null,
+                    pressed && group.restaurantId
+                      ? styles.pressedButton
+                      : null,
+                  ]}
+                >
+                  <Text style={styles.checkoutButtonText}>
+                    Checkout · {formatPrice(group.totalPrice)}
+                  </Text>
+                </Pressable>
               </View>
             ))}
 
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total</Text>
-              <Text style={styles.summaryPrice}>{formatPrice(totalPrice)}</Text>
+              <Text style={styles.summaryLabel}>Cart total</Text>
+              <Text style={styles.summaryPrice}>
+                {formatPrice(totalPrice)}
+              </Text>
             </View>
 
             <View style={styles.checkoutNotice}>
-              <Text style={styles.checkoutTitle}>Checkout comes next</Text>
+              <Text style={styles.checkoutTitle}>
+                One order per restaurant
+              </Text>
               <Text style={styles.checkoutMessage}>
-                Order checkout will be added in SCRUM-392.
+                Checkout is processed separately for each restaurant.
               </Text>
             </View>
           </>
@@ -260,33 +353,60 @@ function createStyles(colors) {
       lineHeight: 21,
       textAlign: 'center',
     },
-    itemCard: {
+    restaurantSection: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
-      borderRadius: 16,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 12,
+      overflow: 'hidden',
+      padding: 14,
+    },
+    restaurantHeader: {
+      borderBottomColor: colors.border,
+      borderBottomWidth: 1,
+      paddingBottom: 12,
+    },
+    restaurantHeaderText: {
+      gap: 3,
+    },
+    restaurantTitle: {
+      color: colors.text,
+      fontSize: 19,
+      fontWeight: '800',
+    },
+    restaurantSubtitle: {
+      color: colors.textMuted,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    itemCard: {
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+      borderRadius: 14,
       borderWidth: 1,
       flexDirection: 'row',
       gap: 14,
-      padding: 14,
+      padding: 12,
     },
     itemImage: {
-      borderRadius: 12,
-      height: 76,
-      width: 76,
+      borderRadius: 11,
+      height: 70,
+      width: 70,
     },
     itemImagePlaceholder: {
       alignItems: 'center',
-      backgroundColor: colors.background,
+      backgroundColor: colors.surface,
       borderColor: colors.border,
-      borderRadius: 12,
+      borderRadius: 11,
       borderWidth: 1,
-      height: 76,
+      height: 70,
       justifyContent: 'center',
-      width: 76,
+      width: 70,
     },
     itemImageInitial: {
       color: colors.primary,
-      fontSize: 30,
+      fontSize: 28,
       fontWeight: '800',
     },
     itemContent: {
@@ -297,11 +417,6 @@ function createStyles(colors) {
       color: colors.text,
       fontSize: 16,
       fontWeight: '800',
-    },
-    restaurantName: {
-      color: colors.textMuted,
-      fontSize: 12,
-      fontWeight: '700',
     },
     itemPrice: {
       color: colors.primary,
@@ -321,7 +436,7 @@ function createStyles(colors) {
     },
     quantityButton: {
       alignItems: 'center',
-      backgroundColor: colors.background,
+      backgroundColor: colors.surface,
       borderColor: colors.border,
       borderRadius: 8,
       borderWidth: 1,
@@ -353,6 +468,39 @@ function createStyles(colors) {
     removeButtonText: {
       color: colors.danger,
       fontSize: 12,
+      fontWeight: '800',
+    },
+    restaurantTotalRow: {
+      alignItems: 'center',
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 2,
+      paddingTop: 12,
+    },
+    restaurantTotalLabel: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    restaurantTotalPrice: {
+      color: colors.primary,
+      fontSize: 17,
+      fontWeight: '800',
+    },
+    checkoutButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 11,
+      justifyContent: 'center',
+      minHeight: 46,
+      paddingHorizontal: 16,
+      paddingVertical: 11,
+    },
+    checkoutButtonText: {
+      color: '#ffffff',
+      fontSize: 15,
       fontWeight: '800',
     },
     summaryCard: {
@@ -392,6 +540,9 @@ function createStyles(colors) {
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 19,
+    },
+    disabledButton: {
+      opacity: 0.5,
     },
     pressedButton: {
       opacity: 0.72,
