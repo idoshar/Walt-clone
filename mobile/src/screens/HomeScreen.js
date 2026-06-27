@@ -14,11 +14,15 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
+import AppCard from '../components/AppCard';
+import AppState from '../components/AppState';
+import ThemeToggle from '../components/ThemeToggle';
 import { sortRestaurantsByDistance } from '../location/distance';
 import {
   LOCATION_STATUS,
   requestCurrentLocation,
 } from '../location/locationService';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const ALL_CUISINES = 'All';
 
@@ -47,6 +51,8 @@ function getRestaurantInitial(restaurant) {
 
 export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
+  const { theme } = useAppTheme();
+  const styles = createStyles(theme.colors);
 
   const [restaurants, setRestaurants] = useState([]);
   const [restaurantsState, setRestaurantsState] = useState('loading');
@@ -144,82 +150,123 @@ export default function HomeScreen({ navigation }) {
   const isLoadingRestaurants = restaurantsState === 'loading';
   const isRestaurantsError = restaurantsState === 'error';
   const isLocationLoading = locationState === 'loading';
+  const isAdmin = user?.role === 'admin';
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            colors={[theme.colors.primary]}
             onRefresh={() => loadRestaurants({ refreshing: true })}
+            refreshing={isRefreshing}
+            tintColor={theme.colors.primary}
           />
         }
       >
         <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Wolt Delivery</Text>
-            <Text style={styles.subtitle}>
-              Hello, {user?.fullName || user?.username || 'customer'}
-            </Text>
+          <View style={styles.brandRow}>
+            <View style={styles.brandText}>
+              <Text style={styles.eyebrow}>DISCOVER FOOD</Text>
+
+              <Text style={styles.title}>Wolt Delivery</Text>
+
+              <Text style={styles.subtitle}>
+                Hello, {user?.fullName || user?.username || 'customer'}
+              </Text>
+            </View>
+
+            <ThemeToggle compact />
           </View>
 
           <View style={styles.headerActions}>
-            {user?.role === 'admin' && (
+            {isAdmin ? (
               <Pressable
+                accessibilityRole="button"
                 onPress={() => navigation.navigate('Admin')}
-                style={styles.adminButton}
+                style={({ pressed }) => [
+                  styles.adminButton,
+                  pressed ? styles.pressedButton : null,
+                ]}
               >
                 <Text style={styles.adminButtonText}>Admin</Text>
               </Pressable>
-            )}
+            ) : null}
 
-            <Pressable onPress={signOut} style={styles.signOutButton}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={signOut}
+              style={({ pressed }) => [
+                styles.signOutButton,
+                pressed ? styles.pressedButton : null,
+              ]}
+            >
               <Text style={styles.signOutText}>Sign out</Text>
             </Pressable>
           </View>
         </View>
 
-        <View style={styles.locationCard}>
+        <AppCard style={styles.locationCard}>
+          <View style={styles.locationIcon}>
+            <Text style={styles.locationIconText}>⌖</Text>
+          </View>
+
           <View style={styles.locationTextContainer}>
-            <Text style={styles.sectionTitle}>Nearby restaurants</Text>
-            <Text style={styles.locationMessage}>{locationMessage}</Text>
+            <Text style={styles.locationTitle}>Nearby restaurants</Text>
+
+            <Text
+              style={[
+                styles.locationMessage,
+                locationState === 'error' ? styles.locationMessageError : null,
+                locationState === 'success'
+                  ? styles.locationMessageSuccess
+                  : null,
+              ]}
+            >
+              {locationMessage}
+            </Text>
           </View>
 
           <Pressable
             disabled={isLocationLoading}
             onPress={handleUseMyLocation}
-            style={[
+            style={({ pressed }) => [
               styles.locationButton,
-              isLocationLoading && styles.disabledButton,
+              isLocationLoading ? styles.disabledButton : null,
+              pressed && !isLocationLoading ? styles.pressedButton : null,
             ]}
           >
             {isLocationLoading ? (
-              <ActivityIndicator />
+              <ActivityIndicator color={theme.colors.onPrimary} />
             ) : (
               <Text style={styles.locationButtonText}>
-                {locationState === 'success' ? 'Update location' : 'Use location'}
+                {locationState === 'success' ? 'Update' : 'Use location'}
               </Text>
             )}
           </Pressable>
-        </View>
+        </AppCard>
 
         <View style={styles.sectionHeader}>
-          <View>
+          <View style={styles.sectionText}>
             <Text style={styles.sectionTitle}>Restaurants</Text>
             <Text style={styles.sectionSubtitle}>{restaurantsMessage}</Text>
           </View>
 
-          {!isLoadingRestaurants && (
+          {!isLoadingRestaurants ? (
             <Pressable
+              accessibilityRole="button"
               onPress={() => loadRestaurants()}
-              style={styles.refreshButton}
+              style={({ pressed }) => [
+                styles.refreshButton,
+                pressed ? styles.pressedButton : null,
+              ]}
             >
               <Text style={styles.refreshButtonText}>Refresh</Text>
             </Pressable>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.categoryList}>
@@ -230,15 +277,16 @@ export default function HomeScreen({ navigation }) {
               <Pressable
                 key={cuisine}
                 onPress={() => setSelectedCuisine(cuisine)}
-                style={[
+                style={({ pressed }) => [
                   styles.categoryChip,
-                  isSelected && styles.categoryChipSelected,
+                  isSelected ? styles.categoryChipSelected : null,
+                  pressed ? styles.pressedButton : null,
                 ]}
               >
                 <Text
                   style={[
                     styles.categoryChipText,
-                    isSelected && styles.categoryChipTextSelected,
+                    isSelected ? styles.categoryChipTextSelected : null,
                   ]}
                 >
                   {cuisine}
@@ -248,44 +296,40 @@ export default function HomeScreen({ navigation }) {
           })}
         </View>
 
-        {isLoadingRestaurants && (
-          <View style={styles.stateCard}>
-            <ActivityIndicator size="large" />
-            <Text style={styles.stateTitle}>Loading restaurants...</Text>
-          </View>
-        )}
+        {isLoadingRestaurants ? (
+          <AppState
+            message="Fetching restaurants from the backend."
+            title="Loading restaurants..."
+            type="loading"
+          />
+        ) : null}
 
-        {isRestaurantsError && (
-          <View style={styles.stateCard}>
-            <Text style={styles.stateTitle}>Could not load restaurants</Text>
-            <Text style={styles.stateMessage}>{restaurantsMessage}</Text>
-
-            <Pressable
-              onPress={() => loadRestaurants()}
-              style={styles.retryButton}
-            >
-              <Text style={styles.retryButtonText}>Try again</Text>
-            </Pressable>
-          </View>
-        )}
+        {isRestaurantsError ? (
+          <AppState
+            actionLabel="Try again"
+            message={restaurantsMessage}
+            onAction={() => loadRestaurants()}
+            title="Could not load restaurants"
+            type="error"
+          />
+        ) : null}
 
         {!isLoadingRestaurants &&
-          !isRestaurantsError &&
-          visibleRestaurants.length === 0 && (
-            <View style={styles.stateCard}>
-              <Text style={styles.stateTitle}>No restaurants found</Text>
-              <Text style={styles.stateMessage}>
-                There are no restaurants in this category right now.
-              </Text>
-            </View>
-          )}
+        !isRestaurantsError &&
+        visibleRestaurants.length === 0 ? (
+          <AppState
+            message="There are no restaurants in this category right now."
+            title="No restaurants found"
+            type="empty"
+          />
+        ) : null}
 
         {!isLoadingRestaurants &&
           !isRestaurantsError &&
           visibleRestaurants.map((restaurant) => (
             <Pressable
               key={restaurant.id}
-              accessibilityLabel={`Open ${restaurant.name} menu`}
+              accessibilityLabel={'Open ' + restaurant.name + ' menu'}
               accessibilityRole="button"
               onPress={() =>
                 navigation.navigate('RestaurantDetails', {
@@ -293,7 +337,10 @@ export default function HomeScreen({ navigation }) {
                   restaurant,
                 })
               }
-              style={styles.restaurantCard}
+              style={({ pressed }) => [
+                styles.restaurantCard,
+                pressed ? styles.pressedButton : null,
+              ]}
             >
               {hasRestaurantImage(restaurant) ? (
                 <Image
@@ -314,30 +361,33 @@ export default function HomeScreen({ navigation }) {
                     {restaurant.name}
                   </Text>
 
-                  {restaurant.cuisine && (
+                  {restaurant.cuisine ? (
                     <View style={styles.cuisineBadge}>
                       <Text style={styles.cuisineBadgeText}>
                         {restaurant.cuisine}
                       </Text>
                     </View>
-                  )}
+                  ) : null}
                 </View>
 
-                {restaurant.description && (
-                  <Text numberOfLines={2} style={styles.restaurantDescription}>
+                {restaurant.description ? (
+                  <Text
+                    numberOfLines={2}
+                    style={styles.restaurantDescription}
+                  >
                     {restaurant.description}
                   </Text>
-                )}
+                ) : null}
 
                 <Text numberOfLines={1} style={styles.restaurantAddress}>
                   {restaurant.address || 'Address unavailable'}
                 </Text>
 
-                {userCoordinates && (
+                {userCoordinates ? (
                   <Text style={styles.restaurantDistance}>
                     {formatDistance(restaurant.distanceKm)}
                   </Text>
-                )}
+                ) : null}
               </View>
             </Pressable>
           ))}
@@ -346,213 +396,269 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f7f7f7',
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    gap: 16,
-    padding: 20,
-    paddingBottom: 32,
-  },
-  header: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  headerText: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  subtitle: {
-    fontSize: 15,
-    marginTop: 4,
-  },
-  headerActions: {
-    alignItems: 'flex-end',
-    gap: 6,
-  },
-  adminButton: {
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  adminButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  signOutButton: {
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  signOutText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  locationCard: {
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-  },
-  locationTextContainer: {
-    flex: 1,
-  },
-  locationMessage: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  locationButton: {
-    alignItems: 'center',
-    borderRadius: 10,
-    minWidth: 108,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-  },
-  locationButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  disabledButton: {
-    opacity: 0.55,
-  },
-  sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    marginTop: 3,
-  },
-  refreshButton: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  refreshButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  categoryList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  categoryChipSelected: {
-    backgroundColor: '#222222',
-  },
-  categoryChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  categoryChipTextSelected: {
-    color: '#ffffff',
-  },
-  stateCard: {
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    gap: 12,
-    padding: 24,
-  },
-  stateTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  stateMessage: {
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-  },
-  retryButton: {
-    borderRadius: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-  },
-  retryButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  restaurantCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    flexDirection: 'row',
-    gap: 14,
-    overflow: 'hidden',
-    padding: 14,
-  },
-  restaurantImage: {
-    borderRadius: 12,
-    height: 76,
-    width: 76,
-  },
-  restaurantImagePlaceholder: {
-    alignItems: 'center',
-    borderRadius: 12,
-    height: 76,
-    justifyContent: 'center',
-    width: 76,
-  },
-  restaurantImageInitial: {
-    fontSize: 30,
-    fontWeight: '700',
-  },
-  restaurantContent: {
-    flex: 1,
-    gap: 5,
-    justifyContent: 'center',
-  },
-  restaurantTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  restaurantName: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  cuisineBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  cuisineBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  restaurantDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  restaurantAddress: {
-    fontSize: 12,
-  },
-  restaurantDistance: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      flex: 1,
+    },
+    content: {
+      flexGrow: 1,
+      gap: 16,
+      padding: 20,
+      paddingBottom: 36,
+    },
+    header: {
+      gap: 14,
+      marginBottom: 4,
+    },
+    brandRow: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    brandText: {
+      flex: 1,
+    },
+    eyebrow: {
+      color: colors.primary,
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 1.1,
+      marginBottom: 5,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 30,
+      fontWeight: '800',
+      letterSpacing: -0.7,
+    },
+    subtitle: {
+      color: colors.textMuted,
+      fontSize: 15,
+      marginTop: 5,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    adminButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 12,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+    },
+    adminButtonText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    signOutButton: {
+      alignItems: 'center',
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+    },
+    signOutText: {
+      color: colors.textMuted,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    pressedButton: {
+      opacity: 0.72,
+    },
+    locationCard: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+    },
+    locationIcon: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderRadius: 18,
+      height: 44,
+      justifyContent: 'center',
+      width: 44,
+    },
+    locationIconText: {
+      color: colors.primary,
+      fontSize: 25,
+      fontWeight: '800',
+      marginTop: -1,
+    },
+    locationTextContainer: {
+      flex: 1,
+    },
+    locationTitle: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    locationMessage: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+      marginTop: 3,
+    },
+    locationMessageError: {
+      color: colors.danger,
+    },
+    locationMessageSuccess: {
+      color: colors.success,
+    },
+    locationButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      justifyContent: 'center',
+      minHeight: 42,
+      minWidth: 82,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+    },
+    locationButtonText: {
+      color: colors.onPrimary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    disabledButton: {
+      opacity: 0.55,
+    },
+    sectionHeader: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    sectionText: {
+      flex: 1,
+      paddingRight: 12,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 22,
+      fontWeight: '800',
+      letterSpacing: -0.3,
+    },
+    sectionSubtitle: {
+      color: colors.textMuted,
+      fontSize: 13,
+      marginTop: 3,
+    },
+    refreshButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderRadius: 12,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    refreshButtonText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    categoryList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    categoryChip: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+    },
+    categoryChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryChipText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    categoryChipTextSelected: {
+      color: colors.onPrimary,
+    },
+    restaurantCard: {
+      flexDirection: 'row',
+      gap: 14,
+      overflow: 'hidden',
+      padding: 14,
+    },
+    restaurantImage: {
+      borderRadius: 14,
+      height: 82,
+      width: 82,
+    },
+    restaurantImagePlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderRadius: 14,
+      height: 82,
+      justifyContent: 'center',
+      width: 82,
+    },
+    restaurantImageInitial: {
+      color: colors.primary,
+      fontSize: 32,
+      fontWeight: '800',
+    },
+    restaurantContent: {
+      flex: 1,
+      gap: 5,
+      justifyContent: 'center',
+    },
+    restaurantTitleRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 8,
+    },
+    restaurantName: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 17,
+      fontWeight: '800',
+    },
+    cuisineBadge: {
+      backgroundColor: colors.primarySoft,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    cuisineBadgeText: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '800',
+    },
+    restaurantDescription: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    restaurantAddress: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    restaurantDistance: {
+      color: colors.success,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+  });
+}
