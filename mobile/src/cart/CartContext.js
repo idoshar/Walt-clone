@@ -21,7 +21,9 @@ function normalizePrice(price) {
 }
 
 function createCartItem(product, restaurant) {
-  const restaurantId = String(restaurant?.id || product?.restaurantId || '').trim();
+  const restaurantId = String(
+    restaurant?.id || product?.restaurantId || ''
+  ).trim();
   const productId = String(product?.id || '').trim();
 
   if (!restaurantId || !productId) {
@@ -88,7 +90,7 @@ export function CartProvider({ children }) {
     }
 
     AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items)).catch(() => {
-      // The cart remains available for the current session if storage fails.
+      // Keep the in-memory cart available if local storage fails.
     });
   }, [isRestoringCart, items]);
 
@@ -144,6 +146,20 @@ export function CartProvider({ children }) {
     setItems([]);
   }, []);
 
+  const clearRestaurantItems = useCallback((restaurantId) => {
+    const normalizedRestaurantId = String(restaurantId || '').trim();
+
+    if (!normalizedRestaurantId) {
+      return;
+    }
+
+    setItems((currentItems) =>
+      currentItems.filter(
+        (item) => item.restaurantId !== normalizedRestaurantId
+      )
+    );
+  }, []);
+
   const value = useMemo(() => {
     const itemCount = items.reduce(
       (total, item) => total + item.quantity,
@@ -165,10 +181,12 @@ export function CartProvider({ children }) {
       decreaseQuantity,
       removeItem,
       clearCart,
+      clearRestaurantItems,
     };
   }, [
     addItem,
     clearCart,
+    clearRestaurantItems,
     decreaseQuantity,
     increaseQuantity,
     isRestoringCart,

@@ -14,6 +14,7 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../cart/CartContext';
 import AppCard from '../components/AppCard';
 import AppState from '../components/AppState';
 import ThemeToggle from '../components/ThemeToggle';
@@ -51,6 +52,7 @@ function getRestaurantInitial(restaurant) {
 
 export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
+  const { itemCount } = useCart();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
@@ -179,6 +181,7 @@ export default function HomeScreen({ navigation }) {
 
             <ThemeToggle compact />
           </View>
+        </View>
 
           <View style={styles.headerActions}>
             <Pressable
@@ -205,22 +208,52 @@ export default function HomeScreen({ navigation }) {
               </Pressable>
             ) : null}
 
+          {isAdmin ? (
             <Pressable
               accessibilityRole="button"
-              onPress={signOut}
+              onPress={() => navigation.navigate('Admin')}
               style={({ pressed }) => [
-                styles.signOutButton,
+                styles.adminButton,
                 pressed ? styles.pressedButton : null,
               ]}
             >
-              <Text style={styles.signOutText}>Sign out</Text>
+              <Text style={styles.adminButtonText}>Admin</Text>
             </Pressable>
-          </View>
+          ) : null}
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={signOut}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
         </View>
 
+        <Pressable
+          accessibilityLabel="Open order history"
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('MyOrders')}
+          style={({ pressed }) => [
+            styles.myOrdersCard,
+            pressed ? styles.pressedButton : null,
+          ]}
+        >
+          <View style={styles.myOrdersText}>
+            <Text style={styles.myOrdersTitle}>My orders</Text>
+            <Text style={styles.myOrdersMessage}>
+              View your previous orders and their current status.
+            </Text>
+          </View>
+
+          <Text style={styles.myOrdersAction}>View</Text>
+        </Pressable>
         <AppCard style={styles.locationCard}>
           <View style={styles.locationIcon}>
-            <Text style={styles.locationIconText}>⌖</Text>
+            <Text style={styles.locationIconText}>{'\u{1F4CD}'}</Text>
           </View>
 
           <View style={styles.locationTextContainer}>
@@ -450,7 +483,45 @@ function createStyles(colors) {
     },
     headerActions: {
       flexDirection: 'row',
-      gap: 8,
+      alignItems: 'center',
+      gap: 10,
+    },
+    myRestaurantsButton: {
+    cartButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 12,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    cartButtonText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },    
+     myRestaurantsButton: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+    },
+    myRestaurantsButtonText: {
+      color: colors.onPrimary,
+      fontSize: 13,
+      fontWeight: '800',
     },
     myRestaurantsButton: {
       alignItems: 'center',
@@ -502,7 +573,36 @@ function createStyles(colors) {
     pressedButton: {
       opacity: 0.72,
     },
-    locationCard: {
+    myOrdersCard: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 18,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 14,
+      justifyContent: 'space-between',
+      padding: 16,
+    },
+    myOrdersText: {
+      flex: 1,
+      gap: 4,
+    },
+    myOrdersTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: '800',
+    },
+    myOrdersMessage: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    myOrdersAction: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+    },    locationCard: {
       alignItems: 'center',
       flexDirection: 'row',
       gap: 12,
