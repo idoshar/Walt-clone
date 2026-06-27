@@ -1,6 +1,6 @@
 import { apiRequest } from './client';
 
-function extractCollection(response) {
+function extractRestaurants(response) {
   if (Array.isArray(response)) {
     return response;
   }
@@ -10,6 +10,10 @@ function extractCollection(response) {
   }
 
   return [];
+}
+
+function extractCollection(response) {
+  return extractRestaurants(response);
 }
 
 function normalizeId(value) {
@@ -29,7 +33,7 @@ export async function getRestaurants({ signal } = {}) {
     signal,
   });
 
-  return extractCollection(response);
+  return extractRestaurants(response);
 }
 
 export async function getRestaurantById(restaurantId, { signal } = {}) {

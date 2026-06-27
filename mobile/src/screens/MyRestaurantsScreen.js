@@ -11,13 +11,22 @@ import {
 
 import { getMyRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
-import ThemeToggle from '../components/ThemeToggle'; // מייבאים את כפתור החלפת התמה
+import ThemeToggle from '../components/ThemeToggle'; 
 import { useAppTheme } from '../theme/ThemeContext';
 
 export default function MyRestaurantsScreen({ navigation }) {
   const { token } = useAuth();
-  const { theme } = useAppTheme();
-  const styles = createStyles(theme.colors);
+  
+  // שליפת ה-Theme עם הגנה מפני ערכי undefined
+  const themeContext = useAppTheme();
+  const theme = themeContext?.theme || { colors: {}, mode: 'light' };
+  
+  // בדיקה בטרמינל שהתמה אכן מתחלפת
+  useEffect(() => {
+    console.log('MyRestaurants Theme Mode:', theme.mode);
+  }, [theme.mode]);
+
+  const styles = createStyles(theme.colors, theme.mode);
 
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +53,7 @@ export default function MyRestaurantsScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors?.primary || '#009de0'} />
         <Text style={styles.helperText}>Loading your restaurants...</Text>
       </View>
     );
@@ -85,7 +94,7 @@ export default function MyRestaurantsScreen({ navigation }) {
         <Text style={styles.screenTitle}>My Restaurants</Text>
 
         <View style={styles.headerActions}>
-          <ThemeToggle compact /> {/* כפתור החלפת דארק מוד */}
+          <ThemeToggle compact /> 
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate('CreateRestaurant')}
@@ -153,13 +162,26 @@ export default function MyRestaurantsScreen({ navigation }) {
   );
 }
 
-function createStyles(colors) {
+// פונקציית עיצוב דינמית וחסינת קריסות (Fallback)
+function createStyles(colors = {}, mode) {
+  const isDark = mode === 'dark';
+
+  // צבעי מגן למקרה שההקשר לא החזיר ערכים
+  const bgColor = colors.background || (isDark ? '#121212' : '#f7f8fa');
+  const cardColor = colors.surface || (isDark ? '#1e1e1e' : '#ffffff');
+  const textColor = colors.text || (isDark ? '#ffffff' : '#111827');
+  const textMutedColor = colors.textMuted || (isDark ? '#9ca3af' : '#5f6b7a');
+  const primaryColor = colors.primary || '#009de0';
+  const onPrimaryColor = colors.onPrimary || '#ffffff';
+  const primarySoftColor = colors.primarySoft || (isDark ? '#153243' : '#e6f6fd');
+  const borderColor = colors.border || (isDark ? '#374151' : '#e5e7eb');
+
   return StyleSheet.create({
     container: {
       flex: 1,
       paddingHorizontal: 16,
       paddingTop: 16,
-      backgroundColor: colors.background,
+      backgroundColor: bgColor,
     },
     listContent: {
       paddingBottom: 24,
@@ -169,7 +191,7 @@ function createStyles(colors) {
       padding: 24,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.background,
+      backgroundColor: bgColor,
     },
     headerRow: {
       marginBottom: 18,
@@ -185,18 +207,18 @@ function createStyles(colors) {
     screenTitle: {
       fontSize: 28,
       fontWeight: '800',
-      color: colors.text,
+      color: textColor,
     },
     title: {
       fontSize: 24,
       fontWeight: '800',
       marginBottom: 8,
       textAlign: 'center',
-      color: colors.text,
+      color: textColor,
     },
     helperText: {
       marginTop: 8,
-      color: colors.textMuted || '#5f6b7a',
+      color: textMutedColor,
       textAlign: 'center',
     },
     errorText: {
@@ -209,47 +231,49 @@ function createStyles(colors) {
       paddingVertical: 12,
       paddingHorizontal: 20,
       borderRadius: 12,
-      backgroundColor: colors.primary || '#009de0',
+      backgroundColor: primaryColor,
     },
     primaryButtonText: {
-      color: colors.onPrimary || '#fff',
+      color: onPrimaryColor,
       fontWeight: '700',
     },
     addButton: {
       paddingVertical: 9,
       paddingHorizontal: 15,
       borderRadius: 14,
-      backgroundColor: colors.primary || '#009de0',
+      backgroundColor: primaryColor,
     },
     addButtonText: {
-      color: colors.onPrimary || '#fff',
+      color: onPrimaryColor,
       fontWeight: '800',
     },
     card: {
       marginBottom: 16,
       borderRadius: 20,
-      backgroundColor: colors.surface || '#fff',
+      backgroundColor: cardColor,
       overflow: 'hidden',
       elevation: 3,
       shadowColor: '#000',
-      shadowOpacity: 0.08,
+      shadowOpacity: isDark ? 0.3 : 0.08,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 4 },
+      borderColor: borderColor,
+      borderWidth: isDark ? 1 : 0,
     },
     restaurantImage: {
       width: '100%',
       height: 190,
-      backgroundColor: colors.border || '#eef1f4',
+      backgroundColor: borderColor,
     },
     imagePlaceholder: {
       width: '100%',
       height: 190,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.border || '#eef1f4',
+      backgroundColor: primarySoftColor,
     },
     imagePlaceholderText: {
-      color: colors.textMuted || '#5f6b7a',
+      color: primaryColor,
       fontWeight: '700',
     },
     cardContent: {
@@ -265,27 +289,27 @@ function createStyles(colors) {
       flex: 1,
       fontSize: 20,
       fontWeight: '800',
-      color: colors.text,
+      color: textColor,
       marginRight: 10,
     },
     countBadge: {
       paddingVertical: 5,
       paddingHorizontal: 10,
       borderRadius: 999,
-      backgroundColor: colors.primarySoft || '#e6f6fd',
+      backgroundColor: primarySoftColor,
     },
     countBadgeText: {
-      color: colors.primary || '#009de0',
+      color: primaryColor,
       fontSize: 13,
       fontWeight: '800',
     },
     metaText: {
-      color: colors.textMuted || '#4b5563',
+      color: textMutedColor,
       marginBottom: 5,
       fontSize: 15,
     },
     addressText: {
-      color: colors.textMuted || '#6b7280',
+      color: textMutedColor,
       fontSize: 14,
     },
   });
