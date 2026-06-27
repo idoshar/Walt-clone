@@ -49,7 +49,7 @@ function formatDistance(distanceKm) {
   return `${distanceKm.toFixed(1)} km away`;
 }
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
 
   const [connectionState, setConnectionState] = useState('loading');
@@ -124,9 +124,20 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <Pressable onPress={signOut} style={styles.signOutButton}>
-            <Text style={styles.signOutText}>Sign out</Text>
-          </Pressable>
+          <View style={styles.headerActions}>
+            {user?.role === 'admin' && (
+              <Pressable
+                onPress={() => navigation.navigate('Admin')}
+                style={styles.adminButton}
+              >
+                <Text style={styles.adminButtonText}>Admin</Text>
+              </Pressable>
+            )}
+
+            <Pressable onPress={signOut} style={styles.signOutButton}>
+              <Text style={styles.signOutText}>Sign out</Text>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.statusCard}>
@@ -221,6 +232,20 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     marginTop: 4,
+  },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  adminButton: {
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  adminButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   signOutButton: {
     borderRadius: 10,
