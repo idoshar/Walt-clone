@@ -81,8 +81,8 @@ class RestaurantController {
     async getAllRestaurants(req, res, next) {
         try {
             const restaurants = restaurantRepository.getAll
-                ? restaurantRepository.getAll()
-                : restaurantRepository.findAll();
+                ? await restaurantRepository.getAll()
+                : await restaurantRepository.findAll();
 
             const visibility = await Promise.all(
                 restaurants.map(async (restaurant) => ({
@@ -105,8 +105,8 @@ class RestaurantController {
         try {
             const userId = req.user?.sub || req.user?.id;
             const restaurants = restaurantRepository.getAll
-                ? restaurantRepository.getAll()
-                : restaurantRepository.findAll();
+                ? await restaurantRepository.getAll()
+                : await restaurantRepository.findAll();
 
             const managedRestaurants = restaurants.filter(
                 (restaurant) =>
@@ -126,7 +126,7 @@ class RestaurantController {
 
     async getRestaurantById(req, res, next) {
         try {
-            const restaurant = restaurantRepository.findById(req.params.id);
+            const restaurant = await restaurantRepository.findById(req.params.id);
 
             if (!restaurant || !(await isPublicRestaurant(restaurant))) {
                 return responseHelper.notFound(res, 'Restaurant not found');
@@ -171,7 +171,7 @@ class RestaurantController {
                 isDefault: false
             });
 
-            restaurantRepository.create(restaurant);
+            await restaurantRepository.create(restaurant);
 
             return res
                 .status(201)
@@ -184,7 +184,7 @@ class RestaurantController {
 
     async updateRestaurant(req, res, next) {
         try {
-            const existingRestaurant = restaurantRepository.findById(req.params.id);
+            const existingRestaurant = await restaurantRepository.findById(req.params.id);
 
             if (!existingRestaurant) {
                 return responseHelper.notFound(res, 'Restaurant not found');
@@ -225,7 +225,7 @@ class RestaurantController {
                 ...(locationResult.coordinates || {})
             };
 
-            restaurantRepository.update(req.params.id, updates);
+            await restaurantRepository.update(req.params.id, updates);
 
             return responseHelper.noContent(res);
         } catch (err) {
@@ -235,7 +235,7 @@ class RestaurantController {
 
     async deleteRestaurant(req, res, next) {
         try {
-            const restaurant = restaurantRepository.findById(req.params.id);
+            const restaurant = await restaurantRepository.findById(req.params.id);
 
             if (!restaurant) {
                 return responseHelper.notFound(res, 'Restaurant not found');
@@ -249,7 +249,7 @@ class RestaurantController {
             }
 
             await productRepository.removeAllByRestaurant(req.params.id);
-            restaurantRepository.deleteById(req.params.id);
+            await restaurantRepository.deleteById(req.params.id);
 
             return responseHelper.noContent(res);
         } catch (err) {
