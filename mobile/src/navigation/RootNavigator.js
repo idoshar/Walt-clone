@@ -10,6 +10,7 @@ import {
 
 import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
+import CartScreen from '../screens/CartScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -69,6 +70,11 @@ function AppNavigator({ screenOptions }) {
         component={RestaurantDetailsScreen}
         name="RestaurantDetails"
         options={{ title: 'Restaurant' }}
+      />
+      <Stack.Screen
+        component={CartScreen}
+        name="Cart"
+        options={{ title: 'Your cart' }}
       />
 
       {user?.role === 'admin' && (

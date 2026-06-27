@@ -16,6 +16,9 @@ import {
   getRestaurantById,
   getRestaurantProducts,
 } from '../api/restaurants';
+import { useCart } from '../cart/CartContext';
+import ThemeToggle from '../components/ThemeToggle';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const ALL_CATEGORIES = 'All';
 
@@ -26,7 +29,7 @@ function formatPrice(price) {
     return 'Price unavailable';
   }
 
-  return `₪${numericPrice.toFixed(2)}`;
+  return `\u20AA${numericPrice.toFixed(2)}`;
 }
 
 function hasImage(item) {
@@ -37,7 +40,11 @@ function getInitial(item, fallback = 'R') {
   return item?.name?.trim()?.charAt(0)?.toUpperCase() || fallback;
 }
 
-export default function RestaurantDetailsScreen({ route }) {
+export default function RestaurantDetailsScreen({ navigation, route }) {
+  const { addItem, itemCount } = useCart();
+  const { theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
+
   const restaurantId = route.params?.restaurantId;
   const initialRestaurant = route.params?.restaurant || null;
 
@@ -128,7 +135,7 @@ export default function RestaurantDetailsScreen({ route }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -136,12 +143,18 @@ export default function RestaurantDetailsScreen({ route }) {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={() => loadRestaurantContent({ refreshing: true })}
+            tintColor={theme.colors.primary}
           />
         }
       >
+        <View style={styles.topBar}>
+          <Text style={styles.topBarTitle}>Restaurant</Text>
+          <ThemeToggle compact />
+        </View>
+
         {isLoading && !restaurant ? (
           <View style={styles.stateCard}>
-            <ActivityIndicator size="large" />
+            <ActivityIndicator color={theme.colors.primary} size="large" />
             <Text style={styles.stateTitle}>Loading restaurant...</Text>
             <Text style={styles.stateMessage}>{message}</Text>
           </View>
@@ -154,9 +167,12 @@ export default function RestaurantDetailsScreen({ route }) {
 
             <Pressable
               onPress={() => loadRestaurantContent()}
-              style={styles.retryButton}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                pressed ? styles.pressedButton : null,
+              ]}
             >
-              <Text style={styles.retryButtonText}>Try again</Text>
+              <Text style={styles.primaryButtonText}>Try again</Text>
             </Pressable>
           </View>
         ) : null}
@@ -211,17 +227,32 @@ export default function RestaurantDetailsScreen({ route }) {
             </View>
 
             <View style={styles.menuHeader}>
-              <View>
+              <View style={styles.menuHeading}>
                 <Text style={styles.menuTitle}>Menu</Text>
                 <Text style={styles.menuSubtitle}>{message}</Text>
               </View>
 
-              <Pressable
-                onPress={() => loadRestaurantContent()}
-                style={styles.refreshButton}
-              >
-                <Text style={styles.refreshButtonText}>Refresh</Text>
-              </Pressable>
+              <View style={styles.menuActions}>
+                <Pressable
+                  onPress={() => navigation.navigate('Cart')}
+                  style={({ pressed }) => [
+                    styles.cartButton,
+                    pressed ? styles.pressedButton : null,
+                  ]}
+                >
+                  <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => loadRestaurantContent()}
+                  style={({ pressed }) => [
+                    styles.refreshButton,
+                    pressed ? styles.pressedButton : null,
+                  ]}
+                >
+                  <Text style={styles.refreshButtonText}>Refresh</Text>
+                </Pressable>
+              </View>
             </View>
 
             <View style={styles.categoryList}>
@@ -232,15 +263,16 @@ export default function RestaurantDetailsScreen({ route }) {
                   <Pressable
                     key={category}
                     onPress={() => setSelectedCategory(category)}
-                    style={[
+                    style={({ pressed }) => [
                       styles.categoryChip,
-                      isSelected && styles.categoryChipSelected,
+                      isSelected ? styles.categoryChipSelected : null,
+                      pressed ? styles.pressedButton : null,
                     ]}
                   >
                     <Text
                       style={[
                         styles.categoryChipText,
-                        isSelected && styles.categoryChipTextSelected,
+                        isSelected ? styles.categoryChipTextSelected : null,
                       ]}
                     >
                       {category}
@@ -252,10 +284,8 @@ export default function RestaurantDetailsScreen({ route }) {
 
             {isLoading ? (
               <View style={styles.inlineLoading}>
-                <ActivityIndicator size="small" />
-                <Text style={styles.inlineLoadingText}>
-                  Updating menu...
-                </Text>
+                <ActivityIndicator color={theme.colors.primary} size="small" />
+                <Text style={styles.inlineLoadingText}>Updating menu...</Text>
               </View>
             ) : null}
 
@@ -309,6 +339,19 @@ export default function RestaurantDetailsScreen({ route }) {
                         {product.category}
                       </Text>
                     ) : null}
+
+                    <Pressable
+                      accessibilityLabel={`Add ${product.name} to cart`}
+                      onPress={() => addItem(product, restaurant)}
+                      style={({ pressed }) => [
+                        styles.addToCartButton,
+                        pressed ? styles.pressedButton : null,
+                      ]}
+                    >
+                      <Text style={styles.addToCartButtonText}>
+                        Add to cart
+                      </Text>
+                    </Pressable>
                   </View>
                 </View>
               ))}
@@ -319,220 +362,287 @@ export default function RestaurantDetailsScreen({ route }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#f7f7f7',
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    gap: 16,
-    padding: 20,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 18,
-    gap: 16,
-    padding: 16,
-  },
-  heroImage: {
-    borderRadius: 14,
-    height: 170,
-    width: '100%',
-  },
-  heroImagePlaceholder: {
-    alignItems: 'center',
-    backgroundColor: '#e7f7fb',
-    borderRadius: 14,
-    height: 170,
-    justifyContent: 'center',
-  },
-  heroImageInitial: {
-    color: '#009de0',
-    fontSize: 64,
-    fontWeight: '800',
-  },
-  heroContent: {
-    gap: 8,
-  },
-  restaurantTitleRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: 10,
-  },
-  restaurantName: {
-    flex: 1,
-    fontSize: 26,
-    fontWeight: '800',
-  },
-  cuisineBadge: {
-    backgroundColor: '#e7f7fb',
-    borderRadius: 999,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  cuisineBadgeText: {
-    color: '#007cb3',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  restaurantDescription: {
-    color: '#4f5b63',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  restaurantAddress: {
-    color: '#4f5b63',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  restaurantPhone: {
-    color: '#4f5b63',
-    fontSize: 13,
-  },
-  menuHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  menuTitle: {
-    fontSize: 23,
-    fontWeight: '800',
-  },
-  menuSubtitle: {
-    color: '#4f5b63',
-    fontSize: 13,
-    marginTop: 3,
-  },
-  refreshButton: {
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-  },
-  refreshButtonText: {
-    color: '#007cb3',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  categoryList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  categoryChip: {
-    borderColor: '#d7d7d7',
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  categoryChipSelected: {
-    backgroundColor: '#009de0',
-    borderColor: '#009de0',
-  },
-  categoryChipText: {
-    color: '#4f5b63',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  categoryChipTextSelected: {
-    color: '#ffffff',
-  },
-  productCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    flexDirection: 'row',
-    gap: 14,
-    padding: 14,
-  },
-  productImage: {
-    borderRadius: 12,
-    height: 74,
-    width: 74,
-  },
-  productImagePlaceholder: {
-    alignItems: 'center',
-    backgroundColor: '#e7f7fb',
-    borderRadius: 12,
-    height: 74,
-    justifyContent: 'center',
-    width: 74,
-  },
-  productImageInitial: {
-    color: '#009de0',
-    fontSize: 29,
-    fontWeight: '800',
-  },
-  productContent: {
-    flex: 1,
-    gap: 5,
-    justifyContent: 'center',
-  },
-  productTitleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  productName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  productPrice: {
-    color: '#007cb3',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  productDescription: {
-    color: '#4f5b63',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  productCategory: {
-    color: '#6b767d',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  stateCard: {
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    gap: 12,
-    padding: 24,
-  },
-  stateTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  stateMessage: {
-    color: '#4f5b63',
-    fontSize: 14,
-    lineHeight: 21,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: '#009de0',
-    borderRadius: 10,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-  },
-  retryButtonText: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  inlineLoading: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-    paddingVertical: 8,
-  },
-  inlineLoadingText: {
-    color: '#4f5b63',
-    fontSize: 13,
-  },
-});
+function createStyles(colors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      flex: 1,
+    },
+    content: {
+      flexGrow: 1,
+      gap: 16,
+      padding: 20,
+      paddingBottom: 32,
+    },
+    topBar: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    topBarTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    heroCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 16,
+      padding: 16,
+    },
+    heroImage: {
+      borderRadius: 14,
+      height: 170,
+      width: '100%',
+    },
+    heroImagePlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      height: 170,
+      justifyContent: 'center',
+    },
+    heroImageInitial: {
+      color: colors.primary,
+      fontSize: 64,
+      fontWeight: '800',
+    },
+    heroContent: {
+      gap: 8,
+    },
+    restaurantTitleRow: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: 10,
+    },
+    restaurantName: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 26,
+      fontWeight: '800',
+    },
+    cuisineBadge: {
+      borderColor: colors.primary,
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+    },
+    cuisineBadgeText: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '800',
+    },
+    restaurantDescription: {
+      color: colors.textMuted,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    restaurantAddress: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    restaurantPhone: {
+      color: colors.textMuted,
+      fontSize: 13,
+    },
+    menuHeader: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: 12,
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    menuHeading: {
+      flex: 1,
+    },
+    menuTitle: {
+      color: colors.text,
+      fontSize: 23,
+      fontWeight: '800',
+    },
+    menuSubtitle: {
+      color: colors.textMuted,
+      fontSize: 13,
+      marginTop: 3,
+    },
+    menuActions: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 8,
+    },
+    cartButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+    },
+    cartButtonText: {
+      color: '#ffffff',
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    refreshButton: {
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 9,
+    },
+    refreshButtonText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    categoryList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    categoryChip: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+    },
+    categoryChipSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryChipText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      fontWeight: '700',
+    },
+    categoryChipTextSelected: {
+      color: '#ffffff',
+    },
+    productCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 14,
+      padding: 14,
+    },
+    productImage: {
+      borderRadius: 12,
+      height: 74,
+      width: 74,
+    },
+    productImagePlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      height: 74,
+      justifyContent: 'center',
+      width: 74,
+    },
+    productImageInitial: {
+      color: colors.primary,
+      fontSize: 29,
+      fontWeight: '800',
+    },
+    productContent: {
+      flex: 1,
+      gap: 5,
+      justifyContent: 'center',
+    },
+    productTitleRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 8,
+    },
+    productName: {
+      color: colors.text,
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    productPrice: {
+      color: colors.primary,
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    productDescription: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    productCategory: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    addToCartButton: {
+      alignItems: 'center',
+      alignSelf: 'flex-start',
+      backgroundColor: colors.primary,
+      borderRadius: 9,
+      marginTop: 4,
+      paddingHorizontal: 11,
+      paddingVertical: 8,
+    },
+    addToCartButtonText: {
+      color: '#ffffff',
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    stateCard: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      gap: 12,
+      padding: 24,
+    },
+    stateTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '800',
+      textAlign: 'center',
+    },
+    stateMessage: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 21,
+      textAlign: 'center',
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingHorizontal: 18,
+      paddingVertical: 11,
+    },
+    primaryButtonText: {
+      color: '#ffffff',
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    inlineLoading: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: 8,
+      justifyContent: 'center',
+      paddingVertical: 8,
+    },
+    inlineLoadingText: {
+      color: colors.textMuted,
+      fontSize: 13,
+    },
+    pressedButton: {
+      opacity: 0.72,
+    },
+  });
+}
