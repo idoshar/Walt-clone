@@ -9,8 +9,9 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo:7
+    image: mongo:7.0
     container_name: mongo
+    restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: "${MONGODB_DB_NAME:-food_delivery}"
     volumes:
@@ -21,7 +22,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    restart: unless-stopped
 
   web-server:
     build:
