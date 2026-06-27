@@ -54,7 +54,7 @@ export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
   const { itemCount } = useCart();
   const { theme } = useAppTheme();
-  const styles = createStyles(theme.colors);
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
   const [restaurants, setRestaurants] = useState([]);
   const [restaurantsState, setRestaurantsState] = useState('loading');
@@ -173,9 +173,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.brandRow}>
             <View style={styles.brandText}>
               <Text style={styles.eyebrow}>DISCOVER FOOD</Text>
-
               <Text style={styles.title}>Wolt Delivery</Text>
-
               <Text style={styles.subtitle}>
                 Hello, {user?.fullName || user?.username || 'customer'}
               </Text>
@@ -185,28 +183,30 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        <View style={styles.headerActions}>
-          <Pressable
-            accessibilityLabel="Open cart"
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('Cart')}
-            style={({ pressed }) => [
-              styles.cartButton,
-              pressed ? styles.pressedButton : null,
-            ]}
-          >
-            <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => navigation.navigate('MyRestaurants')}
-            style={({ pressed }) => [
-              styles.myRestaurantsButton,
-              pressed ? styles.pressedButton : null,
-            ]}
-          >
-            <Text style={styles.myRestaurantsButtonText}>My Restaurants</Text>
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('MyRestaurants')}
+              style={({ pressed }) => [
+                styles.myRestaurantsButton,
+                pressed ? styles.pressedButton : null,
+              ]}
+            >
+              <Text style={styles.myRestaurantsButtonText}>My Restaurants</Text>
+            </Pressable>
+
+            {isAdmin ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => navigation.navigate('Admin')}
+                style={({ pressed }) => [
+                  styles.adminButton,
+                  pressed ? styles.pressedButton : null,
+                ]}
+              >
+                <Text style={styles.adminButtonText}>Admin</Text>
+              </Pressable>
+            ) : null}
 
           {isAdmin ? (
             <Pressable
@@ -520,6 +520,22 @@ function createStyles(colors) {
     },
     myRestaurantsButtonText: {
       color: colors.onPrimary,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    myRestaurantsButton: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+    },
+    myRestaurantsButtonText: {
+      color: colors.text,
       fontSize: 13,
       fontWeight: '800',
     },
