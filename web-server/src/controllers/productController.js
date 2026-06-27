@@ -15,8 +15,8 @@ const {
     validateRequiredFields,
 } = require('../utilities/validationHelper');
 
-function findRestaurant(req, res) {
-    const restaurant = restaurantRepository.findById(req.params.id);
+async function findRestaurant(req, res) {
+    const restaurant = await restaurantRepository.findById(req.params.id);
 
     if (!restaurant) {
         notFound(res, 'Restaurant not found');
@@ -36,8 +36,8 @@ function canManageRestaurant(req, restaurant) {
     );
 }
 
-function requireManagedRestaurant(req, res) {
-    const restaurant = findRestaurant(req, res);
+async function requireManagedRestaurant(req, res) {
+    const restaurant = await findRestaurant(req, res);
 
     if (!restaurant) {
         return null;
@@ -67,7 +67,7 @@ async function getRecommendationUserId(req) {
 }
 
 async function getAllProducts(req, res) {
-    const restaurant = findRestaurant(req, res);
+    const restaurant = await findRestaurant(req, res);
 
     if (!restaurant) {
         return;
@@ -81,7 +81,7 @@ async function getAllProducts(req, res) {
 }
 
 async function createProduct(req, res) {
-    if (!requireManagedRestaurant(req, res)) return;
+    if (!(await requireManagedRestaurant(req, res))) return;
 
     const bodyError = validateObject(req.body);
 
@@ -120,7 +120,7 @@ async function createProduct(req, res) {
 }
 
 async function getProductById(req, res) {
-    if (!findRestaurant(req, res)) return;
+    if (!(await findRestaurant(req, res))) return;
 
     const product = await productRepository.findById(
         req.params.id,
@@ -145,7 +145,7 @@ async function getProductById(req, res) {
 
 async function getProductRecommendations(req, res, next) {
     try {
-        if (!findRestaurant(req, res)) return;
+        if (!(await findRestaurant(req, res))) return;
 
         const sourceProduct = await productRepository.findById(
             req.params.id,
@@ -203,7 +203,7 @@ async function getProductRecommendations(req, res, next) {
 }
 
 async function updateProduct(req, res) {
-    if (!requireManagedRestaurant(req, res)) return;
+    if (!(await requireManagedRestaurant(req, res))) return;
 
     const bodyError = validateObject(req.body);
 
@@ -248,7 +248,7 @@ async function updateProduct(req, res) {
 }
 
 async function deleteProduct(req, res) {
-    if (!requireManagedRestaurant(req, res)) return;
+    if (!(await requireManagedRestaurant(req, res))) return;
 
     const deleted = await productRepository.remove(
         req.params.id,

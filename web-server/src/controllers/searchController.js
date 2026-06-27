@@ -16,7 +16,7 @@ async function searchRestaurantsAndProducts(req, res, next) {
             });
         }
 
-        const restaurants = restaurantRepository.search(query);
+        const restaurants = await restaurantRepository.search(query);
         const restaurantVisibility = await Promise.all(
             restaurants.map(async (restaurant) => ({
                 restaurant,
