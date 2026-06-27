@@ -1,5 +1,6 @@
 const productRepository = require('../repositories/productRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
+const userRepository = require('../repositories/userRepository');
 const ex2 = require('../services/exercise2Client');
 const { generateId } = require('../utilities/idGenerator');
 const {
@@ -53,18 +54,33 @@ function requireManagedRestaurant(req, res) {
     return restaurant;
 }
 
-function getAllProducts(req, res) {
+async function getRecommendationUserId(req) {
+    const userId = req.user?.sub || req.user?.id;
+
+    if (!userId) {
+        return null;
+    }
+
+    const user = await userRepository.findById(userId);
+
+    return user?.recommendationId || null;
+}
+
+async function getAllProducts(req, res) {
     const restaurant = findRestaurant(req, res);
 
     if (!restaurant) {
         return;
     }
 
-    const products = productRepository.findAllByRestaurant(req.params.id);
+    const products = await productRepository.findAllByRestaurant(
+        req.params.id
+    );
+
     return ok(res, products);
 }
 
-function createProduct(req, res) {
+async function createProduct(req, res) {
     if (!requireManagedRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
@@ -95,31 +111,33 @@ function createProduct(req, res) {
         image: typeof image === 'string' ? image.trim() : ''
     };
 
-    productRepository.save(req.params.id, product);
+    const savedProduct = await productRepository.save(req.params.id, product);
 
     return created(
         res,
-        `/api/restaurants/${req.params.id}/products/${product.id}`
+        `/api/restaurants/${req.params.id}/products/${savedProduct.id}`
     );
 }
 
-function getProductById(req, res) {
+async function getProductById(req, res) {
     if (!findRestaurant(req, res)) return;
 
-    const product = productRepository.findById(req.params.id, req.params.pId);
+    const product = await productRepository.findById(
+        req.params.id,
+        req.params.pId
+    );
 
     if (!product) {
         return notFound(res, 'Product not found');
     }
 
-    const userId = req.user?.sub;
-    const recommendationId = productRepository.getRecommendationId(
-        req.params.id,
-        req.params.pId
-    );
+    const recommendationUserId = await getRecommendationUserId(req);
 
-    if (userId && recommendationId) {
-        ex2.reportProductView(userId, recommendationId);
+    if (recommendationUserId && product.recommendationId) {
+        await ex2.reportProductView(
+            recommendationUserId,
+            product.recommendationId
+        );
     }
 
     return ok(res, product);
@@ -129,7 +147,7 @@ async function getProductRecommendations(req, res, next) {
     try {
         if (!findRestaurant(req, res)) return;
 
-        const sourceProduct = productRepository.findById(
+        const sourceProduct = await productRepository.findById(
             req.params.id,
             req.params.pId
         );
@@ -138,46 +156,53 @@ async function getProductRecommendations(req, res, next) {
             return notFound(res, 'Product not found');
         }
 
-        const userId = req.user?.sub;
+        const recommendationUserId = await getRecommendationUserId(req);
 
-        if (!userId) {
+        if (!recommendationUserId) {
             return res.status(401).json({
                 error: 'Unauthorized',
                 message: 'Missing authenticated user'
             });
         }
 
-        const recommendationId = productRepository.getRecommendationId(
-            req.params.id,
-            req.params.pId
-        );
+        const recommendationId = sourceProduct.recommendationId;
 
         if (!recommendationId) {
             return ok(res, []);
         }
 
-        await ex2.reportProductView(userId, recommendationId);
-
-        const recommendationIds = await ex2.getRecommendations(
-            userId,
+        await ex2.reportProductView(
+            recommendationUserId,
             recommendationId
         );
 
-        const recommendedProducts = recommendationIds
-            .map((id) => productRepository.findByRecommendationId(id))
-            .filter((recommendedProduct) =>
-                recommendedProduct &&
-                String(recommendedProduct.restaurantId) === String(req.params.id) &&
-                String(recommendedProduct.id) !== String(req.params.pId)
-            );
+        const recommendationIds = await ex2.getRecommendations(
+            recommendationUserId,
+            recommendationId
+        );
 
-        return ok(res, recommendedProducts);
+        const recommendedProducts = await Promise.all(
+            recommendationIds.map((id) =>
+                productRepository.findByRecommendationId(id)
+            )
+        );
+
+        return ok(
+            res,
+            recommendedProducts.filter(
+                (recommendedProduct) =>
+                    recommendedProduct &&
+                    String(recommendedProduct.restaurantId) ===
+                        String(req.params.id) &&
+                    String(recommendedProduct.id) !== String(req.params.pId)
+            )
+        );
     } catch (err) {
         next(err);
     }
 }
 
-function updateProduct(req, res) {
+async function updateProduct(req, res) {
     if (!requireManagedRestaurant(req, res)) return;
 
     const bodyError = validateObject(req.body);
@@ -209,7 +234,7 @@ function updateProduct(req, res) {
             typeof safeUpdates.image === 'string' ? safeUpdates.image.trim() : '';
     }
 
-    const updated = productRepository.update(
+    const updated = await productRepository.update(
         req.params.id,
         req.params.pId,
         safeUpdates
@@ -222,10 +247,13 @@ function updateProduct(req, res) {
     return noContent(res);
 }
 
-function deleteProduct(req, res) {
+async function deleteProduct(req, res) {
     if (!requireManagedRestaurant(req, res)) return;
 
-    const deleted = productRepository.remove(req.params.id, req.params.pId);
+    const deleted = await productRepository.remove(
+        req.params.id,
+        req.params.pId
+    );
 
     if (!deleted) {
         return notFound(res, 'Product not found');
@@ -242,4 +270,3 @@ module.exports = {
     updateProduct,
     deleteProduct,
 };
-

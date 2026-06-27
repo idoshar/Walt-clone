@@ -1,11 +1,13 @@
 const User = require('../models/User');
 const { generateId } = require('../utilities/idGenerator');
+const { getNextSequence } = require('../services/sequenceService');
 
 class UserRepository {
     async create(userData) {
         const user = await User.create({
+            ...userData,
             id: generateId(),
-            ...userData
+            recommendationId: await getNextSequence('userRecommendationId')
         });
 
         return user;
@@ -20,7 +22,12 @@ class UserRepository {
     }
 
     async update(id, updates) {
-        const { id: _id, username: _username, ...safeUpdates } = updates;
+        const {
+            id: _id,
+            username: _username,
+            recommendationId: _recommendationId,
+            ...safeUpdates
+        } = updates;
 
         return User.findOneAndUpdate(
             { id: String(id) },
