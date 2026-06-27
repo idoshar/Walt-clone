@@ -7,6 +7,16 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Wolt Delivery to access your photos so you can choose a profile image.",
+          "cameraPermission": "Allow Wolt Delivery to use your camera so you can take a profile image.",
+          "microphonePermission": false
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
