@@ -1,4 +1,4 @@
-import { NavigationContainer } from '@react-navigation/native';
+﻿import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   ActivityIndicator,
@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '../auth/AuthContext';
+import AdminScreen from '../screens/AdminScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -41,6 +42,8 @@ function AuthNavigator() {
 }
 
 function AppNavigator() {
+  const { user } = useAuth();
+
   return (
     <Stack.Navigator>
       <Stack.Screen
@@ -48,6 +51,13 @@ function AppNavigator() {
         name="Home"
         options={{ headerShown: false }}
       />
+      {user?.role === 'admin' && (
+        <Stack.Screen
+          component={AdminScreen}
+          name="Admin"
+          options={{ title: 'Admin area' }}
+        />
+      )}
     </Stack.Navigator>
   );
 }
