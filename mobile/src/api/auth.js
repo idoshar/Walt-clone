@@ -16,6 +16,7 @@ export async function registerUser({
   fullName,
   phone,
   address,
+  image = '',
 }) {
   return apiRequest('/users', {
     method: 'POST',
@@ -25,6 +26,7 @@ export async function registerUser({
       fullName,
       phone,
       address,
+      image,
     },
   });
 }

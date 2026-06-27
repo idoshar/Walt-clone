@@ -31,6 +31,7 @@ const IMAGE_PICKER_OPTIONS = {
   allowsEditing: true,
   aspect: [1, 1],
   quality: 0.7,
+  base64: true,
 };
 
 export default function RegisterScreen() {
@@ -165,9 +166,22 @@ export default function RegisterScreen() {
       return;
     }
 
+    const imageMimeType = selectedAsset.mimeType || 'image/jpeg';
+    const imageDataUri = selectedAsset.base64
+      ? `data:${imageMimeType};base64,${selectedAsset.base64}`
+      : '';
+
+    if (!imageDataUri) {
+      setImageError(
+        'The selected image could not be prepared for upload. Please choose it again.'
+      );
+      return;
+    }
+
     setProfileImage({
       name: selectedAsset.fileName || 'Profile image',
       uri: selectedAsset.uri,
+      dataUri: imageDataUri,
     });
 
     setImageError('');
@@ -258,6 +272,28 @@ export default function RegisterScreen() {
     setMessage('');
   }
 
+  function showRegistrationError(error) {
+    const serverMessage =
+      typeof error?.message === 'string' && error.message.trim()
+        ? error.message.trim()
+        : 'Could not create the account.';
+
+    if (
+      error?.status === 409 ||
+      /username already exists/i.test(serverMessage)
+    ) {
+      setFieldErrors((currentErrors) => ({
+        ...currentErrors,
+        username: 'This username is already taken. Please choose another one.',
+      }));
+
+      setMessage('Please choose a different username.');
+      return;
+    }
+
+    setMessage(serverMessage);
+  }
+
   async function handleRegister() {
     if (isSubmitting) {
       return;
@@ -282,9 +318,10 @@ export default function RegisterScreen() {
         fullName: form.fullName.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
+        image: profileImage?.dataUri || '',
       });
     } catch (error) {
-      setMessage(error.message || 'Could not create the account.');
+      showRegistrationError(error);
     } finally {
       setIsSubmitting(false);
     }
