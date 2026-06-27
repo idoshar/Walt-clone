@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema(
             unique: true,
             index: true
         },
+        recommendationId: {
+            type: Number,
+            unique: true,
+            sparse: true,
+            index: true,
+            min: 1
+        },
         username: {
             type: String,
             required: true,

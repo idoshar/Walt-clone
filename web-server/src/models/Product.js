@@ -38,7 +38,10 @@ const productSchema = new mongoose.Schema(
         },
         recommendationId: {
             type: Number,
-            index: true
+            required: true,
+            unique: true,
+            index: true,
+            min: 1
         }
     },
     {
