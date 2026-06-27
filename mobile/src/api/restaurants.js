@@ -1,6 +1,6 @@
 import { apiRequest } from './client';
 
-function extractRestaurants(response) {
+function extractCollection(response) {
   if (Array.isArray(response)) {
     return response;
   }
@@ -12,10 +12,42 @@ function extractRestaurants(response) {
   return [];
 }
 
+function normalizeId(value) {
+  return String(value || '').trim();
+}
+
 export async function getRestaurants({ signal } = {}) {
   const response = await apiRequest('/restaurants', {
     signal,
   });
 
-  return extractRestaurants(response);
+  return extractCollection(response);
+}
+
+export async function getRestaurantById(restaurantId, { signal } = {}) {
+  const normalizedRestaurantId = normalizeId(restaurantId);
+
+  if (!normalizedRestaurantId) {
+    throw new Error('A restaurant id is required.');
+  }
+
+  return apiRequest(
+    `/restaurants/${encodeURIComponent(normalizedRestaurantId)}`,
+    { signal }
+  );
+}
+
+export async function getRestaurantProducts(restaurantId, { signal } = {}) {
+  const normalizedRestaurantId = normalizeId(restaurantId);
+
+  if (!normalizedRestaurantId) {
+    throw new Error('A restaurant id is required.');
+  }
+
+  const response = await apiRequest(
+    `/restaurants/${encodeURIComponent(normalizedRestaurantId)}/products`,
+    { signal }
+  );
+
+  return extractCollection(response);
 }

@@ -283,7 +283,18 @@ export default function HomeScreen({ navigation }) {
         {!isLoadingRestaurants &&
           !isRestaurantsError &&
           visibleRestaurants.map((restaurant) => (
-            <View key={restaurant.id} style={styles.restaurantCard}>
+            <Pressable
+              key={restaurant.id}
+              accessibilityLabel={`Open ${restaurant.name} menu`}
+              accessibilityRole="button"
+              onPress={() =>
+                navigation.navigate('RestaurantDetails', {
+                  restaurantId: restaurant.id,
+                  restaurant,
+                })
+              }
+              style={styles.restaurantCard}
+            >
               {hasRestaurantImage(restaurant) ? (
                 <Image
                   source={{ uri: restaurant.image }}
@@ -328,7 +339,7 @@ export default function HomeScreen({ navigation }) {
                   </Text>
                 )}
               </View>
-            </View>
+            </Pressable>
           ))}
       </ScrollView>
     </SafeAreaView>

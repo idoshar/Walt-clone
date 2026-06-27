@@ -1,4 +1,4 @@
-﻿import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import AdminScreen from '../screens/AdminScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +52,13 @@ function AppNavigator() {
         name="Home"
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        component={RestaurantDetailsScreen}
+        name="RestaurantDetails"
+        options={{ title: 'Restaurant' }}
+      />
+
       {user?.role === 'admin' && (
         <Stack.Screen
           component={AdminScreen}
