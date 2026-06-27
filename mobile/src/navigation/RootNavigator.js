@@ -1,5 +1,6 @@
-﻿import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -12,21 +13,32 @@ import AdminScreen from '../screens/AdminScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import { createNavigationTheme } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
 function LoadingScreen() {
+  const { theme } = useAppTheme();
+
   return (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" />
-      <Text style={styles.loadingText}>Restoring your session...</Text>
+    <View
+      style={[
+        styles.loadingContainer,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
+      <ActivityIndicator color={theme.colors.primary} size="large" />
+      <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
+        Restoring your session...
+      </Text>
     </View>
   );
 }
 
-function AuthNavigator() {
+function AuthNavigator({ screenOptions }) {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         component={LoginScreen}
         name="Login"
@@ -41,11 +53,11 @@ function AuthNavigator() {
   );
 }
 
-function AppNavigator() {
+function AppNavigator({ screenOptions }) {
   const { user } = useAuth();
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         component={HomeScreen}
         name="Home"
@@ -64,14 +76,43 @@ function AppNavigator() {
 
 export default function RootNavigator() {
   const { isAuthenticated, isRestoringSession } = useAuth();
+  const { isRestoringTheme, theme } = useAppTheme();
 
-  if (isRestoringSession) {
+  const navigationTheme = useMemo(
+    () => createNavigationTheme(theme.mode),
+    [theme.mode]
+  );
+
+  const screenOptions = useMemo(
+    () => ({
+      contentStyle: {
+        backgroundColor: theme.colors.background,
+      },
+      headerBackTitle: 'Back',
+      headerShadowVisible: false,
+      headerStyle: {
+        backgroundColor: theme.colors.surface,
+      },
+      headerTintColor: theme.colors.text,
+      headerTitleStyle: {
+        color: theme.colors.text,
+        fontWeight: '800',
+      },
+    }),
+    [theme]
+  );
+
+  if (isRestoringSession || isRestoringTheme) {
     return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
+    <NavigationContainer theme={navigationTheme}>
+      {isAuthenticated ? (
+        <AppNavigator screenOptions={screenOptions} />
+      ) : (
+        <AuthNavigator screenOptions={screenOptions} />
+      )}
     </NavigationContainer>
   );
 }
