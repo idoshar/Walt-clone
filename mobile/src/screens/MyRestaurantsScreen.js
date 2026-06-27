@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -78,6 +79,7 @@ export default function MyRestaurantsScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.screenTitle}>My Restaurants</Text>
+
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => navigation.navigate('CreateRestaurant')}
@@ -91,9 +93,12 @@ export default function MyRestaurantsScreen({ navigation }) {
         keyExtractor={(item) => String(item.id)}
         refreshing={loading}
         onRefresh={loadRestaurants}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
+            activeOpacity={0.85}
             onPress={() =>
               navigation.navigate('RestaurantProducts', {
                 restaurantId: item.id,
@@ -101,12 +106,39 @@ export default function MyRestaurantsScreen({ navigation }) {
               })
             }
           >
-            <Text style={styles.restaurantName}>{item.name}</Text>
-            <Text style={styles.metaText}>{item.cuisine || 'No cuisine'}</Text>
-            <Text style={styles.metaText}>{item.address || 'No address'}</Text>
-            <Text style={styles.productCount}>
-              {item.productCount || 0} menu items
-            </Text>
+            {item.image ? (
+              <Image
+                source={{ uri: item.image }}
+                style={styles.restaurantImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Text style={styles.imagePlaceholderText}>No image</Text>
+              </View>
+            )}
+
+            <View style={styles.cardContent}>
+              <View style={styles.cardTopRow}>
+                <Text style={styles.restaurantName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+
+                <View style={styles.countBadge}>
+                  <Text style={styles.countBadgeText}>
+                    {item.productCount || 0} items
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.metaText} numberOfLines={1}>
+                {item.cuisine || 'No cuisine'}
+              </Text>
+
+              <Text style={styles.addressText} numberOfLines={1}>
+                {item.address || 'No address'}
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
       />
@@ -117,8 +149,12 @@ export default function MyRestaurantsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     backgroundColor: '#f7f8fa',
+  },
+  listContent: {
+    paddingBottom: 24,
   },
   center: {
     flex: 1,
@@ -128,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f8fa',
   },
   headerRow: {
-    marginBottom: 16,
+    marginBottom: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -136,12 +172,14 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 28,
     fontWeight: '800',
+    color: '#111827',
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
     marginBottom: 8,
     textAlign: 'center',
+    color: '#111827',
   },
   helperText: {
     marginTop: 8,
@@ -165,9 +203,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   addButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 15,
+    borderRadius: 14,
     backgroundColor: '#009de0',
   },
   addButtonText: {
@@ -175,23 +213,66 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   card: {
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 18,
+    marginBottom: 16,
+    borderRadius: 20,
     backgroundColor: '#fff',
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  restaurantImage: {
+    width: '100%',
+    height: 190,
+    backgroundColor: '#eef1f4',
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: 190,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#eef1f4',
+  },
+  imagePlaceholderText: {
+    color: '#5f6b7a',
+    fontWeight: '700',
+  },
+  cardContent: {
+    padding: 16,
+  },
+  cardTopRow: {
+    marginBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   restaurantName: {
+    flex: 1,
     fontSize: 20,
     fontWeight: '800',
-    marginBottom: 6,
+    color: '#111827',
+    marginRight: 10,
+  },
+  countBadge: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: '#e6f6fd',
+  },
+  countBadgeText: {
+    color: '#009de0',
+    fontSize: 13,
+    fontWeight: '800',
   },
   metaText: {
-    color: '#5f6b7a',
-    marginBottom: 3,
+    color: '#4b5563',
+    marginBottom: 5,
+    fontSize: 15,
   },
-  productCount: {
-    marginTop: 8,
-    color: '#009de0',
-    fontWeight: '700',
+  addressText: {
+    color: '#6b7280',
+    fontSize: 14,
   },
 });
