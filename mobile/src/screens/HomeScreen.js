@@ -502,7 +502,7 @@ function createStyles(colors) {
       fontSize: 13,
       fontWeight: '800',
     },    
-     myRestaurantsButton: {
+    myRestaurantsButton: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
       borderRadius: 12,

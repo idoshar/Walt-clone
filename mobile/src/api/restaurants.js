@@ -13,10 +13,6 @@ function extractCollection(response) {
   return [];
 }
 
-function extractCollection(response) {
-  return extractRestaurants(response);
-}
-
 function normalizeId(value) {
   return String(value || '').trim();
 }
@@ -60,10 +56,6 @@ export async function getRestaurantProducts(restaurantId, { signal } = {}) {
   );
 
   return extractCollection(response);
-}
-
-export function getMyRestaurants(token) {
-  return apiRequest('/restaurants/mine', { token });
 }
 
 export async function createRestaurant(data, token) {
