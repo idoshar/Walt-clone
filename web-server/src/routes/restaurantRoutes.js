@@ -1,18 +1,42 @@
-const express = require('express');
+﻿const express = require('express');
 
 const restaurantController = require('../controllers/restaurantController');
 const productRoutes = require('./productRoutes');
 const authMiddleware = require('../middleware/authMiddleware');
+const asyncHandler = require('../middleware/asyncHandler');
 
 const router = express.Router();
 
-router.post('/', authMiddleware, restaurantController.createRestaurant);
-router.get('/mine', authMiddleware, restaurantController.getMyRestaurants);
+router.post(
+    '/',
+    authMiddleware,
+    asyncHandler(restaurantController.createRestaurant)
+);
 
-router.get('/', restaurantController.getAllRestaurants);
-router.get('/:id', restaurantController.getRestaurantById);
-router.patch('/:id', authMiddleware, restaurantController.updateRestaurant);
-router.delete('/:id', authMiddleware, restaurantController.deleteRestaurant);
+router.get(
+    '/mine',
+    authMiddleware,
+    asyncHandler(restaurantController.getMyRestaurants)
+);
+
+router.get('/', asyncHandler(restaurantController.getAllRestaurants));
+
+router.get(
+    '/:id',
+    asyncHandler(restaurantController.getRestaurantById)
+);
+
+router.patch(
+    '/:id',
+    authMiddleware,
+    asyncHandler(restaurantController.updateRestaurant)
+);
+
+router.delete(
+    '/:id',
+    authMiddleware,
+    asyncHandler(restaurantController.deleteRestaurant)
+);
 
 router.use('/:id/products', productRoutes);
 
