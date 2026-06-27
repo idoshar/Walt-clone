@@ -12,9 +12,11 @@ import {
 
 import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
+import CartScreen from '../screens/CartScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
 import { createNavigationTheme } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -65,6 +67,18 @@ function AppNavigator({ screenOptions }) {
         name="Home"
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        component={RestaurantDetailsScreen}
+        name="RestaurantDetails"
+        options={{ title: 'Restaurant' }}
+      />
+      <Stack.Screen
+        component={CartScreen}
+        name="Cart"
+        options={{ title: 'Your cart' }}
+      />
+
       <Stack.Screen
         component={MyRestaurantsScreen}
         name="MyRestaurants"
