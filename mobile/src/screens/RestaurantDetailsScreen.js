@@ -15,20 +15,18 @@ import {
 import {
   getRestaurantById,
   getRestaurantProducts,
+  getRestaurants,
 } from '../api/restaurants';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
 const ALL_CATEGORIES = 'All';
+const MAX_RECOMMENDATIONS = 5;
 
 function formatPrice(price) {
   const numericPrice = Number(price);
-
-  if (!Number.isFinite(numericPrice)) {
-    return 'Price unavailable';
-  }
-
+  if (!Number.isFinite(numericPrice)) return 'Price unavailable';
   return `\u20AA${numericPrice.toFixed(2)}`;
 }
 
@@ -38,6 +36,42 @@ function hasImage(item) {
 
 function getInitial(item, fallback = 'R') {
   return item?.name?.trim()?.charAt(0)?.toUpperCase() || fallback;
+}
+
+/**
+ * Picks recommended products from OTHER restaurants — same category as
+ * the most popular category in the current restaurant.
+ */
+function pickRecommendations(currentRestaurantId, currentProducts, allRestaurants) {
+  if (!currentProducts.length || !allRestaurants.length) return [];
+
+  // Find the most common category in the current restaurant
+  const categoryCounts = currentProducts.reduce((acc, p) => {
+    const cat = p.category?.trim();
+    if (cat) acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {});
+
+  const topCategory = Object.entries(categoryCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0]?.[0];
+
+  // Collect products from other restaurants matching that category
+  const candidates = allRestaurants
+    .filter((r) => String(r.id) !== String(currentRestaurantId))
+    .flatMap((r) =>
+      (r.products || [])
+        .filter((p) => !topCategory || p.category?.trim() === topCategory)
+        .map((p) => ({ ...p, restaurant: r }))
+    );
+
+  // Shuffle and take up to MAX_RECOMMENDATIONS
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  return candidates.slice(0, MAX_RECOMMENDATIONS);
 }
 
 export default function RestaurantDetailsScreen({ navigation, route }) {
@@ -60,6 +94,9 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES);
+
+  // Recommendations state
+  const [recommendations, setRecommendations] = useState([]);
 
   const loadRestaurantContent = useCallback(
     async ({ refreshing = false } = {}) => {
@@ -90,11 +127,33 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
             ? 'This restaurant has no products yet.'
             : `${nextProducts.length} menu item${nextProducts.length === 1 ? '' : 's'} available.`
         );
+
+        // Load recommendations in background — don't block the main content
+        getRestaurants()
+          .then(async (allRestaurants) => {
+            const withProducts = await Promise.all(
+              allRestaurants
+                .filter((r) => String(r.id) !== String(restaurantId))
+                .map(async (r) => {
+                  try {
+                    const prods = await getRestaurantProducts(r.id);
+                    return { ...r, products: prods };
+                  } catch {
+                    return { ...r, products: [] };
+                  }
+                })
+            );
+            setRecommendations(
+              pickRecommendations(restaurantId, nextProducts, withProducts)
+            );
+          })
+          .catch(() => {
+            // Recommendations are non-critical — silently skip on error
+          });
       } catch (error) {
         setScreenState('error');
         setMessage(
-          error.message ||
-            'Could not load this restaurant. Please try again.'
+          error.message || 'Could not load this restaurant. Please try again.'
         );
       } finally {
         setIsRefreshing(false);
@@ -114,20 +173,15 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
 
     return [
       ALL_CATEGORIES,
-      ...Array.from(new Set(productCategories)).sort((first, second) =>
-        first.localeCompare(second)
+      ...Array.from(new Set(productCategories)).sort((a, b) =>
+        a.localeCompare(b)
       ),
     ];
   }, [products]);
 
   const visibleProducts = useMemo(() => {
-    if (selectedCategory === ALL_CATEGORIES) {
-      return products;
-    }
-
-    return products.filter(
-      (product) => product.category === selectedCategory
-    );
+    if (selectedCategory === ALL_CATEGORIES) return products;
+    return products.filter((p) => p.category === selectedCategory);
   }, [products, selectedCategory]);
 
   const isLoading = screenState === 'loading';
@@ -152,6 +206,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
           <ThemeToggle compact />
         </View>
 
+        {/* Loading state */}
         {isLoading && !restaurant ? (
           <View style={styles.stateCard}>
             <ActivityIndicator color={theme.colors.primary} size="large" />
@@ -160,11 +215,12 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
           </View>
         ) : null}
 
+        {/* Error state */}
         {isError ? (
           <View style={styles.stateCard}>
+            <Text style={styles.stateEmoji}>⚠️</Text>
             <Text style={styles.stateTitle}>Could not load restaurant</Text>
             <Text style={styles.stateMessage}>{message}</Text>
-
             <Pressable
               onPress={() => loadRestaurantContent()}
               style={({ pressed }) => [
@@ -179,6 +235,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
 
         {!isError && restaurant ? (
           <>
+            {/* Hero card */}
             <View style={styles.heroCard}>
               {hasImage(restaurant) ? (
                 <Image
@@ -219,13 +276,12 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
                 </Text>
 
                 {restaurant.phone ? (
-                  <Text style={styles.restaurantPhone}>
-                    {restaurant.phone}
-                  </Text>
+                  <Text style={styles.restaurantPhone}>{restaurant.phone}</Text>
                 ) : null}
               </View>
             </View>
 
+            {/* Menu header */}
             <View style={styles.menuHeader}>
               <View style={styles.menuHeading}>
                 <Text style={styles.menuTitle}>Menu</Text>
@@ -240,7 +296,9 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
                     pressed ? styles.pressedButton : null,
                   ]}
                 >
-                  <Text style={styles.cartButtonText}>Cart ({itemCount})</Text>
+                  <Text style={styles.cartButtonText}>
+                    Cart ({itemCount})
+                  </Text>
                 </Pressable>
 
                 <Pressable
@@ -255,10 +313,10 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
               </View>
             </View>
 
+            {/* Category chips */}
             <View style={styles.categoryList}>
               {categories.map((category) => {
                 const isSelected = category === selectedCategory;
-
                 return (
                   <Pressable
                     key={category}
@@ -282,6 +340,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
               })}
             </View>
 
+            {/* Inline loading */}
             {isLoading ? (
               <View style={styles.inlineLoading}>
                 <ActivityIndicator color={theme.colors.primary} size="small" />
@@ -289,8 +348,10 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
               </View>
             ) : null}
 
+            {/* Empty menu state */}
             {!isLoading && visibleProducts.length === 0 ? (
               <View style={styles.stateCard}>
+                <Text style={styles.stateEmoji}>🍽️</Text>
                 <Text style={styles.stateTitle}>No products found</Text>
                 <Text style={styles.stateMessage}>
                   There are no products in this category right now.
@@ -298,6 +359,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
               </View>
             ) : null}
 
+            {/* Product list */}
             {!isLoading &&
               visibleProducts.map((product) => (
                 <View key={product.id} style={styles.productCard}>
@@ -319,17 +381,13 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
                       <Text numberOfLines={1} style={styles.productName}>
                         {product.name}
                       </Text>
-
                       <Text style={styles.productPrice}>
                         {formatPrice(product.price)}
                       </Text>
                     </View>
 
                     {product.description ? (
-                      <Text
-                        numberOfLines={2}
-                        style={styles.productDescription}
-                      >
+                      <Text numberOfLines={2} style={styles.productDescription}>
                         {product.description}
                       </Text>
                     ) : null}
@@ -355,6 +413,82 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
                   </View>
                 </View>
               ))}
+
+            {/* ── Recommendations (SCRUM-390) ── */}
+            {recommendations.length > 0 ? (
+              <View style={styles.recommendationsSection}>
+                <Text style={styles.recommendationsTitle}>
+                  You might also like
+                </Text>
+                <Text style={styles.recommendationsSubtitle}>
+                  Popular dishes from other restaurants
+                </Text>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.recommendationsList}
+                >
+                  {recommendations.map((rec) => (
+                    <Pressable
+                      key={`${rec.restaurant?.id}:${rec.id}`}
+                      style={({ pressed }) => [
+                        styles.recommendationCard,
+                        pressed ? styles.pressedButton : null,
+                      ]}
+                      onPress={() =>
+                        navigation.navigate('RestaurantDetails', {
+                          restaurantId: rec.restaurant?.id,
+                          restaurant: rec.restaurant,
+                        })
+                      }
+                    >
+                      {hasImage(rec) ? (
+                        <Image
+                          source={{ uri: rec.image }}
+                          style={styles.recommendationImage}
+                        />
+                      ) : (
+                        <View style={styles.recommendationImagePlaceholder}>
+                          <Text style={styles.recommendationInitial}>
+                            {getInitial(rec, 'P')}
+                          </Text>
+                        </View>
+                      )}
+
+                      <Text numberOfLines={2} style={styles.recommendationName}>
+                        {rec.name}
+                      </Text>
+
+                      <Text style={styles.recommendationRestaurant}>
+                        {rec.restaurant?.name || ''}
+                      </Text>
+
+                      <View style={styles.recommendationFooter}>
+                        <Text style={styles.recommendationPrice}>
+                          {formatPrice(rec.price)}
+                        </Text>
+
+                        <Pressable
+                          style={({ pressed }) => [
+                            styles.recommendationAddButton,
+                            pressed ? styles.pressedButton : null,
+                          ]}
+                          onPress={(e) => {
+                            e.stopPropagation?.();
+                            addItem(rec, rec.restaurant);
+                          }}
+                        >
+                          <Text style={styles.recommendationAddButtonText}>
+                            + Add
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
@@ -364,26 +498,14 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-    container: {
-      backgroundColor: colors.background,
-      flex: 1,
-    },
-    content: {
-      flexGrow: 1,
-      gap: 16,
-      padding: 20,
-      paddingBottom: 32,
-    },
+    container: { backgroundColor: colors.background, flex: 1 },
+    content: { flexGrow: 1, gap: 16, padding: 20, paddingBottom: 32 },
     topBar: {
       alignItems: 'center',
       flexDirection: 'row',
       justifyContent: 'space-between',
     },
-    topBarTitle: {
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '800',
-    },
+    topBarTitle: { color: colors.text, fontSize: 16, fontWeight: '800' },
     heroCard: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
@@ -392,11 +514,7 @@ function createStyles(colors) {
       gap: 16,
       padding: 16,
     },
-    heroImage: {
-      borderRadius: 14,
-      height: 170,
-      width: '100%',
-    },
+    heroImage: { borderRadius: 14, height: 170, width: '100%' },
     heroImagePlaceholder: {
       alignItems: 'center',
       backgroundColor: colors.background,
@@ -406,14 +524,8 @@ function createStyles(colors) {
       height: 170,
       justifyContent: 'center',
     },
-    heroImageInitial: {
-      color: colors.primary,
-      fontSize: 64,
-      fontWeight: '800',
-    },
-    heroContent: {
-      gap: 8,
-    },
+    heroImageInitial: { color: colors.primary, fontSize: 64, fontWeight: '800' },
+    heroContent: { gap: 8 },
     restaurantTitleRow: {
       alignItems: 'flex-start',
       flexDirection: 'row',
@@ -432,25 +544,14 @@ function createStyles(colors) {
       paddingHorizontal: 9,
       paddingVertical: 5,
     },
-    cuisineBadgeText: {
-      color: colors.primary,
-      fontSize: 11,
-      fontWeight: '800',
-    },
+    cuisineBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '800' },
     restaurantDescription: {
       color: colors.textMuted,
       fontSize: 15,
       lineHeight: 22,
     },
-    restaurantAddress: {
-      color: colors.text,
-      fontSize: 13,
-      fontWeight: '700',
-    },
-    restaurantPhone: {
-      color: colors.textMuted,
-      fontSize: 13,
-    },
+    restaurantAddress: { color: colors.text, fontSize: 13, fontWeight: '700' },
+    restaurantPhone: { color: colors.textMuted, fontSize: 13 },
     menuHeader: {
       alignItems: 'flex-start',
       flexDirection: 'row',
@@ -458,35 +559,17 @@ function createStyles(colors) {
       justifyContent: 'space-between',
       marginTop: 4,
     },
-    menuHeading: {
-      flex: 1,
-    },
-    menuTitle: {
-      color: colors.text,
-      fontSize: 23,
-      fontWeight: '800',
-    },
-    menuSubtitle: {
-      color: colors.textMuted,
-      fontSize: 13,
-      marginTop: 3,
-    },
-    menuActions: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: 8,
-    },
+    menuHeading: { flex: 1 },
+    menuTitle: { color: colors.text, fontSize: 23, fontWeight: '800' },
+    menuSubtitle: { color: colors.textMuted, fontSize: 13, marginTop: 3 },
+    menuActions: { alignItems: 'center', flexDirection: 'row', gap: 8 },
     cartButton: {
       backgroundColor: colors.primary,
       borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 9,
     },
-    cartButtonText: {
-      color: '#ffffff',
-      fontSize: 13,
-      fontWeight: '800',
-    },
+    cartButtonText: { color: '#ffffff', fontSize: 13, fontWeight: '800' },
     refreshButton: {
       borderColor: colors.border,
       borderRadius: 10,
@@ -494,16 +577,8 @@ function createStyles(colors) {
       paddingHorizontal: 12,
       paddingVertical: 9,
     },
-    refreshButtonText: {
-      color: colors.primary,
-      fontSize: 13,
-      fontWeight: '800',
-    },
-    categoryList: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
+    refreshButtonText: { color: colors.primary, fontSize: 13, fontWeight: '800' },
+    categoryList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
@@ -516,14 +591,8 @@ function createStyles(colors) {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
-    categoryChipText: {
-      color: colors.textMuted,
-      fontSize: 14,
-      fontWeight: '700',
-    },
-    categoryChipTextSelected: {
-      color: '#ffffff',
-    },
+    categoryChipText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
+    categoryChipTextSelected: { color: '#ffffff' },
     productCard: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
@@ -533,11 +602,7 @@ function createStyles(colors) {
       gap: 14,
       padding: 14,
     },
-    productImage: {
-      borderRadius: 12,
-      height: 74,
-      width: 74,
-    },
+    productImage: { borderRadius: 12, height: 74, width: 74 },
     productImagePlaceholder: {
       alignItems: 'center',
       backgroundColor: colors.background,
@@ -548,42 +613,13 @@ function createStyles(colors) {
       justifyContent: 'center',
       width: 74,
     },
-    productImageInitial: {
-      color: colors.primary,
-      fontSize: 29,
-      fontWeight: '800',
-    },
-    productContent: {
-      flex: 1,
-      gap: 5,
-      justifyContent: 'center',
-    },
-    productTitleRow: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: 8,
-    },
-    productName: {
-      color: colors.text,
-      flex: 1,
-      fontSize: 16,
-      fontWeight: '800',
-    },
-    productPrice: {
-      color: colors.primary,
-      fontSize: 15,
-      fontWeight: '800',
-    },
-    productDescription: {
-      color: colors.textMuted,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    productCategory: {
-      color: colors.textMuted,
-      fontSize: 12,
-      fontWeight: '700',
-    },
+    productImageInitial: { color: colors.primary, fontSize: 29, fontWeight: '800' },
+    productContent: { flex: 1, gap: 5, justifyContent: 'center' },
+    productTitleRow: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    productName: { color: colors.text, flex: 1, fontSize: 16, fontWeight: '800' },
+    productPrice: { color: colors.primary, fontSize: 15, fontWeight: '800' },
+    productDescription: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+    productCategory: { color: colors.textMuted, fontSize: 12, fontWeight: '700' },
     addToCartButton: {
       alignItems: 'center',
       alignSelf: 'flex-start',
@@ -593,11 +629,7 @@ function createStyles(colors) {
       paddingHorizontal: 11,
       paddingVertical: 8,
     },
-    addToCartButtonText: {
-      color: '#ffffff',
-      fontSize: 12,
-      fontWeight: '800',
-    },
+    addToCartButtonText: { color: '#ffffff', fontSize: 12, fontWeight: '800' },
     stateCard: {
       alignItems: 'center',
       backgroundColor: colors.surface,
@@ -607,6 +639,7 @@ function createStyles(colors) {
       gap: 12,
       padding: 24,
     },
+    stateEmoji: { fontSize: 36 },
     stateTitle: {
       color: colors.text,
       fontSize: 18,
@@ -625,11 +658,7 @@ function createStyles(colors) {
       paddingHorizontal: 18,
       paddingVertical: 11,
     },
-    primaryButtonText: {
-      color: '#ffffff',
-      fontSize: 14,
-      fontWeight: '800',
-    },
+    primaryButtonText: { color: '#ffffff', fontSize: 14, fontWeight: '800' },
     inlineLoading: {
       alignItems: 'center',
       flexDirection: 'row',
@@ -637,12 +666,81 @@ function createStyles(colors) {
       justifyContent: 'center',
       paddingVertical: 8,
     },
-    inlineLoadingText: {
+    inlineLoadingText: { color: colors.textMuted, fontSize: 13 },
+    pressedButton: { opacity: 0.72 },
+
+    // Recommendations
+    recommendationsSection: { gap: 10, marginTop: 8 },
+    recommendationsTitle: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    recommendationsSubtitle: {
       color: colors.textMuted,
       fontSize: 13,
+      marginTop: 2,
     },
-    pressedButton: {
-      opacity: 0.72,
+    recommendationsList: { gap: 12, paddingBottom: 4, paddingTop: 4 },
+    recommendationCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      gap: 8,
+      padding: 12,
+      width: 160,
+    },
+    recommendationImage: {
+      borderRadius: 12,
+      height: 100,
+      width: '100%',
+    },
+    recommendationImagePlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderRadius: 12,
+      height: 100,
+      justifyContent: 'center',
+      width: '100%',
+    },
+    recommendationInitial: {
+      color: colors.primary,
+      fontSize: 36,
+      fontWeight: '800',
+    },
+    recommendationName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '800',
+      lineHeight: 19,
+    },
+    recommendationRestaurant: {
+      color: colors.primary,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    recommendationFooter: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 2,
+    },
+    recommendationPrice: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    recommendationAddButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 5,
+    },
+    recommendationAddButtonText: {
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: '800',
     },
   });
 }
