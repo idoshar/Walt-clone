@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema(
             required: true
         },
         restaurantId: {
-            type: Number,
+            type: String,
             required: true,
             index: true
         },

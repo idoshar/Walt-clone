@@ -1,29 +1,36 @@
-const InMemoryRepository = require('./InMemoryRepository');
 const User = require('../models/User');
+const { generateId } = require('../utilities/idGenerator');
 
-class UserRepository extends InMemoryRepository {
-    create(userData) {
-        const raw = super.create(userData);
-        return new User(raw);
+class UserRepository {
+    async create(userData) {
+        const user = await User.create({
+            id: generateId(),
+            ...userData
+        });
+
+        return user;
     }
 
-    findById(id) {
-        const raw = super.findById(id);
-        return raw ? new User(raw) : null;
+    async findById(id) {
+        return User.findOne({ id: String(id) });
     }
 
-    findByUsername(username) {
-        const raw = super.findOneBy('username', username);
-        return raw ? new User(raw) : null;
+    async findByUsername(username) {
+        return User.findOne({ username: String(username) });
     }
 
-    update(id, updates) {
-        const raw = super.update(id, updates);
-        return raw ? new User(raw) : null;
+    async update(id, updates) {
+        const { id: _id, username: _username, ...safeUpdates } = updates;
+
+        return User.findOneAndUpdate(
+            { id: String(id) },
+            safeUpdates,
+            { new: true, runValidators: true }
+        );
     }
 
-    getAll() {
-        return super.findAll().map((raw) => new User(raw));
+    async getAll() {
+        return User.find({});
     }
 }
 

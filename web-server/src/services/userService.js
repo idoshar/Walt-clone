@@ -57,7 +57,7 @@ function getOptionalLocation(userData) {
 }
 
 class UserService {
-    createUser(userData) {
+    async createUser(userData) {
         const data = userData || {};
         const { username, password, fullName, phone, address } = data;
 
@@ -67,7 +67,7 @@ class UserService {
         validateRequiredString(phone, 'phone');
         validateRequiredString(address, 'address');
 
-        const existingUser = userRepository.findByUsername(username.trim());
+        const existingUser = await userRepository.findByUsername(username.trim());
 
         if (existingUser) {
             const error = new Error('username already exists');
@@ -77,7 +77,7 @@ class UserService {
 
         const location = getOptionalLocation(data);
 
-        return userRepository.create({
+        return await userRepository.create({
             username: data.username.trim(),
             password: data.password,
             fullName: data.fullName.trim(),
@@ -89,8 +89,8 @@ class UserService {
         });
     }
 
-    getUserById(id) {
-        const user = userRepository.findById(id);
+    async getUserById(id) {
+        const user = await userRepository.findById(id);
 
         if (!user) {
             const error = new Error('User not found');
@@ -101,13 +101,13 @@ class UserService {
         return user;
     }
 
-    updateCurrentUserLocation(userId, locationData) {
+    async updateCurrentUserLocation(userId, locationData) {
         const data = locationData || {};
 
         const latitude = normalizeCoordinate(data.latitude, 'latitude', -90, 90);
         const longitude = normalizeCoordinate(data.longitude, 'longitude', -180, 180);
 
-        const user = userRepository.update(userId, {
+        const user = await userRepository.update(userId, {
             latitude,
             longitude
         });
