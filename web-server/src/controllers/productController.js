@@ -1,4 +1,6 @@
 const productRepository = require('../repositories/productRepository');
+const menuCategoryRepository =
+    require('../repositories/menuCategoryRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const userRepository = require('../repositories/userRepository');
 const ex2 = require('../services/exercise2Client');
@@ -8,12 +10,20 @@ const {
     created,
     noContent,
     badRequest,
-    notFound,
+    notFound
 } = require('../utilities/responseHelper');
 const {
     validateObject,
-    validateRequiredFields,
+    validateRequiredFields
 } = require('../utilities/validationHelper');
+
+function normalizeCategoryId(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+
+    return value.trim();
+}
 
 async function findRestaurant(req, res) {
     const restaurant = await restaurantRepository.findById(req.params.id);
@@ -66,6 +76,19 @@ async function getRecommendationUserId(req) {
     return user?.recommendationId || null;
 }
 
+async function findProductCategory(restaurantId, categoryId) {
+    const normalizedCategoryId = normalizeCategoryId(categoryId);
+
+    if (!normalizedCategoryId) {
+        return null;
+    }
+
+    return menuCategoryRepository.findById(
+        restaurantId,
+        normalizedCategoryId
+    );
+}
+
 async function getAllProducts(req, res) {
     const restaurant = await findRestaurant(req, res);
 
@@ -81,7 +104,9 @@ async function getAllProducts(req, res) {
 }
 
 async function createProduct(req, res) {
-    if (!(await requireManagedRestaurant(req, res))) return;
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
 
     const bodyError = validateObject(req.body);
 
@@ -89,16 +114,36 @@ async function createProduct(req, res) {
         return badRequest(res, bodyError);
     }
 
-    const fieldError = validateRequiredFields(req.body, ['name', 'price']);
+    const fieldError = validateRequiredFields(
+        req.body,
+        ['name', 'price', 'categoryId']
+    );
 
     if (fieldError) {
         return badRequest(res, fieldError);
     }
 
-    const { name, price, description = '', category = '', image = '' } = req.body;
+    const {
+        name,
+        price,
+        description = '',
+        image = ''
+    } = req.body;
 
     if (typeof price !== 'number' || price < 0) {
         return badRequest(res, 'price must be a non-negative number');
+    }
+
+    const category = await findProductCategory(
+        req.params.id,
+        req.body.categoryId
+    );
+
+    if (!category) {
+        return badRequest(
+            res,
+            'categoryId must reference an existing category in this restaurant'
+        );
     }
 
     const product = {
@@ -107,11 +152,15 @@ async function createProduct(req, res) {
         name,
         price,
         description,
-        category,
+        categoryId: category.id,
+        category: category.name,
         image: typeof image === 'string' ? image.trim() : ''
     };
 
-    const savedProduct = await productRepository.save(req.params.id, product);
+    const savedProduct = await productRepository.save(
+        req.params.id,
+        product
+    );
 
     return created(
         res,
@@ -120,7 +169,9 @@ async function createProduct(req, res) {
 }
 
 async function getProductById(req, res) {
-    if (!(await findRestaurant(req, res))) return;
+    if (!(await findRestaurant(req, res))) {
+        return;
+    }
 
     const product = await productRepository.findById(
         req.params.id,
@@ -145,7 +196,9 @@ async function getProductById(req, res) {
 
 async function getProductRecommendations(req, res, next) {
     try {
-        if (!(await findRestaurant(req, res))) return;
+        if (!(await findRestaurant(req, res))) {
+            return;
+        }
 
         const sourceProduct = await productRepository.findById(
             req.params.id,
@@ -203,7 +256,9 @@ async function getProductRecommendations(req, res, next) {
 }
 
 async function updateProduct(req, res) {
-    if (!(await requireManagedRestaurant(req, res))) return;
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
 
     const bodyError = validateObject(req.body);
 
@@ -222,16 +277,58 @@ async function updateProduct(req, res) {
         return badRequest(res, 'price must be a non-negative number');
     }
 
+    const hasCategoryId = Object.prototype.hasOwnProperty.call(
+        req.body,
+        'categoryId'
+    );
+
+    const hasCategoryName = Object.prototype.hasOwnProperty.call(
+        req.body,
+        'category'
+    );
+
+    if (hasCategoryName && !hasCategoryId) {
+        return badRequest(
+            res,
+            'category is managed through categoryId'
+        );
+    }
+
     const {
         id: _id,
         restaurantId: _restaurantId,
         recommendationId: _recommendationId,
+        category: _category,
+        categoryId: requestedCategoryId,
         ...safeUpdates
     } = req.body;
 
+    if (hasCategoryId) {
+        const category = await findProductCategory(
+            req.params.id,
+            requestedCategoryId
+        );
+
+        if (!category) {
+            return badRequest(
+                res,
+                'categoryId must reference an existing category in this restaurant'
+            );
+        }
+
+        safeUpdates.categoryId = category.id;
+        safeUpdates.category = category.name;
+    }
+
     if (Object.prototype.hasOwnProperty.call(safeUpdates, 'image')) {
         safeUpdates.image =
-            typeof safeUpdates.image === 'string' ? safeUpdates.image.trim() : '';
+            typeof safeUpdates.image === 'string'
+                ? safeUpdates.image.trim()
+                : '';
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+        return badRequest(res, 'Request body does not contain editable fields');
     }
 
     const updated = await productRepository.update(
@@ -248,7 +345,9 @@ async function updateProduct(req, res) {
 }
 
 async function deleteProduct(req, res) {
-    if (!(await requireManagedRestaurant(req, res))) return;
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
 
     const deleted = await productRepository.remove(
         req.params.id,
@@ -268,5 +367,5 @@ module.exports = {
     getProductById,
     getProductRecommendations,
     updateProduct,
-    deleteProduct,
+    deleteProduct
 };

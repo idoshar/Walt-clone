@@ -1,4 +1,4 @@
-﻿import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProductFormScreen from '../screens/ProductFormScreen';
 import RestaurantProductsScreen from '../screens/RestaurantProductsScreen';
@@ -21,6 +21,7 @@ import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
+import RestaurantFormScreen from '../screens/RestaurantFormScreen';
 import SearchScreen from '../screens/SearchScreen';
 import { createNavigationTheme } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -117,6 +118,9 @@ function AppNavigator({ screenOptions }) {
         component={ProductFormScreen}
         name="ProductForm"
         options={{ title: 'Product' }}
+        component={RestaurantFormScreen}
+        name="RestaurantForm"
+        options={{ title: 'Restaurant' }}
       />
       {isAdmin ? (
         <Stack.Screen

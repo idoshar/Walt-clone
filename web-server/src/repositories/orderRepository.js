@@ -1,8 +1,15 @@
-﻿const Order = require('../models/Order');
+const Order = require('../models/Order');
 const { generateId } = require('../utilities/idGenerator');
 
 class OrderRepository {
-    async create({ userId, restaurantId, restaurantName, items }) {
+    async create({
+        userId,
+        restaurantId,
+        restaurantName,
+        restaurantImage,
+        items,
+        deliveryDetails
+    }) {
         const totalPrice = items.reduce(
             (sum, item) => sum + Number(item.price) * Number(item.quantity),
             0
@@ -13,7 +20,9 @@ class OrderRepository {
             userId: String(userId),
             restaurantId: String(restaurantId),
             restaurantName,
+            restaurantImage,
             items,
+            deliveryDetails,
             totalPrice,
             status: 'created'
         });
@@ -24,7 +33,9 @@ class OrderRepository {
     }
 
     async findByUserId(userId) {
-        return Order.find({ userId: String(userId) }).sort({ createdAt: -1 });
+        return Order.find({ userId: String(userId) }).sort({
+            createdAt: -1
+        });
     }
 
     async findAll() {
@@ -149,6 +160,8 @@ class OrderRepository {
             userId: _uid,
             restaurantId: _rid,
             restaurantName: _restaurantName,
+            restaurantImage: _restaurantImage,
+            deliveryDetails: _deliveryDetails,
             createdAt: _ca,
             ...safeUpdates
         } = updates;
@@ -162,6 +175,7 @@ class OrderRepository {
 
     async delete(id) {
         const result = await Order.deleteOne({ id: String(id) });
+
         return result.deletedCount > 0;
     }
 }

@@ -15,14 +15,14 @@ import {
 import {
   getRestaurantById,
   getRestaurantProducts,
-  getRestaurants,
 } from '../api/restaurants';
+import { getProductRecommendations } from '../api/products';
+import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
 const ALL_CATEGORIES = 'All';
-const MAX_RECOMMENDATIONS = 5;
 
 function formatPrice(price) {
   const numericPrice = Number(price);
@@ -38,44 +38,47 @@ function getInitial(item, fallback = 'R') {
   return item?.name?.trim()?.charAt(0)?.toUpperCase() || fallback;
 }
 
-/**
- * Picks recommended products from OTHER restaurants — same category as
- * the most popular category in the current restaurant.
- */
-function pickRecommendations(currentRestaurantId, currentProducts, allRestaurants) {
-  if (!currentProducts.length || !allRestaurants.length) return [];
+// Fallback: picks products from the same restaurant in the same category
+// Used when the ex2 engine has no data yet for the user
+function getCategoryFallback(products, currentProductId) {
+  if (!products.length) return [];
 
-  // Find the most common category in the current restaurant
-  const categoryCounts = currentProducts.reduce((acc, p) => {
-    const cat = p.category?.trim();
-    if (cat) acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  }, {});
+  // Find the category of the current product
+  const current = products.find((p) => String(p.id) === String(currentProductId));
+  const category = current?.category?.trim();
 
-  const topCategory = Object.entries(categoryCounts).sort(
-    (a, b) => b[1] - a[1]
-  )[0]?.[0];
+  // Same category, different product — up to 5
+  const sameCategory = products.filter(
+    (p) => String(p.id) !== String(currentProductId) &&
+      category && p.category?.trim() === category
+  );
 
-  // Collect products from other restaurants matching that category
-  const candidates = allRestaurants
-    .filter((r) => String(r.id) !== String(currentRestaurantId))
-    .flatMap((r) =>
-      (r.products || [])
-        .filter((p) => !topCategory || p.category?.trim() === topCategory)
-        .map((p) => ({ ...p, restaurant: r }))
+  // If not enough, fill with other products
+  const others = products.filter(
+    (p) => String(p.id) !== String(currentProductId) &&
+      (!category || p.category?.trim() !== category)
+  );
+
+  return [...sameCategory, ...others].slice(0, 5);
+}
+
+// Calls GET /restaurants/:id/products/:pId which records the view in ex2
+async function reportProductView(restaurantId, productId, token) {
+  if (!restaurantId || !productId || !token) return;
+  try {
+    const { apiRequest } = await import('../api/client');
+    await apiRequest(
+      `/restaurants/${encodeURIComponent(restaurantId)}/products/${encodeURIComponent(productId)}`,
+      { token }
     );
-
-  // Shuffle and take up to MAX_RECOMMENDATIONS
-  for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  } catch {
+    // Non-critical — ignore errors
   }
-
-  return candidates.slice(0, MAX_RECOMMENDATIONS);
 }
 
 export default function RestaurantDetailsScreen({ navigation, route }) {
   const { addItem, itemCount } = useCart();
+  const { token } = useAuth();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
@@ -94,8 +97,6 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
   );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES);
-
-  // Recommendations state
   const [recommendations, setRecommendations] = useState([]);
 
   const loadRestaurantContent = useCallback(
@@ -128,28 +129,27 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
             : `${nextProducts.length} menu item${nextProducts.length === 1 ? '' : 's'} available.`
         );
 
-        // Load recommendations in background — don't block the main content
-        getRestaurants()
-          .then(async (allRestaurants) => {
-            const withProducts = await Promise.all(
-              allRestaurants
-                .filter((r) => String(r.id) !== String(restaurantId))
-                .map(async (r) => {
-                  try {
-                    const prods = await getRestaurantProducts(r.id);
-                    return { ...r, products: prods };
-                  } catch {
-                    return { ...r, products: [] };
-                  }
-                })
-            );
-            setRecommendations(
-              pickRecommendations(restaurantId, nextProducts, withProducts)
-            );
-          })
-          .catch(() => {
-            // Recommendations are non-critical — silently skip on error
-          });
+        // Load recommendations — real ex2 engine first, fallback by category
+        if (nextProducts.length > 0 && token) {
+          const firstProduct = nextProducts[0];
+          reportProductView(restaurantId, firstProduct.id, token).then(() =>
+            getProductRecommendations(restaurantId, firstProduct.id, token)
+              .then((recs) => {
+                if (recs.length > 0) {
+                  setRecommendations(recs);
+                } else {
+                  // ex2 has no data yet — show category-based fallback
+                  setRecommendations(getCategoryFallback(nextProducts, firstProduct.id));
+                }
+              })
+              .catch(() => {
+                setRecommendations(getCategoryFallback(nextProducts, firstProduct.id));
+              })
+          );
+        } else if (nextProducts.length > 0) {
+          // No token — just show category fallback
+          setRecommendations(getCategoryFallback(nextProducts, nextProducts[0].id));
+        }
       } catch (error) {
         setScreenState('error');
         setMessage(
@@ -159,7 +159,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
         setIsRefreshing(false);
       }
     },
-    [restaurantId]
+    [restaurantId, token]
   );
 
   useEffect(() => {
@@ -183,6 +183,31 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
     if (selectedCategory === ALL_CATEGORIES) return products;
     return products.filter((p) => p.category === selectedCategory);
   }, [products, selectedCategory]);
+
+  const handleAddToCart = useCallback(
+    async (product, rest) => {
+      addItem(product, rest || restaurant);
+
+      // Report the view to ex2 engine, then refresh recommendations
+      if (product?.id && restaurantId && token) {
+        reportProductView(restaurantId, product.id, token).then(() =>
+          getProductRecommendations(restaurantId, product.id, token)
+            .then((recs) => {
+              if (recs.length > 0) {
+                setRecommendations(recs);
+              } else {
+                // ex2 has no data yet — show category fallback
+                setRecommendations(getCategoryFallback(products, product.id));
+              }
+            })
+            .catch(() => {
+              setRecommendations(getCategoryFallback(products, product.id));
+            })
+        );
+      }
+    },
+    [addItem, restaurant, restaurantId, token, products]
+  );
 
   const isLoading = screenState === 'loading';
   const isError = screenState === 'error';
@@ -400,7 +425,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
 
                     <Pressable
                       accessibilityLabel={`Add ${product.name} to cart`}
-                      onPress={() => addItem(product, restaurant)}
+                      onPress={() => handleAddToCart(product, restaurant)}
                       style={({ pressed }) => [
                         styles.addToCartButton,
                         pressed ? styles.pressedButton : null,
@@ -414,81 +439,6 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
                 </View>
               ))}
 
-            {/* ── Recommendations (SCRUM-390) ── */}
-            {recommendations.length > 0 ? (
-              <View style={styles.recommendationsSection}>
-                <Text style={styles.recommendationsTitle}>
-                  You might also like
-                </Text>
-                <Text style={styles.recommendationsSubtitle}>
-                  Popular dishes from other restaurants
-                </Text>
-
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.recommendationsList}
-                >
-                  {recommendations.map((rec) => (
-                    <Pressable
-                      key={`${rec.restaurant?.id}:${rec.id}`}
-                      style={({ pressed }) => [
-                        styles.recommendationCard,
-                        pressed ? styles.pressedButton : null,
-                      ]}
-                      onPress={() =>
-                        navigation.navigate('RestaurantDetails', {
-                          restaurantId: rec.restaurant?.id,
-                          restaurant: rec.restaurant,
-                        })
-                      }
-                    >
-                      {hasImage(rec) ? (
-                        <Image
-                          source={{ uri: rec.image }}
-                          style={styles.recommendationImage}
-                        />
-                      ) : (
-                        <View style={styles.recommendationImagePlaceholder}>
-                          <Text style={styles.recommendationInitial}>
-                            {getInitial(rec, 'P')}
-                          </Text>
-                        </View>
-                      )}
-
-                      <Text numberOfLines={2} style={styles.recommendationName}>
-                        {rec.name}
-                      </Text>
-
-                      <Text style={styles.recommendationRestaurant}>
-                        {rec.restaurant?.name || ''}
-                      </Text>
-
-                      <View style={styles.recommendationFooter}>
-                        <Text style={styles.recommendationPrice}>
-                          {formatPrice(rec.price)}
-                        </Text>
-
-                        <Pressable
-                          style={({ pressed }) => [
-                            styles.recommendationAddButton,
-                            pressed ? styles.pressedButton : null,
-                          ]}
-                          onPress={(e) => {
-                            e.stopPropagation?.();
-                            addItem(rec, rec.restaurant);
-                          }}
-                        >
-                          <Text style={styles.recommendationAddButtonText}>
-                            + Add
-                          </Text>
-                        </Pressable>
-                      </View>
-                    </Pressable>
-                  ))}
-                </ScrollView>
-              </View>
-            ) : null}
           </>
         ) : null}
       </ScrollView>
@@ -715,8 +665,8 @@ function createStyles(colors) {
       fontWeight: '800',
       lineHeight: 19,
     },
-    recommendationRestaurant: {
-      color: colors.primary,
+    recommendationCategory: {
+      color: colors.textMuted,
       fontSize: 11,
       fontWeight: '700',
     },
