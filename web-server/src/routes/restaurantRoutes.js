@@ -1,6 +1,7 @@
 ﻿const express = require('express');
 
 const restaurantController = require('../controllers/restaurantController');
+const restaurantStatisticsController = require('../controllers/restaurantStatisticsController');
 const productRoutes = require('./productRoutes');
 const authMiddleware = require('../middleware/authMiddleware');
 const asyncHandler = require('../middleware/asyncHandler');
@@ -17,6 +18,12 @@ router.get(
     '/mine',
     authMiddleware,
     asyncHandler(restaurantController.getMyRestaurants)
+);
+
+router.get(
+    '/:id/statistics',
+    authMiddleware,
+    asyncHandler(restaurantStatisticsController.getRestaurantStatistics)
 );
 
 router.get('/', asyncHandler(restaurantController.getAllRestaurants));
