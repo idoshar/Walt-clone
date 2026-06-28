@@ -102,14 +102,16 @@ export async function apiRequest(
   try {
     response = await fetch(buildUrl(path), options);
   } catch (error) {
-    throw new ApiError(
-      'Could not connect to the backend. Check that the server is running and that the API URL is correct.',
-      {
-        code: 'NETWORK_ERROR',
-        details: error,
-      }
-    );
-  }
+      console.error('FETCH ERROR:', error);
+
+      throw new ApiError(
+        error.message || 'Network error',
+        {
+          code: 'NETWORK_ERROR',
+          details: error,
+        }
+      );
+    }
 
   const responseBody = await readResponseBody(response);
 
