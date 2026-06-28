@@ -1,6 +1,13 @@
 import { useEffect } from 'react';
 
-function Modal({ title, onClose, children, size = 'medium' }) {
+function Modal({
+  title,
+  onClose,
+  children,
+  size = 'medium',
+  onBack = null,
+  backLabel = 'Back to previous screen'
+}) {
   useEffect(() => {
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -37,14 +44,29 @@ function Modal({ title, onClose, children, size = 'medium' }) {
       >
         <header className="app-modal-header">
           <h2>{title}</h2>
-          <button
-            type="button"
-            className="app-modal-close-button"
-            onClick={onClose}
-            aria-label={`Close ${title}`}
-          >
-            ×
-          </button>
+
+          <div className="app-modal-header-actions">
+            {typeof onBack === 'function' && (
+              <button
+                type="button"
+                className="app-modal-header-back-button"
+                onClick={onBack}
+                aria-label={backLabel}
+                title={backLabel}
+              >
+                &larr;
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="app-modal-close-button"
+              onClick={onClose}
+              aria-label={`Close ${title}`}
+            >
+              &times;
+            </button>
+          </div>
         </header>
 
         <div className="app-modal-content">{children}</div>
