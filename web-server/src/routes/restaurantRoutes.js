@@ -2,6 +2,8 @@ const express = require('express');
 
 const restaurantController =
     require('../controllers/restaurantController');
+const restaurantStatisticsController =
+    require('../controllers/restaurantStatisticsController');
 const productRoutes = require('./productRoutes');
 const menuCategoryRoutes = require('./menuCategoryRoutes');
 const authMiddleware = require('../middleware/authMiddleware');
