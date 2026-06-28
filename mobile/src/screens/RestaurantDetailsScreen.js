@@ -20,15 +20,11 @@ import { getProductRecommendations } from '../api/products';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
+import CurrencySelector from '../components/CurrencySelector';
+import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
 const ALL_CATEGORIES = 'All';
-
-function formatPrice(price) {
-  const numericPrice = Number(price);
-  if (!Number.isFinite(numericPrice)) return 'Price unavailable';
-  return `\u20AA${numericPrice.toFixed(2)}`;
-}
 
 function hasImage(item) {
   return typeof item?.image === 'string' && item.image.trim().length > 0;
@@ -77,6 +73,7 @@ async function reportProductView(restaurantId, productId, token) {
 }
 
 export default function RestaurantDetailsScreen({ navigation, route }) {
+  const { formatPrice } = useCurrency();
   const { addItem, itemCount } = useCart();
   const { token } = useAuth();
   const { theme } = useAppTheme();
@@ -229,6 +226,10 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle}>Restaurant</Text>
           <ThemeToggle compact />
+        </View>
+
+        <View style={styles.currencySection}>
+          <CurrencySelector />
         </View>
 
         {/* Loading state */}
@@ -456,6 +457,9 @@ function createStyles(colors) {
       justifyContent: 'space-between',
     },
     topBarTitle: { color: colors.text, fontSize: 16, fontWeight: '800' },
+    currencySection: {
+      alignSelf: 'flex-start',
+    },
     heroCard: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
