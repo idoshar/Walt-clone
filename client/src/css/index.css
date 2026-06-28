@@ -4053,3 +4053,118 @@ body.dark .checkout-field input[type='number'] {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* SCRUM-439 optional checkout location sharing */
+.checkout-location-section {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.checkout-location-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.checkout-location-heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.checkout-location-heading p {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.checkout-location-button,
+.checkout-location-remove-button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 8px 11px;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.checkout-location-button {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.checkout-location-button:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.checkout-location-remove-button {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.checkout-location-remove-button:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.checkout-location-button:focus-visible,
+.checkout-location-remove-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.checkout-location-button:disabled,
+.checkout-location-remove-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.checkout-location-notice {
+  margin: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.checkout-location-notice--success {
+  border-color: var(--color-primary);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.checkout-location-notice--error {
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.checkout-location-notice--neutral {
+  background: var(--color-surface);
+}
+
+@media (max-width: 640px) {
+  .checkout-location-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .checkout-location-button,
+  .checkout-location-remove-button {
+    width: 100%;
+  }
+}

@@ -24,7 +24,10 @@ function getInitialDeliveryDetails(user) {
   };
 }
 
-function validateDeliveryDetails(deliveryDetails) {
+function validateDeliveryDetails(
+  deliveryDetails,
+  sharedLocation
+) {
   const recipientName = deliveryDetails.recipientName
     .trim()
     .replace(/\s+/g, ' ');
@@ -74,15 +77,57 @@ function validateDeliveryDetails(deliveryDetails) {
     };
   }
 
-  return {
-    value: {
-      recipientName,
-      phone,
-      address,
-      dinerCount,
-      notes
-    }
+  const value = {
+    recipientName,
+    phone,
+    address,
+    dinerCount,
+    notes
   };
+
+  if (sharedLocation) {
+    const latitude = Number(sharedLocation.latitude);
+    const longitude = Number(sharedLocation.longitude);
+
+    if (!isValidLocationCoordinates(latitude, longitude)) {
+      return {
+        error: 'The selected location is invalid. Remove it and try again.'
+      };
+    }
+
+    value.location = {
+      latitude,
+      longitude
+    };
+  }
+
+  return {
+    value
+  };
+}
+
+function isValidLocationCoordinates(latitude, longitude) {
+  return (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
+function getLocationErrorMessage(error) {
+  switch (error?.code) {
+    case 1:
+      return 'Location permission was not granted. You can still place the order without sharing your location.';
+    case 2:
+      return 'Your current location could not be determined. You can still place the order without it.';
+    case 3:
+      return 'Location sharing timed out. You can still place the order without it.';
+    default:
+      return 'Location sharing is currently unavailable. You can still place the order without it.';
+  }
 }
 
 function CheckoutPage() {
@@ -104,6 +149,10 @@ function CheckoutPage() {
   );
   const [isDinerCountTouched, setIsDinerCountTouched] =
     useState(false);
+  const [sharedLocation, setSharedLocation] = useState(null);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [locationNotice, setLocationNotice] = useState(null);
+  const locationRequestRef = useRef(0);
   const submittingRef = useRef(false);
 
   const cartGroups = useMemo(
@@ -189,6 +238,91 @@ function CheckoutPage() {
     setFormError('');
   }
 
+  function handleUseCurrentLocation() {
+    if (
+      isSubmitting ||
+      isLocationLoading
+    ) {
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setSharedLocation(null);
+      setLocationNotice({
+        tone: 'error',
+        text: 'This browser does not support location sharing. You can still place the order without it.'
+      });
+
+      return;
+    }
+
+    const requestId = locationRequestRef.current + 1;
+
+    locationRequestRef.current = requestId;
+    setIsLocationLoading(true);
+    setLocationNotice(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (requestId !== locationRequestRef.current) {
+          return;
+        }
+
+        const latitude = position?.coords?.latitude;
+        const longitude = position?.coords?.longitude;
+
+        setIsLocationLoading(false);
+
+        if (!isValidLocationCoordinates(latitude, longitude)) {
+          setSharedLocation(null);
+          setLocationNotice({
+            tone: 'error',
+            text: 'The browser returned an invalid location. You can still place the order without it.'
+          });
+
+          return;
+        }
+
+        setSharedLocation({
+          latitude,
+          longitude
+        });
+
+        setLocationNotice({
+          tone: 'success',
+          text: 'Your current location is attached to this order.'
+        });
+      },
+      (error) => {
+        if (requestId !== locationRequestRef.current) {
+          return;
+        }
+
+        setIsLocationLoading(false);
+        setSharedLocation(null);
+        setLocationNotice({
+          tone: 'error',
+          text: getLocationErrorMessage(error)
+        });
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  }
+
+  function handleRemoveSharedLocation() {
+    locationRequestRef.current += 1;
+    setIsLocationLoading(false);
+    setSharedLocation(null);
+    setLocationNotice({
+      tone: 'neutral',
+      text: 'Current location will not be shared with this order.'
+    });
+  }
+
   async function handleConfirmOrder(event) {
     event?.preventDefault();
 
@@ -202,7 +336,10 @@ function CheckoutPage() {
     }
 
     const validatedDeliveryDetails =
-      validateDeliveryDetails(deliveryDetails);
+      validateDeliveryDetails(
+        deliveryDetails,
+        sharedLocation
+      );
 
     if (validatedDeliveryDetails.error) {
       setFormError(validatedDeliveryDetails.error);
@@ -363,6 +500,53 @@ function CheckoutPage() {
                 disabled={isSubmitting}
               />
             </label>
+
+            <section className="checkout-location-section checkout-field--wide">
+              <div className="checkout-location-heading">
+                <div>
+                  <h3>Current location</h3>
+                  <p>
+                    Optional. Share your current location to help with delivery.
+                  </p>
+                </div>
+
+                {sharedLocation ? (
+                  <button
+                    type="button"
+                    className="checkout-location-remove-button"
+                    onClick={handleRemoveSharedLocation}
+                    disabled={isSubmitting}
+                  >
+                    Remove location
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="checkout-location-button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={isSubmitting || isLocationLoading}
+                    aria-busy={isLocationLoading}
+                  >
+                    {isLocationLoading
+                      ? 'Getting location...'
+                      : 'Use my current location'}
+                  </button>
+                )}
+              </div>
+
+              {locationNotice && (
+                <p
+                  className={
+                    'checkout-location-notice checkout-location-notice--' +
+                    locationNotice.tone
+                  }
+                  role="status"
+                  aria-live="polite"
+                >
+                  {locationNotice.text}
+                </p>
+              )}
+            </section>
 
             <label className="checkout-field">
               Number of diners *
