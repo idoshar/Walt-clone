@@ -4290,3 +4290,59 @@ body.dark .checkout-field input[type='number'] {
     grid-column: auto;
   }
 }
+
+/* Reorder previous order action */
+.order-history-reorder-error {
+  max-width: 760px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.order-history-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.order-history-reorder-button {
+  min-height: 40px;
+  padding: 9px 15px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.order-history-reorder-button:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.order-history-reorder-button:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.order-history-reorder-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 640px) {
+  .order-history-actions {
+    justify-content: stretch;
+  }
+
+  .order-history-reorder-button {
+    width: 100%;
+  }
+}

@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getOrders } from '../api/orderApi.js';
+import { apiRequest } from '../api/client.js';
+import { getMenuCategories } from '../api/menuCategoryApi.js';
+import { useCart } from '../context/CartContext.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
-import { formatCurrency } from '../utils/cart.js';
+import {
+  formatCurrency,
+  normalizeCartItem
+} from '../utils/cart.js';
 
 function getItemCount(items = []) {
   return items.reduce(
@@ -23,6 +30,54 @@ function formatStatus(status = '') {
     normalizedStatus.charAt(0).toUpperCase() +
     normalizedStatus.slice(1)
   );
+}
+
+function getReorderQuantity(value) {
+  const quantity = Math.floor(Number(value));
+
+  return (
+    Number.isFinite(quantity) &&
+    quantity > 0
+  )
+    ? quantity
+    : null;
+}
+
+function getReorderStorageKey(restaurantId) {
+  return 'checkout-reorder:' + String(restaurantId);
+}
+
+function getReorderDeliveryDetails(deliveryDetails) {
+  if (
+    !deliveryDetails ||
+    typeof deliveryDetails !== 'object'
+  ) {
+    return null;
+  }
+
+  const dinerCount = getReorderQuantity(
+    deliveryDetails.dinerCount
+  );
+
+  return {
+    recipientName:
+      typeof deliveryDetails.recipientName === 'string'
+        ? deliveryDetails.recipientName
+        : '',
+    phone:
+      typeof deliveryDetails.phone === 'string'
+        ? deliveryDetails.phone
+        : '',
+    address:
+      typeof deliveryDetails.address === 'string'
+        ? deliveryDetails.address
+        : '',
+    dinerCount: dinerCount || 1,
+    notes:
+      typeof deliveryDetails.notes === 'string'
+        ? deliveryDetails.notes
+        : ''
+  };
 }
 
 function getRestaurantInitials(restaurantName = '') {
@@ -88,6 +143,7 @@ function DeliveryDetails({ deliveryDetails }) {
     return (
       <section className="order-history-delivery">
         <h4>Delivery details</h4>
+
         <p className="order-history-delivery-unavailable">
           Delivery details are unavailable for this older order.
         </p>
@@ -143,9 +199,14 @@ function DeliveryDetails({ deliveryDetails }) {
 }
 
 function OrdersPage() {
+  const navigate = useNavigate();
+  const { setCartItems } = useCart();
+
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [reorderingOrderId, setReorderingOrderId] = useState('');
+  const [reorderError, setReorderError] = useState('');
 
   useEffect(() => {
     async function loadOrders() {
@@ -162,6 +223,188 @@ function OrdersPage() {
     loadOrders();
   }, []);
 
+  async function handleReorder(order) {
+    const restaurantId = order?.restaurantId;
+    const previousItems = Array.isArray(order?.items)
+      ? order.items
+      : [];
+
+    if (
+      !restaurantId ||
+      previousItems.length === 0 ||
+      reorderingOrderId
+    ) {
+      return;
+    }
+
+    setReorderError('');
+    setReorderingOrderId(String(order.id));
+
+    try {
+      const productsData = await apiRequest(
+        `/restaurants/${encodeURIComponent(restaurantId)}/products`
+      );
+
+      const currentProducts = Array.isArray(productsData)
+        ? productsData
+        : [];
+
+      let menuCategories = [];
+
+      try {
+        const categoriesData = await getMenuCategories(restaurantId);
+
+        menuCategories = Array.isArray(categoriesData)
+          ? categoriesData
+          : [];
+      } catch {
+        menuCategories = [];
+      }
+
+      const productsById = new Map(
+        currentProducts
+          .filter(
+            (product) =>
+              product?.id !== undefined &&
+              product?.id !== null
+          )
+          .map((product) => [
+            String(product.id),
+            product
+          ])
+      );
+
+      const unavailableItems = previousItems.filter((item) => {
+        const quantity = getReorderQuantity(item?.quantity);
+
+        return (
+          !quantity ||
+          !productsById.has(String(item?.productId))
+        );
+      });
+
+      if (unavailableItems.length > 0) {
+        const unavailableNames = unavailableItems
+          .map((item) => getItemLabel(item))
+          .join(', ');
+
+        throw new Error(
+          `This order cannot be reordered because these items are no longer available: ${unavailableNames}.`
+        );
+      }
+
+      const categoriesById = new Map(
+        menuCategories
+          .filter(
+            (category) =>
+              category?.id !== undefined &&
+              category?.id !== null
+          )
+          .map((category) => [
+            String(category.id),
+            category
+          ])
+      );
+
+      const reorderedItemsByKey = new Map();
+
+      previousItems.forEach((previousItem) => {
+        const currentProduct = productsById.get(
+          String(previousItem.productId)
+        );
+
+        const quantity = getReorderQuantity(
+          previousItem.quantity
+        );
+
+        const category = categoriesById.get(
+          String(currentProduct.categoryId || '')
+        );
+
+        const cartItem = normalizeCartItem({
+          ...currentProduct,
+          quantity,
+          menuType:
+            category?.menuType ||
+            currentProduct.menuType ||
+            '',
+          restaurantId:
+            currentProduct.restaurantId ?? restaurantId,
+          restaurantName:
+            currentProduct.restaurantName ||
+            order.restaurantName ||
+            `Restaurant ${String(restaurantId)}`,
+          restaurantImage:
+            currentProduct.restaurantImage ||
+            order.restaurantImage ||
+            ''
+        });
+
+        const existingItem = reorderedItemsByKey.get(
+          cartItem.cartKey
+        );
+
+        reorderedItemsByKey.set(
+          cartItem.cartKey,
+          existingItem
+            ? {
+              ...existingItem,
+              quantity:
+                existingItem.quantity +
+                cartItem.quantity
+            }
+            : cartItem
+        );
+      });
+
+      const reorderedItems = Array.from(
+        reorderedItemsByKey.values()
+      );
+
+      if (reorderedItems.length === 0) {
+        throw new Error(
+          'No available items were found for this order.'
+        );
+      }
+
+      const reorderDeliveryDetails =
+        getReorderDeliveryDetails(
+          order.deliveryDetails
+        );
+
+      try {
+        window.sessionStorage.setItem(
+          getReorderStorageKey(restaurantId),
+          JSON.stringify(reorderDeliveryDetails)
+        );
+      } catch {
+        // Checkout will use normal profile defaults if session storage is unavailable.
+      }
+
+      setCartItems((currentItems) => [
+        ...currentItems.filter(
+          (item) =>
+            String(item.restaurantId) !==
+            String(restaurantId)
+        ),
+        ...reorderedItems
+      ]);
+
+      navigate(
+        `/checkout?restaurantId=${encodeURIComponent(
+          restaurantId
+        )}&reorder=1`
+      );
+    } catch (err) {
+      setReorderError(
+        err.message ||
+        'We could not prepare this order for checkout.'
+      );
+    } finally {
+      setReorderingOrderId('');
+    }
+  }
+
   if (loading) {
     return <LoadingState message="Loading previous orders..." />;
   }
@@ -173,6 +416,15 @@ function OrdersPage() {
   return (
     <main className="page">
       <h1>Previous Orders</h1>
+
+      {reorderError && (
+        <p
+          className="order-history-reorder-error"
+          role="alert"
+        >
+          {reorderError}
+        </p>
+      )}
 
       {orders.length === 0 ? (
         <EmptyState
@@ -187,9 +439,14 @@ function OrdersPage() {
               : [];
 
             const itemCount = getItemCount(items);
+
             const restaurantName =
               order.restaurantName ||
               `Restaurant #${order.restaurantId}`;
+
+            const isPreparingReorder =
+              String(reorderingOrderId) ===
+              String(order.id);
 
             return (
               <article
@@ -227,13 +484,11 @@ function OrdersPage() {
                     <ul>
                       {items.map((item, index) => (
                         <li
-                          key={
-                            `${item.productId || 'item'}-${index}`
-                          }
+                          key={`${item.productId || 'item'}-${index}`}
                         >
                           <span>
                             {getItemLabel(item)}
-                            {' \u00d7 '}
+                            {' × '}
                             {Number(item.quantity) || 0}
                           </span>
 
@@ -266,6 +521,20 @@ function OrdersPage() {
                     )}
                   </strong>
                 </footer>
+
+                <div className="order-history-actions">
+                  <button
+                    type="button"
+                    className="order-history-reorder-button"
+                    onClick={() => handleReorder(order)}
+                    disabled={Boolean(reorderingOrderId)}
+                    aria-busy={isPreparingReorder}
+                  >
+                    {isPreparingReorder
+                      ? 'Preparing reorder...'
+                      : 'Reorder'}
+                  </button>
+                </div>
               </article>
             );
           })}

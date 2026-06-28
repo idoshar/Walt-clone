@@ -14,13 +14,96 @@ function getUserText(user, field) {
     : '';
 }
 
-function getInitialDeliveryDetails(user) {
-  return {
+function getReorderStorageKey(restaurantId) {
+  return 'checkout-reorder:' + String(restaurantId);
+}
+
+function getStoredReorderDetails(restaurantId) {
+  try {
+    const savedDetails = window.sessionStorage.getItem(
+      getReorderStorageKey(restaurantId)
+    );
+
+    if (!savedDetails) {
+      return null;
+    }
+
+    const parsedDetails = JSON.parse(savedDetails);
+
+    return (
+      parsedDetails &&
+      typeof parsedDetails === 'object' &&
+      !Array.isArray(parsedDetails)
+    )
+      ? parsedDetails
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function getReorderedText(reorderDetails, field) {
+  const value = reorderDetails?.[field];
+
+  return typeof value === 'string' && value.trim() !== ''
+    ? value
+    : '';
+}
+
+function getReorderedDinerCount(reorderDetails) {
+  const dinerCount = Number(reorderDetails?.dinerCount);
+
+  return (
+    Number.isSafeInteger(dinerCount) &&
+    dinerCount >= 1 &&
+    dinerCount <= 99
+  )
+    ? String(dinerCount)
+    : '';
+}
+
+function getInitialDeliveryDetails(
+  user,
+  reorderDetails
+) {
+  const defaults = {
     recipientName: getUserText(user, 'fullName'),
     phone: getUserText(user, 'phone'),
     address: getUserText(user, 'address'),
     dinerCount: '1',
     notes: ''
+  };
+
+  if (
+    !reorderDetails ||
+    typeof reorderDetails !== 'object'
+  ) {
+    return defaults;
+  }
+
+  return {
+    recipientName:
+      getReorderedText(
+        reorderDetails,
+        'recipientName'
+      ) || defaults.recipientName,
+    phone:
+      getReorderedText(
+        reorderDetails,
+        'phone'
+      ) || defaults.phone,
+    address:
+      getReorderedText(
+        reorderDetails,
+        'address'
+      ) || defaults.address,
+    dinerCount:
+      getReorderedDinerCount(reorderDetails) ||
+      defaults.dinerCount,
+    notes:
+      typeof reorderDetails.notes === 'string'
+        ? reorderDetails.notes
+        : defaults.notes
   };
 }
 
@@ -141,14 +224,27 @@ function CheckoutPage() {
   const [searchParams] = useSearchParams();
 
   const requestedRestaurantId = searchParams.get('restaurantId');
+  const isReorderCheckout = searchParams.get('reorder') === '1';
+
+  const [reorderDeliveryDetails] = useState(() => (
+    isReorderCheckout
+      ? getStoredReorderDetails(requestedRestaurantId)
+      : null
+  ));
+
+  const hasReorderedDinerCount =
+    getReorderedDinerCount(reorderDeliveryDetails) !== '';
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [deliveryDetails, setDeliveryDetails] = useState(() =>
-    getInitialDeliveryDetails(user)
+    getInitialDeliveryDetails(
+      user,
+      reorderDeliveryDetails
+    )
   );
   const [isDinerCountTouched, setIsDinerCountTouched] =
-    useState(false);
+    useState(hasReorderedDinerCount);
   const [sharedLocation, setSharedLocation] = useState(null);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [locationNotice, setLocationNotice] = useState(null);
@@ -203,8 +299,24 @@ function CheckoutPage() {
   }, [selectedGroup]);
 
   useEffect(() => {
+    const keepReorderedDinerCount =
+      isReorderCheckout &&
+      hasReorderedDinerCount &&
+      selectedRestaurantKey !== '' &&
+      String(requestedRestaurantId) === selectedRestaurantKey;
+
+    if (keepReorderedDinerCount) {
+      setIsDinerCountTouched(true);
+      return;
+    }
+
     setIsDinerCountTouched(false);
-  }, [selectedRestaurantKey]);
+  }, [
+    hasReorderedDinerCount,
+    isReorderCheckout,
+    requestedRestaurantId,
+    selectedRestaurantKey
+  ]);
 
   useEffect(() => {
     if (isDinerCountTouched) {
@@ -369,6 +481,16 @@ function CheckoutPage() {
         `WOLT-${Math.floor(10000 + Math.random() * 90000)}`;
 
       clearRestaurantCart(selectedGroup.restaurantId);
+
+      if (isReorderCheckout) {
+        try {
+          window.sessionStorage.removeItem(
+            getReorderStorageKey(selectedGroup.restaurantId)
+          );
+        } catch {
+          // The order can still be completed if session storage is unavailable.
+        }
+      }
 
       navigate(
         `/order-status?status=success&orderId=${encodeURIComponent(orderId)}`
