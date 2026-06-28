@@ -169,6 +169,17 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.headerActions}>
             <Pressable
               accessibilityRole="button"
+              onPress={() => navigation.navigate('MyOrders')}
+              style={({ pressed }) => [
+                styles.myRestaurantsButton,
+                pressed ? styles.pressedButton : null,
+              ]}
+            >
+              <Text style={styles.myRestaurantsButtonText}>My Orders</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
               onPress={() => navigation.navigate('MyRestaurants')}
               style={({ pressed }) => [
                 styles.myRestaurantsButton,
