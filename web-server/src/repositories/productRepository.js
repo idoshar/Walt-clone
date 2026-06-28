@@ -30,6 +30,7 @@ function toResponseObject(product) {
         name: product.name,
         price: product.price,
         description: product.description,
+        categoryId: product.categoryId || '',
         category: product.category,
         image: product.image,
         recommendationId: product.recommendationId
@@ -111,6 +112,7 @@ async function save(restaurantId, product) {
         name: product.name,
         price: product.price,
         description: product.description || '',
+        categoryId: product.categoryId || '',
         category: product.category || '',
         image: product.image || '',
         recommendationId
@@ -140,6 +142,31 @@ async function update(restaurantId, productId, updates) {
     ).lean();
 
     return toResponseObject(updatedProduct);
+}
+
+async function countByCategoryId(restaurantId, categoryId) {
+    return Product.countDocuments({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        categoryId: String(categoryId)
+    });
+}
+
+async function updateCategoryName(
+    restaurantId,
+    categoryId,
+    categoryName
+) {
+    await Product.updateMany(
+        {
+            restaurantId: normalizeRestaurantId(restaurantId),
+            categoryId: String(categoryId)
+        },
+        {
+            $set: {
+                category: categoryName
+            }
+        }
+    );
 }
 
 async function remove(restaurantId, productId) {
@@ -189,6 +216,8 @@ module.exports = {
     getRecommendationId,
     save,
     update,
+    countByCategoryId,
+    updateCategoryName,
     remove,
     removeAllByRestaurant,
     search

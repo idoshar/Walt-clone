@@ -12,9 +12,17 @@ import {
   getProducts,
   updateProduct
 } from '../api/productApi.js';
+import {
+  createMenuCategory,
+  deleteMenuCategory,
+  getMenuCategories,
+  updateMenuCategory,
+  updateMenuCategoryOrder
+} from '../api/menuCategoryApi.js';
 import Modal from '../components/Modal.jsx';
 import RestaurantForm from '../components/RestaurantForm.jsx';
 import ProductForm from '../components/ProductForm.jsx';
+import MenuCategoryManager from '../components/MenuCategoryManager.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
 import RestaurantSalesStatistics from '../components/RestaurantSalesStatistics.jsx';
 
@@ -54,10 +62,13 @@ function RestaurantManagementPage() {
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [isPostCreatePromptOpen, setIsPostCreatePromptOpen] = useState(false);
   const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
-  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
-  const [statistics, setStatistics] = useState(null);
-  const [statisticsError, setStatisticsError] = useState('');
-  const [isStatisticsLoading, setIsStatisticsLoading] = useState(false);
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [isMenuCategoriesLoading, setIsMenuCategoriesLoading] = useState(false);
+  const [isMenuCategoryCreating, setIsMenuCategoryCreating] = useState(false);
+  const [isMenuCategoryManagerOpen, setIsMenuCategoryManagerOpen] = useState(false);
+  const [isMenuCategoryOrderSaving, setIsMenuCategoryOrderSaving] = useState(false);
+  const [isMenuCategoryUpdating, setIsMenuCategoryUpdating] = useState(false);
+  const [isMenuCategoryDeleting, setIsMenuCategoryDeleting] = useState(false);
 
   async function loadRestaurants() {
     const data = await getMyRestaurants();
@@ -86,6 +97,19 @@ function RestaurantManagementPage() {
     return restaurantProducts;
   }
 
+  async function loadMenuCategories(restaurantId) {
+    setIsMenuCategoriesLoading(true);
+
+    try {
+      const data = await getMenuCategories(restaurantId);
+      const restaurantCategories = Array.isArray(data) ? data : [];
+      setMenuCategories(restaurantCategories);
+      return restaurantCategories;
+    } finally {
+      setIsMenuCategoriesLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadRestaurants().catch((error) => setMessage(error.message));
   }, []);
@@ -103,6 +127,7 @@ function RestaurantManagementPage() {
       setSelectedRestaurant(savedRestaurant);
       setRestaurantSearchQuery('');
       setProducts([]);
+      setMenuCategories([]);
       setIsCreateRestaurantOpen(false);
       setIsPostCreatePromptOpen(true);
       setMessage('Restaurant created successfully.');
@@ -163,6 +188,165 @@ function RestaurantManagementPage() {
     }
   }
 
+  async function handleCreateMenuCategory(categoryInput) {
+    if (!selectedRestaurant) {
+      throw new Error('Select a restaurant before creating a category');
+    }
+
+    setIsMenuCategoryCreating(true);
+
+    try {
+      const createdCategory = await createMenuCategory(
+        selectedRestaurant.id,
+        categoryInput
+      );
+
+      const refreshedCategories = await getMenuCategories(
+        selectedRestaurant.id
+      );
+
+      setMenuCategories(
+        Array.isArray(refreshedCategories)
+          ? refreshedCategories
+          : []
+      );
+
+      setMessage(
+        'Category "' + createdCategory.name + '" created successfully.'
+      );
+
+      return createdCategory;
+    } catch (error) {
+      setMessage(error.message);
+      throw error;
+    } finally {
+      setIsMenuCategoryCreating(false);
+    }
+  }
+
+  async function handleUpdateMenuCategory(categoryId, categoryInput) {
+    if (!selectedRestaurant) {
+      throw new Error('Select a restaurant before updating a category');
+    }
+
+    setIsMenuCategoryUpdating(true);
+
+    try {
+      const updatedCategory = await updateMenuCategory(
+        selectedRestaurant.id,
+        categoryId,
+        categoryInput
+      );
+
+      await Promise.all([
+        loadMenuCategories(selectedRestaurant.id),
+        loadProducts(selectedRestaurant.id)
+      ]);
+
+      setMessage(
+        'Category "' +
+          updatedCategory.name +
+          '" updated successfully.'
+      );
+
+      return updatedCategory;
+    } catch (error) {
+      setMessage(error.message);
+      throw error;
+    } finally {
+      setIsMenuCategoryUpdating(false);
+    }
+  }
+
+  async function handleDeleteMenuCategory(categoryId) {
+    if (!selectedRestaurant) {
+      throw new Error('Select a restaurant before deleting a category');
+    }
+
+    setIsMenuCategoryDeleting(true);
+
+    try {
+      await deleteMenuCategory(
+        selectedRestaurant.id,
+        categoryId
+      );
+
+      await Promise.all([
+        loadMenuCategories(selectedRestaurant.id),
+        loadProducts(selectedRestaurant.id)
+      ]);
+
+      setMessage('Category deleted successfully.');
+    } catch (error) {
+      setMessage(error.message);
+      throw error;
+    } finally {
+      setIsMenuCategoryDeleting(false);
+    }
+  }
+
+  async function handleMoveMenuCategory(categoryId, direction) {
+    if (
+      !selectedRestaurant ||
+      isMenuCategoryOrderSaving ||
+      !Number.isInteger(direction)
+    ) {
+      return;
+    }
+
+    const currentIndex = menuCategories.findIndex(
+      (category) => String(category.id) === String(categoryId)
+    );
+
+    const targetIndex = currentIndex + direction;
+
+    if (
+      currentIndex < 0 ||
+      targetIndex < 0 ||
+      targetIndex >= menuCategories.length
+    ) {
+      return;
+    }
+
+    const reorderedCategories = [...menuCategories];
+
+    [
+      reorderedCategories[currentIndex],
+      reorderedCategories[targetIndex]
+    ] = [
+      reorderedCategories[targetIndex],
+      reorderedCategories[currentIndex]
+    ];
+
+    setMenuCategories(reorderedCategories);
+    setIsMenuCategoryOrderSaving(true);
+
+    try {
+      const updatedCategories = await updateMenuCategoryOrder(
+        selectedRestaurant.id,
+        reorderedCategories.map((category) => category.id)
+      );
+
+      setMenuCategories(
+        Array.isArray(updatedCategories)
+          ? updatedCategories
+          : reorderedCategories
+      );
+
+      setMessage('Category order updated successfully.');
+    } catch (error) {
+      setMessage(error.message);
+
+      try {
+        await loadMenuCategories(selectedRestaurant.id);
+      } catch {
+        // Keep the optimistic order visible if reload also fails.
+      }
+    } finally {
+      setIsMenuCategoryOrderSaving(false);
+    }
+  }
+
   async function handleDeleteRestaurant() {
     if (!selectedRestaurant) {
       return;
@@ -180,9 +364,11 @@ function RestaurantManagementPage() {
       await deleteRestaurant(selectedRestaurant.id);
       setSelectedRestaurant(null);
       setProducts([]);
+      setMenuCategories([]);
       setIsRestaurantActionsOpen(false);
       setIsRestaurantDetailsOpen(false);
       setIsMenuOpen(false);
+      setIsMenuCategoryManagerOpen(false);
       await loadRestaurants();
       setMessage('Restaurant deleted successfully.');
     } catch (error) {
@@ -233,36 +419,64 @@ function RestaurantManagementPage() {
     }
   }
 
-  async function openRestaurantStatistics() {
+  async function openCategoryManagement() {
     if (!selectedRestaurant) {
       return;
     }
 
-    setIsRestaurantActionsOpen(false);
-    setIsStatisticsOpen(true);
-    setIsStatisticsLoading(true);
-    setStatistics(null);
-    setStatisticsError('');
-
     try {
-      const data = await getRestaurantStatistics(selectedRestaurant.id);
-      setStatistics(data);
+      await loadMenuCategories(selectedRestaurant.id);
+      setIsRestaurantActionsOpen(false);
+      setIsMenuCategoryManagerOpen(true);
     } catch (error) {
-      setStatisticsError(error.message);
-    } finally {
-      setIsStatisticsLoading(false);
+      setMessage(error.message);
     }
   }
-  function openAddMenuItem() {
-    setEditingProduct(null);
-    setIsMenuOpen(false);
-    setIsProductFormOpen(true);
+
+  async function openAddMenuItem() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setEditingProduct(null);
+      setIsMenuOpen(false);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
   }
 
-  function openEditMenuItem(product) {
-    setEditingProduct(product);
+  async function openEditMenuItem(product) {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setEditingProduct(product);
+      setIsMenuOpen(false);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  function returnToRestaurantActions() {
+    setEditingProduct(null);
+    setIsProductFormOpen(false);
+    setIsRestaurantDetailsOpen(false);
     setIsMenuOpen(false);
-    setIsProductFormOpen(true);
+    setIsMenuCategoryManagerOpen(false);
+    setIsPostCreatePromptOpen(false);
+    setIsRestaurantActionsOpen(true);
+  }
+
+  function returnToMenuManagement() {
+    setEditingProduct(null);
+    setIsProductFormOpen(false);
+    setIsMenuOpen(true);
   }
 
   function closeProductForm() {
@@ -270,10 +484,19 @@ function RestaurantManagementPage() {
     setIsProductFormOpen(false);
   }
 
-  function handleCreateMenuItemsNow() {
-    setIsPostCreatePromptOpen(false);
-    setEditingProduct(null);
-    setIsProductFormOpen(true);
+  async function handleCreateMenuItemsNow() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setIsPostCreatePromptOpen(false);
+      setEditingProduct(null);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
   }
 
   const normalizedRestaurantSearchQuery = restaurantSearchQuery.trim().toLowerCase();
@@ -497,16 +720,14 @@ function RestaurantManagementPage() {
               <span>Manage Menu</span>
               <small>Add, edit, or delete the dishes available at this restaurant.</small>
             </button>
+
             <button
               type="button"
-              className="management-action-button management-analytics-action"
-              onClick={openRestaurantStatistics}
+              className="management-action-button"
+              onClick={openCategoryManagement}
             >
-              <span>View Sales Statistics</span>
-              <small>
-                Review orders, revenue, average order value, and your
-                best-selling dishes.
-              </small>
+              <span>Manage Categories</span>
+              <small>Set the order customers see when browsing your menu.</small>
             </button>
           </div>
 
@@ -524,6 +745,7 @@ function RestaurantManagementPage() {
         <Modal
           title="Edit Restaurant Details"
           onClose={() => setIsRestaurantDetailsOpen(false)}
+          onBack={returnToRestaurantActions}
         >
           <RestaurantForm
             key={`restaurant-${selectedRestaurant.id}`}
@@ -533,10 +755,31 @@ function RestaurantManagementPage() {
         </Modal>
       )}
 
+      {isMenuCategoryManagerOpen && selectedRestaurant && (
+        <Modal
+          title={selectedRestaurant.name + ' Categories'}
+          onClose={() => setIsMenuCategoryManagerOpen(false)}
+          onBack={returnToRestaurantActions}
+        >
+          <MenuCategoryManager
+            categories={menuCategories}
+            isSaving={isMenuCategoryOrderSaving}
+            isCreating={isMenuCategoryCreating}
+            isUpdating={isMenuCategoryUpdating}
+            isDeleting={isMenuCategoryDeleting}
+            onMove={handleMoveMenuCategory}
+            onCreate={handleCreateMenuCategory}
+            onUpdate={handleUpdateMenuCategory}
+            onDelete={handleDeleteMenuCategory}
+          />
+        </Modal>
+      )}
+
       {isMenuOpen && selectedRestaurant && (
         <Modal
           title={`${selectedRestaurant.name} Menu`}
           onClose={() => setIsMenuOpen(false)}
+          onBack={returnToRestaurantActions}
           size="large"
         >
           <div className="management-menu-header">
@@ -571,6 +814,11 @@ function RestaurantManagementPage() {
                 <article key={product.id} className="management-menu-item">
                   <div>
                     <h3>{product.name}</h3>
+                    {product.category && (
+                      <span className="management-menu-category">
+                        {product.category}
+                      </span>
+                    )}
                     {product.description && <p>{product.description}</p>}
                     <strong>₪{product.price}</strong>
                   </div>
@@ -615,10 +863,15 @@ function RestaurantManagementPage() {
         <Modal
           title={editingProduct ? 'Edit Menu Item' : 'Add Menu Item'}
           onClose={closeProductForm}
+          onBack={returnToMenuManagement}
         >
           <ProductForm
             key={editingProduct ? `product-${editingProduct.id}` : 'new-product'}
             initialProduct={editingProduct}
+            categories={menuCategories}
+            isCategoriesLoading={isMenuCategoriesLoading}
+            isCreatingCategory={isMenuCategoryCreating}
+            onCreateCategory={handleCreateMenuCategory}
             onSubmit={handleSaveProduct}
           />
         </Modal>
