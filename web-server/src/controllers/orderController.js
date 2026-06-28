@@ -1,10 +1,20 @@
-﻿const orderRepository = require('../repositories/orderRepository');
+const orderRepository = require('../repositories/orderRepository');
 const userRepository = require('../repositories/userRepository');
-const restaurantRepository = require('../repositories/restaurantRepository');
-const productRepository = require('../repositories/productRepository');
+const restaurantRepository =
+    require('../repositories/restaurantRepository');
+const productRepository =
+    require('../repositories/productRepository');
 
-async function resolveUser(userId) {
-    return userRepository.findById(userId);
+function isPlainObject(value) {
+    return Boolean(
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+    );
+}
+
+function hasOwnProperty(object, property) {
+    return Object.prototype.hasOwnProperty.call(object, property);
 }
 
 function normalizeQuantity(quantity) {
@@ -15,6 +25,246 @@ function normalizeQuantity(quantity) {
     }
 
     return value;
+}
+
+function normalizeDinerCount(value) {
+    const normalizedValue = Number(value);
+
+    if (
+        !Number.isSafeInteger(normalizedValue) ||
+        normalizedValue < 1 ||
+        normalizedValue > 99
+    ) {
+        return null;
+    }
+
+    return normalizedValue;
+}
+
+function normalizeRequiredText(value, maximumLength) {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const normalizedValue = value.trim().replace(/\s+/g, ' ');
+
+    if (
+        !normalizedValue ||
+        normalizedValue.length > maximumLength
+    ) {
+        return null;
+    }
+
+    return normalizedValue;
+}
+
+function normalizeNotes(value) {
+    if (value === undefined || value === null) {
+        return '';
+    }
+
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const normalizedValue = value.trim();
+
+    if (normalizedValue.length > 500) {
+        return null;
+    }
+
+    return normalizedValue;
+}
+
+function isValidCoordinatePair(latitude, longitude) {
+    return (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180
+    );
+}
+
+function resolveDeliveryField(
+    details,
+    field,
+    defaultValue,
+    maximumLength,
+    fieldLabel
+) {
+    const rawValue = hasOwnProperty(details, field)
+        ? details[field]
+        : defaultValue;
+
+    const normalizedValue = normalizeRequiredText(
+        rawValue,
+        maximumLength
+    );
+
+    if (!normalizedValue) {
+        return {
+            error:
+                'deliveryDetails.' +
+                fieldLabel +
+                ' must be a non-empty string up to ' +
+                maximumLength +
+                ' characters'
+        };
+    }
+
+    return {
+        value: normalizedValue
+    };
+}
+
+function resolveDeliveryLocation(details, user) {
+    if (!hasOwnProperty(details, 'location')) {
+        const profileLatitude = user.latitude;
+        const profileLongitude = user.longitude;
+
+        if (
+            isValidCoordinatePair(
+                profileLatitude,
+                profileLongitude
+            )
+        ) {
+            return {
+                value: {
+                    latitude: profileLatitude,
+                    longitude: profileLongitude,
+                    source: 'profile'
+                }
+            };
+        }
+
+        return {
+            value: null
+        };
+    }
+
+    if (details.location === null) {
+        return {
+            value: null
+        };
+    }
+
+    if (!isPlainObject(details.location)) {
+        return {
+            error:
+                'deliveryDetails.location must be an object or null'
+        };
+    }
+
+    const latitude = details.location.latitude;
+    const longitude = details.location.longitude;
+
+    if (!isValidCoordinatePair(latitude, longitude)) {
+        return {
+            error:
+                'deliveryDetails.location must include valid latitude and longitude coordinates'
+        };
+    }
+
+    return {
+        value: {
+            latitude,
+            longitude,
+            source: 'shared'
+        }
+    };
+}
+
+function createDeliveryDetailsSnapshot(user, deliveryDetailsInput) {
+    if (
+        deliveryDetailsInput !== undefined &&
+        deliveryDetailsInput !== null &&
+        !isPlainObject(deliveryDetailsInput)
+    ) {
+        return {
+            error: 'deliveryDetails must be a JSON object'
+        };
+    }
+
+    const details = deliveryDetailsInput || {};
+
+    const recipientName = resolveDeliveryField(
+        details,
+        'recipientName',
+        user.fullName,
+        100,
+        'recipientName'
+    );
+
+    if (recipientName.error) {
+        return recipientName;
+    }
+
+    const phone = resolveDeliveryField(
+        details,
+        'phone',
+        user.phone,
+        40,
+        'phone'
+    );
+
+    if (phone.error) {
+        return phone;
+    }
+
+    const address = resolveDeliveryField(
+        details,
+        'address',
+        user.address,
+        240,
+        'address'
+    );
+
+    if (address.error) {
+        return address;
+    }
+
+    const dinerCount = hasOwnProperty(details, 'dinerCount')
+        ? normalizeDinerCount(details.dinerCount)
+        : 1;
+
+    if (!dinerCount) {
+        return {
+            error:
+                'deliveryDetails.dinerCount must be a whole number between 1 and 99'
+        };
+    }
+
+    const notes = normalizeNotes(details.notes);
+
+    if (notes === null) {
+        return {
+            error:
+                'deliveryDetails.notes must be a string up to 500 characters'
+        };
+    }
+
+    const location = resolveDeliveryLocation(details, user);
+
+    if (location.error) {
+        return location;
+    }
+
+    return {
+        value: {
+            recipientName: recipientName.value,
+            phone: phone.value,
+            address: address.value,
+            dinerCount,
+            notes,
+            location: location.value
+        }
+    };
+}
+
+async function resolveUser(userId) {
+    return userRepository.findById(userId);
 }
 
 function isValidItem(item) {
@@ -33,6 +283,7 @@ function requireUserId(req, res) {
             error: 'Unauthorized',
             message: 'Missing authenticated user'
         });
+
         return null;
     }
 
@@ -74,20 +325,45 @@ async function createItemSnapshots(restaurantId, items) {
 
 async function createOrder(req, res) {
     const userId = requireUserId(req, res);
-    if (!userId) return;
 
-    const user = await resolveUser(userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const { restaurantId, items } = req.body || {};
-
-    if (!restaurantId) {
-        return res.status(400).json({ error: 'restaurantId is required' });
+    if (!userId) {
+        return;
     }
 
-    const restaurant = await restaurantRepository.findById(restaurantId);
+    if (!isPlainObject(req.body)) {
+        return res.status(400).json({
+            error: 'Request body must be a JSON object'
+        });
+    }
+
+    const user = await resolveUser(userId);
+
+    if (!user) {
+        return res.status(404).json({
+            error: 'User not found'
+        });
+    }
+
+    const {
+        restaurantId,
+        items,
+        deliveryDetails
+    } = req.body;
+
+    if (!restaurantId) {
+        return res.status(400).json({
+            error: 'restaurantId is required'
+        });
+    }
+
+    const restaurant = await restaurantRepository.findById(
+        restaurantId
+    );
+
     if (!restaurant) {
-        return res.status(404).json({ error: 'Restaurant not found' });
+        return res.status(404).json({
+            error: 'Restaurant not found'
+        });
     }
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -97,17 +373,34 @@ async function createOrder(req, res) {
     }
 
     const invalidItem = items.find((item) => !isValidItem(item));
+
     if (invalidItem) {
         return res.status(400).json({
-            error: 'Each item must include productId and a positive whole-number quantity'
+            error:
+                'Each item must include productId and a positive whole-number quantity'
         });
     }
 
-    const itemSnapshots = await createItemSnapshots(restaurantId, items);
+    const deliverySnapshot = createDeliveryDetailsSnapshot(
+        user,
+        deliveryDetails
+    );
+
+    if (deliverySnapshot.error) {
+        return res.status(400).json({
+            error: deliverySnapshot.error
+        });
+    }
+
+    const itemSnapshots = await createItemSnapshots(
+        restaurantId,
+        items
+    );
 
     if (itemSnapshots.some((item) => item === null)) {
         return res.status(400).json({
-            error: 'Each item must reference an existing product in the selected restaurant'
+            error:
+                'Each item must reference an existing product in the selected restaurant'
         });
     }
 
@@ -115,7 +408,8 @@ async function createOrder(req, res) {
         userId,
         restaurantId,
         restaurantName: restaurant.name,
-        items: itemSnapshots
+        items: itemSnapshots,
+        deliveryDetails: deliverySnapshot.value
     });
 
     return res
@@ -126,20 +420,31 @@ async function createOrder(req, res) {
 
 async function getUserOrders(req, res) {
     const userId = requireUserId(req, res);
-    if (!userId) return;
+
+    if (!userId) {
+        return;
+    }
 
     const orders = await orderRepository.findByUserId(userId);
-    return res.status(200).json(orders.map((order) => order.toResponseObject()));
+
+    return res
+        .status(200)
+        .json(orders.map((order) => order.toResponseObject()));
 }
 
 async function getOrderById(req, res) {
     const userId = requireUserId(req, res);
-    if (!userId) return;
+
+    if (!userId) {
+        return;
+    }
 
     const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
-        return res.status(404).json({ error: 'Order not found' });
+        return res.status(404).json({
+            error: 'Order not found'
+        });
     }
 
     return res.status(200).json(order.toResponseObject());
@@ -147,15 +452,31 @@ async function getOrderById(req, res) {
 
 async function updateOrder(req, res) {
     const userId = requireUserId(req, res);
-    if (!userId) return;
+
+    if (!userId) {
+        return;
+    }
 
     const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
-        return res.status(404).json({ error: 'Order not found' });
+        return res.status(404).json({
+            error: 'Order not found'
+        });
     }
 
-    const { status, items } = req.body || {};
+    const {
+        status,
+        items,
+        deliveryDetails
+    } = req.body || {};
+
+    if (deliveryDetails !== undefined) {
+        return res.status(400).json({
+            error:
+                'deliveryDetails are captured when an order is created and cannot be changed later'
+        });
+    }
 
     if (status === undefined && items === undefined) {
         return res.status(400).json({
@@ -176,7 +497,9 @@ async function updateOrder(req, res) {
 
         if (!allowedStatuses.includes(status)) {
             return res.status(400).json({
-                error: `Invalid status. Allowed values: ${allowedStatuses.join(', ')}`
+                error:
+                    'Invalid status. Allowed values: ' +
+                    allowedStatuses.join(', ')
             });
         }
 
@@ -191,9 +514,11 @@ async function updateOrder(req, res) {
         }
 
         const invalidItem = items.find((item) => !isValidItem(item));
+
         if (invalidItem) {
             return res.status(400).json({
-                error: 'Each item must include productId and a positive whole-number quantity'
+                error:
+                    'Each item must include productId and a positive whole-number quantity'
             });
         }
 
@@ -204,7 +529,8 @@ async function updateOrder(req, res) {
 
         if (itemSnapshots.some((item) => item === null)) {
             return res.status(400).json({
-                error: 'Each item must reference an existing product in the selected restaurant'
+                error:
+                    'Each item must reference an existing product in the selected restaurant'
             });
         }
 
@@ -222,12 +548,17 @@ async function updateOrder(req, res) {
 
 async function deleteOrder(req, res) {
     const userId = requireUserId(req, res);
-    if (!userId) return;
+
+    if (!userId) {
+        return;
+    }
 
     const order = await orderRepository.findById(req.params.id);
 
     if (!order || String(order.userId) !== String(userId)) {
-        return res.status(404).json({ error: 'Order not found' });
+        return res.status(404).json({
+            error: 'Order not found'
+        });
     }
 
     await orderRepository.delete(order.id);
