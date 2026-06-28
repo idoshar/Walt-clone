@@ -133,8 +133,14 @@ function RestaurantPage() {
   function createCartProduct(product) {
     const displayImage = getRestaurantImage(restaurant);
 
+    const menuCategory = menuCategories.find(
+      (category) =>
+        String(category.id) === String(product.categoryId || '')
+    );
+
     return {
       ...product,
+      menuType: menuCategory?.menuType || product.menuType || '',
       restaurantId: product.restaurantId ?? restaurant.id,
       restaurantName: product.restaurantName ?? restaurant.name,
       restaurantImage:
