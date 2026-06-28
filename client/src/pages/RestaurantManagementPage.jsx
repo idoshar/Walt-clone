@@ -69,6 +69,10 @@ function RestaurantManagementPage() {
   const [isMenuCategoryOrderSaving, setIsMenuCategoryOrderSaving] = useState(false);
   const [isMenuCategoryUpdating, setIsMenuCategoryUpdating] = useState(false);
   const [isMenuCategoryDeleting, setIsMenuCategoryDeleting] = useState(false);
+  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+  const [statistics, setStatistics] = useState(null);
+  const [isStatisticsLoading, setIsStatisticsLoading] = useState(false);
+  const [statisticsError, setStatisticsError] = useState('');
 
   async function loadRestaurants() {
     const data = await getMyRestaurants();
@@ -347,6 +351,32 @@ function RestaurantManagementPage() {
     }
   }
 
+  async function openRestaurantStatistics() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    setIsRestaurantActionsOpen(false);
+    setIsStatisticsOpen(true);
+    setStatistics(null);
+    setStatisticsError('');
+    setIsStatisticsLoading(true);
+
+    try {
+      const data = await getRestaurantStatistics(
+        selectedRestaurant.id
+      );
+
+      setStatistics(data);
+    } catch (error) {
+      setStatisticsError(
+        error.message || 'Could not load restaurant statistics.'
+      );
+    } finally {
+      setIsStatisticsLoading(false);
+    }
+  }
+
   async function handleDeleteRestaurant() {
     if (!selectedRestaurant) {
       return;
@@ -469,6 +499,7 @@ function RestaurantManagementPage() {
     setIsRestaurantDetailsOpen(false);
     setIsMenuOpen(false);
     setIsMenuCategoryManagerOpen(false);
+    setIsStatisticsOpen(false);
     setIsPostCreatePromptOpen(false);
     setIsRestaurantActionsOpen(true);
   }
@@ -728,6 +759,15 @@ function RestaurantManagementPage() {
             >
               <span>Manage Categories</span>
               <small>Set the order customers see when browsing your menu.</small>
+            </button>
+
+            <button
+              type="button"
+              className="management-action-button"
+              onClick={openRestaurantStatistics}
+            >
+              <span>View Sales Statistics</span>
+              <small>Review orders, revenue, and best-selling menu items.</small>
             </button>
           </div>
 
