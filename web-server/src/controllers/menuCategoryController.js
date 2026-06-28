@@ -1,5 +1,7 @@
 const menuCategoryRepository =
     require('../repositories/menuCategoryRepository');
+const productRepository =
+    require('../repositories/productRepository');
 const restaurantRepository =
     require('../repositories/restaurantRepository');
 const { MENU_TYPES } = require('../models/MenuCategory');
@@ -182,6 +184,160 @@ async function createMenuCategory(req, res) {
     }
 }
 
+
+async function updateMenuCategory(req, res) {
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
+
+    const bodyError = validateObject(req.body);
+
+    if (bodyError) {
+        return badRequest(res, bodyError);
+    }
+
+    if (Object.keys(req.body).length === 0) {
+        return badRequest(res, 'Request body must not be empty');
+    }
+
+    const category = await menuCategoryRepository.findById(
+        req.params.id,
+        req.params.categoryId
+    );
+
+    if (!category) {
+        return notFound(res, 'Category not found');
+    }
+
+    const hasName = Object.prototype.hasOwnProperty.call(
+        req.body,
+        'name'
+    );
+
+    const hasMenuType = Object.prototype.hasOwnProperty.call(
+        req.body,
+        'menuType'
+    );
+
+    if (!hasName && !hasMenuType) {
+        return badRequest(
+            res,
+            'Request body must contain name and/or menuType'
+        );
+    }
+
+    const updates = {};
+
+    if (hasName) {
+        const name = normalizeCategoryName(req.body.name);
+
+        if (!name) {
+            return badRequest(res, 'name is required');
+        }
+
+        const normalizedName = name.toLowerCase();
+
+        const existingCategory =
+            await menuCategoryRepository.findByNormalizedName(
+                req.params.id,
+                normalizedName
+            );
+
+        if (
+            existingCategory &&
+            String(existingCategory.id) !== String(category.id)
+        ) {
+            return badRequest(
+                res,
+                'A category with this name already exists in this restaurant'
+            );
+        }
+
+        updates.name = name;
+        updates.normalizedName = normalizedName;
+    }
+
+    if (hasMenuType) {
+        const menuType = normalizeMenuType(req.body.menuType);
+
+        if (!MENU_TYPES.includes(menuType)) {
+            return badRequest(
+                res,
+                `menuType must be one of: ${MENU_TYPES.join(', ')}`
+            );
+        }
+
+        updates.menuType = menuType;
+    }
+
+    const updatedCategory = await menuCategoryRepository.update(
+        req.params.id,
+        req.params.categoryId,
+        updates
+    );
+
+    if (!updatedCategory) {
+        return notFound(res, 'Category not found');
+    }
+
+    if (
+        Object.prototype.hasOwnProperty.call(updates, 'name') &&
+        updates.name !== category.name
+    ) {
+        await productRepository.updateCategoryName(
+            req.params.id,
+            updatedCategory.id,
+            updatedCategory.name
+        );
+    }
+
+    return ok(res, updatedCategory);
+}
+
+async function deleteMenuCategory(req, res) {
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
+
+    const category = await menuCategoryRepository.findById(
+        req.params.id,
+        req.params.categoryId
+    );
+
+    if (!category) {
+        return notFound(res, 'Category not found');
+    }
+
+    const productCount =
+        await productRepository.countByCategoryId(
+            req.params.id,
+            category.id
+        );
+
+    if (productCount > 0) {
+        return res.status(409).json({
+            error: 'Conflict',
+            message:
+                'This category still contains ' +
+                productCount +
+                ' menu item' +
+                (productCount === 1 ? '' : 's') +
+                '. Move or delete them first.'
+        });
+    }
+
+    const deleted = await menuCategoryRepository.remove(
+        req.params.id,
+        category.id
+    );
+
+    if (!deleted) {
+        return notFound(res, 'Category not found');
+    }
+
+    return res.status(204).send();
+}
+
 async function updateMenuCategoryOrder(req, res) {
     if (!(await requireManagedRestaurant(req, res))) {
         return;
@@ -240,5 +396,7 @@ async function updateMenuCategoryOrder(req, res) {
 module.exports = {
     getAllMenuCategories,
     createMenuCategory,
+    updateMenuCategory,
+    deleteMenuCategory,
     updateMenuCategoryOrder
 };

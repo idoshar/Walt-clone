@@ -3229,3 +3229,411 @@ body.dark .product-card {
     width: 100%;
   }
 }
+
+/* SCRUM-447 category manager */
+.management-category-manager {
+  display: grid;
+  gap: 16px;
+}
+
+.management-category-manager-intro {
+  display: grid;
+  gap: 5px;
+}
+
+.management-category-manager-intro p,
+.management-category-manager-intro small,
+.management-category-empty p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.management-category-manager-intro p {
+  font-weight: 700;
+}
+
+.management-category-empty {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+}
+
+.management-category-list {
+  display: grid;
+  gap: 10px;
+}
+
+.management-category-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.management-category-position {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.management-category-details {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.management-category-details strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.management-category-details span {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.management-category-order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.management-category-order-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  min-width: 40px;
+  min-height: 38px;
+  padding: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.management-category-order-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.management-category-saving {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .management-category-row {
+    gap: 10px;
+    padding: 11px;
+  }
+
+  .management-category-order-actions {
+    gap: 6px;
+  }
+
+  .management-category-order-button {
+    width: 36px;
+    min-width: 36px;
+  }
+}
+
+/* SCRUM-447 category creation in manager */
+.management-category-manager-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.management-category-create-toggle {
+  flex: 0 0 auto;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+.management-category-create-form {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+}
+
+.management-category-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.55fr);
+  gap: 12px;
+}
+
+.management-category-form-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.management-category-form-grid input,
+.management-category-form-grid select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.management-category-form-grid input:focus,
+.management-category-form-grid select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.management-category-create-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.management-category-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .management-category-manager-topline {
+    flex-direction: column;
+  }
+
+  .management-category-create-toggle {
+    width: 100%;
+  }
+
+  .management-category-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .management-category-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .management-category-form-actions button {
+    width: 100%;
+  }
+}
+
+/* SCRUM-447 compact modal header back action */
+.app-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.app-modal-header-back-button {
+  min-height: 32px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.app-modal-header-back-button:hover {
+  border-color: var(--color-border);
+  background: var(--color-info-bg);
+  color: var(--color-text);
+}
+
+.app-modal-header-back-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+@media (max-width: 480px) {
+  .app-modal-header-back-button {
+    min-width: 32px;
+    padding: 5px 7px;
+    font-size: 0;
+  }
+
+  .app-modal-header-back-button::first-letter {
+    font-size: 16px;
+  }
+}
+
+/* SCRUM-447 circular modal back button */
+.app-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.app-modal-header-back-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.app-modal-header-back-button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.app-modal-header-back-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .app-modal-header-back-button {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 18px;
+  }
+}
+
+/* SCRUM-447 category edit and delete controls */
+.management-category-row-editing {
+  align-items: start;
+}
+
+.management-category-inline-edit-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(130px, 0.5fr) auto;
+  gap: 10px;
+  width: 100%;
+}
+
+.management-category-inline-edit-form input,
+.management-category-inline-edit-form select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.management-category-inline-edit-form input:focus,
+.management-category-inline-edit-form select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.management-category-inline-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.management-category-small-button,
+.management-category-text-button,
+.management-category-delete-button {
+  min-height: 38px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.management-category-text-button {
+  border: 1px solid var(--color-border);
+}
+
+.management-category-delete-button {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-danger);
+  cursor: pointer;
+  font: inherit;
+}
+
+.management-category-delete-button:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+}
+
+.management-category-delete-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 760px) {
+  .management-category-row-editing {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .management-category-inline-edit-form {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
+  }
+
+  .management-category-inline-edit-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 640px) {
+  .management-category-order-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .management-category-text-button,
+  .management-category-delete-button {
+    min-width: 58px;
+  }
+
+  .management-category-inline-edit-actions {
+    flex-direction: column-reverse;
+  }
+
+  .management-category-inline-edit-actions button {
+    width: 100%;
+  }
+}

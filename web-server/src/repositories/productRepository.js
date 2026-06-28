@@ -144,6 +144,31 @@ async function update(restaurantId, productId, updates) {
     return toResponseObject(updatedProduct);
 }
 
+async function countByCategoryId(restaurantId, categoryId) {
+    return Product.countDocuments({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        categoryId: String(categoryId)
+    });
+}
+
+async function updateCategoryName(
+    restaurantId,
+    categoryId,
+    categoryName
+) {
+    await Product.updateMany(
+        {
+            restaurantId: normalizeRestaurantId(restaurantId),
+            categoryId: String(categoryId)
+        },
+        {
+            $set: {
+                category: categoryName
+            }
+        }
+    );
+}
+
 async function remove(restaurantId, productId) {
     const result = await Product.deleteOne({
         restaurantId: normalizeRestaurantId(restaurantId),
@@ -191,6 +216,8 @@ module.exports = {
     getRecommendationId,
     save,
     update,
+    countByCategoryId,
+    updateCategoryName,
     remove,
     removeAllByRestaurant,
     search

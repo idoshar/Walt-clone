@@ -10,3 +10,33 @@ export function createMenuCategory(restaurantId, category) {
     body: JSON.stringify(category)
   });
 }
+
+export function updateMenuCategoryOrder(restaurantId, categoryIds) {
+  return apiRequest(`/restaurants/${restaurantId}/menu-categories/order`, {
+    method: 'PATCH',
+    body: JSON.stringify({ categoryIds })
+  });
+}
+
+export function updateMenuCategory(
+  restaurantId,
+  categoryId,
+  category
+) {
+  return apiRequest(
+    `/restaurants/${restaurantId}/menu-categories/${categoryId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(category)
+    }
+  );
+}
+
+export function deleteMenuCategory(restaurantId, categoryId) {
+  return apiRequest(
+    `/restaurants/${restaurantId}/menu-categories/${categoryId}`,
+    {
+      method: 'DELETE'
+    }
+  );
+}

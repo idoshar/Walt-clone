@@ -26,4 +26,16 @@ router.patch(
     asyncHandler(menuCategoryController.updateMenuCategoryOrder)
 );
 
+router.patch(
+    '/:categoryId',
+    authMiddleware,
+    asyncHandler(menuCategoryController.updateMenuCategory)
+);
+
+router.delete(
+    '/:categoryId',
+    authMiddleware,
+    asyncHandler(menuCategoryController.deleteMenuCategory)
+);
+
 module.exports = router;

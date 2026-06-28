@@ -98,6 +98,37 @@ async function save(category) {
     return toResponseObject(savedCategory.toObject());
 }
 
+async function update(
+    restaurantId,
+    categoryId,
+    updates
+) {
+    const updatedCategory = await MenuCategory.findOneAndUpdate(
+        {
+            restaurantId: normalizeRestaurantId(restaurantId),
+            id: normalizeCategoryId(categoryId)
+        },
+        {
+            $set: updates
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    ).lean();
+
+    return toResponseObject(updatedCategory);
+}
+
+async function remove(restaurantId, categoryId) {
+    const result = await MenuCategory.deleteOne({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        id: normalizeCategoryId(categoryId)
+    });
+
+    return result.deletedCount > 0;
+}
+
 async function updateOrder(restaurantId, categoryIds) {
     const normalizedRestaurantId = normalizeRestaurantId(restaurantId);
 
@@ -131,6 +162,8 @@ module.exports = {
     findById,
     findByNormalizedName,
     save,
+    update,
+    remove,
     updateOrder,
     removeAllByRestaurant,
     getDefaultSortOrder
