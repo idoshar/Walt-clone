@@ -14,7 +14,6 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
-import { useCart } from '../cart/CartContext';
 import AppCard from '../components/AppCard';
 import AppState from '../components/AppState';
 import ThemeToggle from '../components/ThemeToggle';
@@ -31,11 +30,9 @@ function formatDistance(distanceKm) {
   if (distanceKm === null || distanceKm === undefined) {
     return 'Distance unavailable';
   }
-
   if (distanceKm < 1) {
     return `${Math.round(distanceKm * 1000)} m away`;
   }
-
   return `${distanceKm.toFixed(1)} km away`;
 }
 
@@ -52,15 +49,12 @@ function getRestaurantInitial(restaurant) {
 
 export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
-  const { itemCount } = useCart();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
   const [restaurants, setRestaurants] = useState([]);
   const [restaurantsState, setRestaurantsState] = useState('loading');
-  const [restaurantsMessage, setRestaurantsMessage] = useState(
-    'Loading restaurants...'
-  );
+  const [restaurantsMessage, setRestaurantsMessage] = useState('Loading restaurants...');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCuisine, setSelectedCuisine] = useState(ALL_CUISINES);
   const [locationState, setLocationState] = useState('idle');
@@ -79,7 +73,6 @@ export default function HomeScreen({ navigation }) {
 
     try {
       const nextRestaurants = await getRestaurants();
-
       setRestaurants(nextRestaurants);
       setRestaurantsState('success');
       setRestaurantsMessage(
@@ -103,30 +96,24 @@ export default function HomeScreen({ navigation }) {
 
   const cuisines = useMemo(() => {
     const restaurantCuisines = restaurants
-      .map((restaurant) => restaurant.cuisine?.trim())
+      .map((r) => r.cuisine?.trim())
       .filter(Boolean);
-
     return [
       ALL_CUISINES,
-      ...Array.from(new Set(restaurantCuisines)).sort((first, second) =>
-        first.localeCompare(second)
+      ...Array.from(new Set(restaurantCuisines)).sort((a, b) =>
+        a.localeCompare(b)
       ),
     ];
   }, [restaurants]);
 
   const visibleRestaurants = useMemo(() => {
-    const filteredRestaurants =
+    const filtered =
       selectedCuisine === ALL_CUISINES
         ? restaurants
-        : restaurants.filter(
-            (restaurant) => restaurant.cuisine === selectedCuisine
-          );
+        : restaurants.filter((r) => r.cuisine === selectedCuisine);
 
-    if (!userCoordinates) {
-      return filteredRestaurants;
-    }
-
-    return sortRestaurantsByDistance(filteredRestaurants, userCoordinates);
+    if (!userCoordinates) return filtered;
+    return sortRestaurantsByDistance(filtered, userCoordinates);
   }, [restaurants, selectedCuisine, userCoordinates]);
 
   const handleUseMyLocation = useCallback(async () => {
@@ -138,9 +125,7 @@ export default function HomeScreen({ navigation }) {
     if (result.status === LOCATION_STATUS.AVAILABLE) {
       setUserCoordinates(result.coordinates);
       setLocationState('success');
-      setLocationMessage(
-        'Restaurants are now sorted from nearest to farthest.'
-      );
+      setLocationMessage('Restaurants are now sorted from nearest to farthest.');
       return;
     }
 
@@ -178,10 +163,8 @@ export default function HomeScreen({ navigation }) {
                 Hello, {user?.fullName || user?.username || 'customer'}
               </Text>
             </View>
-
             <ThemeToggle compact />
           </View>
-        </View>
 
           <View style={styles.headerActions}>
             <Pressable
@@ -208,64 +191,46 @@ export default function HomeScreen({ navigation }) {
               </Pressable>
             ) : null}
 
-          {isAdmin ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => navigation.navigate('Admin')}
+              onPress={signOut}
               style={({ pressed }) => [
-                styles.adminButton,
+                styles.signOutButton,
                 pressed ? styles.pressedButton : null,
               ]}
             >
-              <Text style={styles.adminButtonText}>Admin</Text>
+              <Text style={styles.signOutText}>Sign out</Text>
             </Pressable>
-          ) : null}
+          </View>
 
+          {/* Search bar — navigates to SearchScreen */}
           <Pressable
             accessibilityRole="button"
-            onPress={signOut}
+            onPress={() => navigation.navigate('Search')}
             style={({ pressed }) => [
-              styles.signOutButton,
+              styles.searchBar,
               pressed ? styles.pressedButton : null,
             ]}
           >
-            <Text style={styles.signOutText}>Sign out</Text>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <Text style={styles.searchPlaceholder}>
+              Search restaurants or dishes...
+            </Text>
           </Pressable>
         </View>
 
-        <Pressable
-          accessibilityLabel="Open order history"
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('MyOrders')}
-          style={({ pressed }) => [
-            styles.myOrdersCard,
-            pressed ? styles.pressedButton : null,
-          ]}
-        >
-          <View style={styles.myOrdersText}>
-            <Text style={styles.myOrdersTitle}>My orders</Text>
-            <Text style={styles.myOrdersMessage}>
-              View your previous orders and their current status.
-            </Text>
-          </View>
-
-          <Text style={styles.myOrdersAction}>View</Text>
-        </Pressable>
         <AppCard style={styles.locationCard}>
           <View style={styles.locationIcon}>
-            <Text style={styles.locationIconText}>{'\u{1F4CD}'}</Text>
+            <Text style={styles.locationIconText}>⌖</Text>
           </View>
 
           <View style={styles.locationTextContainer}>
             <Text style={styles.locationTitle}>Nearby restaurants</Text>
-
             <Text
               style={[
                 styles.locationMessage,
                 locationState === 'error' ? styles.locationMessageError : null,
-                locationState === 'success'
-                  ? styles.locationMessageSuccess
-                  : null,
+                locationState === 'success' ? styles.locationMessageSuccess : null,
               ]}
             >
               {locationMessage}
@@ -314,7 +279,6 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.categoryList}>
           {cuisines.map((cuisine) => {
             const isSelected = cuisine === selectedCuisine;
-
             return (
               <Pressable
                 key={cuisine}
@@ -413,10 +377,7 @@ export default function HomeScreen({ navigation }) {
                 </View>
 
                 {restaurant.description ? (
-                  <Text
-                    numberOfLines={2}
-                    style={styles.restaurantDescription}
-                  >
+                  <Text numberOfLines={2} style={styles.restaurantDescription}>
                     {restaurant.description}
                   </Text>
                 ) : null}
@@ -440,29 +401,16 @@ export default function HomeScreen({ navigation }) {
 
 function createStyles(colors) {
   return StyleSheet.create({
-    container: {
-      backgroundColor: colors.background,
-      flex: 1,
-    },
-    content: {
-      flexGrow: 1,
-      gap: 16,
-      padding: 20,
-      paddingBottom: 36,
-    },
-    header: {
-      gap: 14,
-      marginBottom: 4,
-    },
+    container: { backgroundColor: colors.background, flex: 1 },
+    content: { flexGrow: 1, gap: 16, padding: 20, paddingBottom: 36 },
+    header: { gap: 14, marginBottom: 4 },
     brandRow: {
       alignItems: 'flex-start',
       flexDirection: 'row',
       gap: 12,
       justifyContent: 'space-between',
     },
-    brandText: {
-      flex: 1,
-    },
+    brandText: { flex: 1 },
     eyebrow: {
       color: colors.primary,
       fontSize: 12,
@@ -470,58 +418,9 @@ function createStyles(colors) {
       letterSpacing: 1.1,
       marginBottom: 5,
     },
-    title: {
-      color: colors.text,
-      fontSize: 30,
-      fontWeight: '800',
-      letterSpacing: -0.7,
-    },
-    subtitle: {
-      color: colors.textMuted,
-      fontSize: 15,
-      marginTop: 5,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-    },
-    cartButton: {
-      alignItems: 'center',
-      backgroundColor: colors.primarySoft,
-      borderColor: colors.primary,
-      borderRadius: 12,
-      borderWidth: 1,
-      justifyContent: 'center',
-      minHeight: 40,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-    },
-    cartButtonText: {
-      color: colors.primary,
-      fontSize: 13,
-      fontWeight: '800',
-    },    
-    myRestaurantsButton: {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderRadius: 12,
-      borderWidth: 1,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      alignItems: 'center',
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      justifyContent: 'center',
-      minHeight: 40,
-      paddingHorizontal: 13,
-      paddingVertical: 8,
-    },
-    myRestaurantsButtonText: {
-      color: colors.onPrimary,
-      fontSize: 13,
-      fontWeight: '800',
-    },
+    title: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.7 },
+    subtitle: { color: colors.textMuted, fontSize: 15, marginTop: 5 },
+    headerActions: { flexDirection: 'row', gap: 8 },
     myRestaurantsButton: {
       alignItems: 'center',
       backgroundColor: colors.surface,
@@ -533,11 +432,7 @@ function createStyles(colors) {
       paddingHorizontal: 13,
       paddingVertical: 8,
     },
-    myRestaurantsButtonText: {
-      color: colors.text,
-      fontSize: 13,
-      fontWeight: '800',
-    },
+    myRestaurantsButtonText: { color: colors.text, fontSize: 13, fontWeight: '800' },
     adminButton: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
@@ -549,11 +444,7 @@ function createStyles(colors) {
       paddingHorizontal: 13,
       paddingVertical: 8,
     },
-    adminButtonText: {
-      color: colors.primary,
-      fontSize: 13,
-      fontWeight: '800',
-    },
+    adminButtonText: { color: colors.primary, fontSize: 13, fontWeight: '800' },
     signOutButton: {
       alignItems: 'center',
       borderColor: colors.border,
@@ -564,49 +455,22 @@ function createStyles(colors) {
       paddingHorizontal: 13,
       paddingVertical: 8,
     },
-    signOutText: {
-      color: colors.textMuted,
-      fontSize: 13,
-      fontWeight: '800',
-    },
-    pressedButton: {
-      opacity: 0.72,
-    },
-    myOrdersCard: {
+    signOutText: { color: colors.textMuted, fontSize: 13, fontWeight: '800' },
+    searchBar: {
       alignItems: 'center',
       backgroundColor: colors.surface,
       borderColor: colors.border,
-      borderRadius: 18,
+      borderRadius: 14,
       borderWidth: 1,
       flexDirection: 'row',
-      gap: 14,
-      justifyContent: 'space-between',
-      padding: 16,
+      gap: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
     },
-    myOrdersText: {
-      flex: 1,
-      gap: 4,
-    },
-    myOrdersTitle: {
-      color: colors.text,
-      fontSize: 17,
-      fontWeight: '800',
-    },
-    myOrdersMessage: {
-      color: colors.textMuted,
-      fontSize: 13,
-      lineHeight: 19,
-    },
-    myOrdersAction: {
-      color: colors.primary,
-      fontSize: 14,
-      fontWeight: '800',
-    },    locationCard: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: 12,
-      padding: 16,
-    },
+    searchIcon: { fontSize: 16 },
+    searchPlaceholder: { color: colors.textMuted, flex: 1, fontSize: 15 },
+    pressedButton: { opacity: 0.72 },
+    locationCard: { alignItems: 'center', flexDirection: 'row', gap: 12, padding: 16 },
     locationIcon: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
@@ -615,32 +479,12 @@ function createStyles(colors) {
       justifyContent: 'center',
       width: 44,
     },
-    locationIconText: {
-      color: colors.primary,
-      fontSize: 25,
-      fontWeight: '800',
-      marginTop: -1,
-    },
-    locationTextContainer: {
-      flex: 1,
-    },
-    locationTitle: {
-      color: colors.text,
-      fontSize: 15,
-      fontWeight: '800',
-    },
-    locationMessage: {
-      color: colors.textMuted,
-      fontSize: 13,
-      lineHeight: 18,
-      marginTop: 3,
-    },
-    locationMessageError: {
-      color: colors.danger,
-    },
-    locationMessageSuccess: {
-      color: colors.success,
-    },
+    locationIconText: { color: colors.primary, fontSize: 25, fontWeight: '800', marginTop: -1 },
+    locationTextContainer: { flex: 1 },
+    locationTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
+    locationMessage: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginTop: 3 },
+    locationMessageError: { color: colors.danger },
+    locationMessageSuccess: { color: colors.success },
     locationButton: {
       alignItems: 'center',
       backgroundColor: colors.primary,
@@ -651,35 +495,17 @@ function createStyles(colors) {
       paddingHorizontal: 12,
       paddingVertical: 9,
     },
-    locationButtonText: {
-      color: colors.onPrimary,
-      fontSize: 12,
-      fontWeight: '800',
-    },
-    disabledButton: {
-      opacity: 0.55,
-    },
+    locationButtonText: { color: colors.onPrimary, fontSize: 12, fontWeight: '800' },
+    disabledButton: { opacity: 0.55 },
     sectionHeader: {
       alignItems: 'center',
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginTop: 4,
     },
-    sectionText: {
-      flex: 1,
-      paddingRight: 12,
-    },
-    sectionTitle: {
-      color: colors.text,
-      fontSize: 22,
-      fontWeight: '800',
-      letterSpacing: -0.3,
-    },
-    sectionSubtitle: {
-      color: colors.textMuted,
-      fontSize: 13,
-      marginTop: 3,
-    },
+    sectionText: { flex: 1, paddingRight: 12 },
+    sectionTitle: { color: colors.text, fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
+    sectionSubtitle: { color: colors.textMuted, fontSize: 13, marginTop: 3 },
     refreshButton: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
@@ -689,16 +515,8 @@ function createStyles(colors) {
       paddingHorizontal: 12,
       paddingVertical: 8,
     },
-    refreshButtonText: {
-      color: colors.primary,
-      fontSize: 13,
-      fontWeight: '800',
-    },
-    categoryList: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-    },
+    refreshButtonText: { color: colors.primary, fontSize: 13, fontWeight: '800' },
+    categoryList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     categoryChip: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
@@ -707,29 +525,11 @@ function createStyles(colors) {
       paddingHorizontal: 14,
       paddingVertical: 9,
     },
-    categoryChipSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    categoryChipText: {
-      color: colors.textMuted,
-      fontSize: 14,
-      fontWeight: '700',
-    },
-    categoryChipTextSelected: {
-      color: colors.onPrimary,
-    },
-    restaurantCard: {
-      flexDirection: 'row',
-      gap: 14,
-      overflow: 'hidden',
-      padding: 14,
-    },
-    restaurantImage: {
-      borderRadius: 14,
-      height: 82,
-      width: 82,
-    },
+    categoryChipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+    categoryChipText: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
+    categoryChipTextSelected: { color: colors.onPrimary },
+    restaurantCard: { flexDirection: 'row', gap: 14, overflow: 'hidden', padding: 14 },
+    restaurantImage: { borderRadius: 14, height: 82, width: 82 },
     restaurantImagePlaceholder: {
       alignItems: 'center',
       backgroundColor: colors.primarySoft,
@@ -738,51 +538,19 @@ function createStyles(colors) {
       justifyContent: 'center',
       width: 82,
     },
-    restaurantImageInitial: {
-      color: colors.primary,
-      fontSize: 32,
-      fontWeight: '800',
-    },
-    restaurantContent: {
-      flex: 1,
-      gap: 5,
-      justifyContent: 'center',
-    },
-    restaurantTitleRow: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: 8,
-    },
-    restaurantName: {
-      color: colors.text,
-      flex: 1,
-      fontSize: 17,
-      fontWeight: '800',
-    },
+    restaurantImageInitial: { color: colors.primary, fontSize: 32, fontWeight: '800' },
+    restaurantContent: { flex: 1, gap: 5, justifyContent: 'center' },
+    restaurantTitleRow: { alignItems: 'center', flexDirection: 'row', gap: 8 },
+    restaurantName: { color: colors.text, flex: 1, fontSize: 17, fontWeight: '800' },
     cuisineBadge: {
       backgroundColor: colors.primarySoft,
       borderRadius: 999,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
-    cuisineBadgeText: {
-      color: colors.primary,
-      fontSize: 11,
-      fontWeight: '800',
-    },
-    restaurantDescription: {
-      color: colors.textMuted,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    restaurantAddress: {
-      color: colors.textMuted,
-      fontSize: 12,
-    },
-    restaurantDistance: {
-      color: colors.success,
-      fontSize: 12,
-      fontWeight: '800',
-    },
+    cuisineBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '800' },
+    restaurantDescription: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
+    restaurantAddress: { color: colors.textMuted, fontSize: 12 },
+    restaurantDistance: { color: colors.success, fontSize: 12, fontWeight: '800' },
   });
 }

@@ -3,6 +3,7 @@ import {
   createRestaurant,
   deleteRestaurant,
   getMyRestaurants,
+  getRestaurantStatistics,
   updateRestaurant
 } from '../api/restaurantApi.js';
 import {
@@ -23,6 +24,7 @@ import RestaurantForm from '../components/RestaurantForm.jsx';
 import ProductForm from '../components/ProductForm.jsx';
 import MenuCategoryManager from '../components/MenuCategoryManager.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
+import RestaurantSalesStatistics from '../components/RestaurantSalesStatistics.jsx';
 
 function getProductCount(restaurant) {
   const count = Number(restaurant?.productCount);
@@ -843,6 +845,20 @@ function RestaurantManagementPage() {
         </Modal>
       )}
 
+      {isStatisticsOpen && selectedRestaurant && (
+        <Modal
+          title={`${selectedRestaurant.name} Sales Statistics`}
+          onClose={() => setIsStatisticsOpen(false)}
+          size="large"
+        >
+          <RestaurantSalesStatistics
+            restaurantName={selectedRestaurant.name}
+            statistics={statistics}
+            isLoading={isStatisticsLoading}
+            error={statisticsError}
+          />
+        </Modal>
+      )}
       {isProductFormOpen && selectedRestaurant && (
         <Modal
           title={editingProduct ? 'Edit Menu Item' : 'Add Menu Item'}

@@ -1,19 +1,28 @@
-const orderRepository = require('../repositories/orderRepository');
+﻿const orderRepository = require('../repositories/orderRepository');
 const userRepository = require('../repositories/userRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const productRepository = require('../repositories/productRepository');
-
 
 async function resolveUser(userId) {
     return userRepository.findById(userId);
 }
 
+function normalizeQuantity(quantity) {
+    const value = Number(quantity);
+
+    if (!Number.isSafeInteger(value) || value <= 0) {
+        return null;
+    }
+
+    return value;
+}
+
 function isValidItem(item) {
-    if (!item) return false;
-    if (!item.productId) return false;
-    if (!item.quantity || Number(item.quantity) <= 0) return false;
-    if (item.price === undefined || item.price === null || Number(item.price) < 0) return false;
-    return true;
+    if (!item || !item.productId) {
+        return false;
+    }
+
+    return normalizeQuantity(item.quantity) !== null;
 }
 
 function requireUserId(req, res) {
@@ -34,18 +43,29 @@ async function createItemSnapshots(restaurantId, items) {
     const snapshots = [];
 
     for (const item of items) {
-        const product = await productRepository.findById(restaurantId, item.productId);
+        const product = await productRepository.findById(
+            restaurantId,
+            item.productId
+        );
 
-        if (!product) {
+        const quantity = normalizeQuantity(item.quantity);
+        const price = product ? Number(product.price) : NaN;
+
+        if (
+            !product ||
+            quantity === null ||
+            !Number.isFinite(price) ||
+            price < 0
+        ) {
             snapshots.push(null);
             continue;
         }
 
         snapshots.push({
-            productId: String(item.productId),
+            productId: String(product.id),
             productName: product.name || 'Menu item',
-            quantity: Number(item.quantity),
-            price: Number(item.price)
+            quantity,
+            price
         });
     }
 
@@ -66,16 +86,20 @@ async function createOrder(req, res) {
     }
 
     const restaurant = await restaurantRepository.findById(restaurantId);
-    if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+    if (!restaurant) {
+        return res.status(404).json({ error: 'Restaurant not found' });
+    }
 
     if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: 'items must be a non-empty array' });
+        return res.status(400).json({
+            error: 'items must be a non-empty array'
+        });
     }
 
     const invalidItem = items.find((item) => !isValidItem(item));
     if (invalidItem) {
         return res.status(400).json({
-            error: 'Each item must include productId, positive quantity, and non-negative price'
+            error: 'Each item must include productId and a positive whole-number quantity'
         });
     }
 
@@ -100,15 +124,13 @@ async function createOrder(req, res) {
         .json(order.toResponseObject());
 }
 
-
 async function getUserOrders(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
     const orders = await orderRepository.findByUserId(userId);
-    return res.status(200).json(orders.map((o) => o.toResponseObject()));
+    return res.status(200).json(orders.map((order) => order.toResponseObject()));
 }
-
 
 async function getOrderById(req, res) {
     const userId = requireUserId(req, res);
@@ -123,7 +145,6 @@ async function getOrderById(req, res) {
     return res.status(200).json(order.toResponseObject());
 }
 
-
 async function updateOrder(req, res) {
     const userId = requireUserId(req, res);
     if (!userId) return;
@@ -137,34 +158,49 @@ async function updateOrder(req, res) {
     const { status, items } = req.body || {};
 
     if (status === undefined && items === undefined) {
-        return res.status(400).json({ error: 'Nothing to update. Provide status and/or items' });
+        return res.status(400).json({
+            error: 'Nothing to update. Provide status and/or items'
+        });
     }
 
     const updates = {};
 
     if (status !== undefined) {
-        const ALLOWED_STATUSES = ['created', 'confirmed', 'preparing', 'delivered', 'cancelled'];
-        if (!ALLOWED_STATUSES.includes(status)) {
+        const allowedStatuses = [
+            'created',
+            'confirmed',
+            'preparing',
+            'delivered',
+            'cancelled'
+        ];
+
+        if (!allowedStatuses.includes(status)) {
             return res.status(400).json({
-                error: `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(', ')}`
+                error: `Invalid status. Allowed values: ${allowedStatuses.join(', ')}`
             });
         }
+
         updates.status = status;
     }
 
     if (items !== undefined) {
         if (!Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ error: 'items must be a non-empty array' });
+            return res.status(400).json({
+                error: 'items must be a non-empty array'
+            });
         }
 
         const invalidItem = items.find((item) => !isValidItem(item));
         if (invalidItem) {
             return res.status(400).json({
-                error: 'Each item must include productId, positive quantity, and non-negative price'
+                error: 'Each item must include productId and a positive whole-number quantity'
             });
         }
 
-        const itemSnapshots = await createItemSnapshots(order.restaurantId, items);
+        const itemSnapshots = await createItemSnapshots(
+            order.restaurantId,
+            items
+        );
 
         if (itemSnapshots.some((item) => item === null)) {
             return res.status(400).json({
@@ -173,7 +209,7 @@ async function updateOrder(req, res) {
         }
 
         updates.items = itemSnapshots;
-        updates.totalPrice = updates.items.reduce(
+        updates.totalPrice = itemSnapshots.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
         );
@@ -183,7 +219,6 @@ async function updateOrder(req, res) {
 
     return res.status(204).send();
 }
-
 
 async function deleteOrder(req, res) {
     const userId = requireUserId(req, res);

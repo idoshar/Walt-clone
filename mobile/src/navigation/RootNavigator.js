@@ -12,13 +12,14 @@ import { useAuth } from '../auth/AuthContext';
 import AdminScreen from '../screens/AdminScreen';
 import CartScreen from '../screens/CartScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
-import OrderDetailsScreen from '../screens/OrderDetailsScreen';
-import OrdersScreen from '../screens/OrdersScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
+import OrderDetailsScreen from '../screens/OrderDetailsScreen';
+import OrdersScreen from '../screens/OrdersScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
+import SearchScreen from '../screens/SearchScreen';
 import { createNavigationTheme } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -71,11 +72,15 @@ function AppNavigator({ screenOptions }) {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        component={SearchScreen}
+        name="Search"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         component={RestaurantDetailsScreen}
         name="RestaurantDetails"
         options={{ title: 'Restaurant' }}
       />
-
       <Stack.Screen
         component={CartScreen}
         name="Cart"
@@ -86,19 +91,16 @@ function AppNavigator({ screenOptions }) {
         name="Checkout"
         options={{ title: 'Checkout' }}
       />
-
       <Stack.Screen
         component={OrdersScreen}
         name="MyOrders"
         options={{ title: 'My orders' }}
       />
-
       <Stack.Screen
         component={OrderDetailsScreen}
         name="OrderDetails"
         options={{ title: 'Order details' }}
       />
-
       <Stack.Screen
         component={MyRestaurantsScreen}
         name="MyRestaurants"
@@ -126,19 +128,12 @@ export default function RootNavigator() {
 
   const screenOptions = useMemo(
     () => ({
-      contentStyle: {
-        backgroundColor: theme.colors.background,
-      },
+      contentStyle: { backgroundColor: theme.colors.background },
       headerBackTitle: 'Back',
       headerShadowVisible: false,
-      headerStyle: {
-        backgroundColor: theme.colors.surface,
-      },
+      headerStyle: { backgroundColor: theme.colors.surface },
       headerTintColor: theme.colors.text,
-      headerTitleStyle: {
-        color: theme.colors.text,
-        fontWeight: '800',
-      },
+      headerTitleStyle: { color: theme.colors.text, fontWeight: '800' },
     }),
     [theme]
   );
@@ -165,7 +160,5 @@ const styles = StyleSheet.create({
     gap: 16,
     justifyContent: 'center',
   },
-  loadingText: {
-    fontSize: 16,
-  },
+  loadingText: { fontSize: 16 },
 });

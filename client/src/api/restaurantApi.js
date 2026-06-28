@@ -1,4 +1,4 @@
-import { apiRequest } from './client.js';
+﻿import { apiRequest } from './client.js';
 
 export function getRestaurants() {
   return apiRequest('/restaurants');
@@ -10,6 +10,10 @@ export function getMyRestaurants() {
 
 export function getRestaurantById(id) {
   return apiRequest(`/restaurants/${id}`);
+}
+
+export function getRestaurantStatistics(id) {
+  return apiRequest(`/restaurants/${id}/statistics`);
 }
 
 export function createRestaurant(restaurant) {

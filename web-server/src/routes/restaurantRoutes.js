@@ -21,6 +21,12 @@ router.get(
     asyncHandler(restaurantController.getMyRestaurants)
 );
 
+router.get(
+    '/:id/statistics',
+    authMiddleware,
+    asyncHandler(restaurantStatisticsController.getRestaurantStatistics)
+);
+
 router.get('/', asyncHandler(restaurantController.getAllRestaurants));
 
 router.use('/:id/menu-categories', menuCategoryRoutes);
