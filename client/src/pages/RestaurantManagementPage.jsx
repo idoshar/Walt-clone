@@ -3,6 +3,7 @@ import {
   createRestaurant,
   deleteRestaurant,
   getMyRestaurants,
+  getRestaurantStatistics,
   updateRestaurant
 } from '../api/restaurantApi.js';
 import {
@@ -15,6 +16,7 @@ import Modal from '../components/Modal.jsx';
 import RestaurantForm from '../components/RestaurantForm.jsx';
 import ProductForm from '../components/ProductForm.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
+import RestaurantSalesStatistics from '../components/RestaurantSalesStatistics.jsx';
 
 function getProductCount(restaurant) {
   const count = Number(restaurant?.productCount);
@@ -52,6 +54,10 @@ function RestaurantManagementPage() {
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [isPostCreatePromptOpen, setIsPostCreatePromptOpen] = useState(false);
   const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
+  const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
+  const [statistics, setStatistics] = useState(null);
+  const [statisticsError, setStatisticsError] = useState('');
+  const [isStatisticsLoading, setIsStatisticsLoading] = useState(false);
 
   async function loadRestaurants() {
     const data = await getMyRestaurants();
@@ -227,6 +233,26 @@ function RestaurantManagementPage() {
     }
   }
 
+  async function openRestaurantStatistics() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    setIsRestaurantActionsOpen(false);
+    setIsStatisticsOpen(true);
+    setIsStatisticsLoading(true);
+    setStatistics(null);
+    setStatisticsError('');
+
+    try {
+      const data = await getRestaurantStatistics(selectedRestaurant.id);
+      setStatistics(data);
+    } catch (error) {
+      setStatisticsError(error.message);
+    } finally {
+      setIsStatisticsLoading(false);
+    }
+  }
   function openAddMenuItem() {
     setEditingProduct(null);
     setIsMenuOpen(false);
@@ -471,6 +497,17 @@ function RestaurantManagementPage() {
               <span>Manage Menu</span>
               <small>Add, edit, or delete the dishes available at this restaurant.</small>
             </button>
+            <button
+              type="button"
+              className="management-action-button management-analytics-action"
+              onClick={openRestaurantStatistics}
+            >
+              <span>View Sales Statistics</span>
+              <small>
+                Review orders, revenue, average order value, and your
+                best-selling dishes.
+              </small>
+            </button>
           </div>
 
           <button
@@ -560,6 +597,20 @@ function RestaurantManagementPage() {
         </Modal>
       )}
 
+      {isStatisticsOpen && selectedRestaurant && (
+        <Modal
+          title={`${selectedRestaurant.name} Sales Statistics`}
+          onClose={() => setIsStatisticsOpen(false)}
+          size="large"
+        >
+          <RestaurantSalesStatistics
+            restaurantName={selectedRestaurant.name}
+            statistics={statistics}
+            isLoading={isStatisticsLoading}
+            error={statisticsError}
+          />
+        </Modal>
+      )}
       {isProductFormOpen && selectedRestaurant && (
         <Modal
           title={editingProduct ? 'Edit Menu Item' : 'Add Menu Item'}
