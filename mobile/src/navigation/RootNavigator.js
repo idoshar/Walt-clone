@@ -118,6 +118,8 @@ function AppNavigator({ screenOptions }) {
         component={ProductFormScreen}
         name="ProductForm"
         options={{ title: 'Product' }}
+      />
+      <Stack.Screen
         component={RestaurantFormScreen}
         name="RestaurantForm"
         options={{ title: 'Restaurant' }}
