@@ -1,127 +1,152 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  Pressable,
+  SafeAreaView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 
 import { getMyRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
-import ThemeToggle from '../components/ThemeToggle'; 
 import { useAppTheme } from '../theme/ThemeContext';
 
 export default function MyRestaurantsScreen({ navigation }) {
   const { token } = useAuth();
-  
-  // שליפת ה-Theme עם הגנה מפני ערכי undefined
-  const themeContext = useAppTheme();
-  const theme = themeContext?.theme || { colors: {}, mode: 'light' };
-  
-  // בדיקה בטרמינל שהתמה אכן מתחלפת
-  useEffect(() => {
-    console.log('MyRestaurants Theme Mode:', theme.mode);
-  }, [theme.mode]);
-
-  const styles = createStyles(theme.colors, theme.mode);
+  const { theme } = useAppTheme();
+  const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
   const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loadState, setLoadState] = useState('loading');
+  const [loadError, setLoadError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  async function loadRestaurants() {
-    try {
-      setLoading(true);
-      setError('');
+  const loadRestaurants = useCallback(
+    async ({ refreshing = false } = {}) => {
+      if (refreshing) {
+        setIsRefreshing(true);
+      } else {
+        setLoadState('loading');
+        setLoadError('');
+      }
 
-      const data = await getMyRestaurants(token);
-      setRestaurants(Array.isArray(data) ? data : []);
-    } catch (err) {
-      setError(err.message || 'Failed to load restaurants');
-    } finally {
-      setLoading(false);
-    }
-  }
+      try {
+        const data = await getMyRestaurants(token);
+        setRestaurants(Array.isArray(data) ? data : []);
+        setLoadState('success');
+      } catch (err) {
+        setLoadState('error');
+        setLoadError(err.message || 'Failed to load your restaurants.');
+      } finally {
+        setIsRefreshing(false);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
     loadRestaurants();
-  }, []);
+  }, [loadRestaurants]);
 
-  if (loading) {
+  // Refresh the list whenever we come back from the form screen
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadRestaurants({ refreshing: true });
+    });
+    return unsubscribe;
+  }, [navigation, loadRestaurants]);
+
+  const isLoading = loadState === 'loading';
+  const isError = loadState === 'error';
+  const isEmpty = loadState === 'success' && restaurants.length === 0;
+
+  // ── Loading ──
+  if (isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={theme.colors?.primary || '#009de0'} />
+      <SafeAreaView style={styles.center}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.helperText}>Loading your restaurants...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
-  if (error) {
+  // ── Error ──
+  if (isError) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Could not load restaurants</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={loadRestaurants}>
-          <Text style={styles.primaryButtonText}>Try again</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (restaurants.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Text style={styles.title}>No restaurants yet</Text>
-        <Text style={styles.helperText}>
-          Restaurants you create will appear here.
-        </Text>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => navigation.navigate('CreateRestaurant')}
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.stateEmoji}>⚠️</Text>
+        <Text style={styles.stateTitle}>Could not load restaurants</Text>
+        <Text style={styles.errorText}>{loadError}</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            pressed ? styles.pressed : null,
+          ]}
+          onPress={() => loadRestaurants()}
         >
-          <Text style={styles.primaryButtonText}>Create restaurant</Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.primaryButtonText}>Try again</Text>
+        </Pressable>
+      </SafeAreaView>
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.screenTitle}>My Restaurants</Text>
+  // ── Empty ──
+  if (isEmpty) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.stateEmoji}>🍽️</Text>
+        <Text style={styles.stateTitle}>No restaurants yet</Text>
+        <Text style={styles.helperText}>
+          Create your first restaurant to get started.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            pressed ? styles.pressed : null,
+          ]}
+          onPress={() => navigation.navigate('RestaurantForm')}
+        >
+          <Text style={styles.primaryButtonText}>+ Create restaurant</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
-        <View style={styles.headerActions}>
-          <ThemeToggle compact /> 
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate('CreateRestaurant')}
-          >
-            <Text style={styles.addButtonText}>+ Add</Text>
-          </TouchableOpacity>
+  // ── List ──
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.screenTitle}>My Restaurants</Text>
+          <Text style={styles.screenSubtitle}>
+            {restaurants.length} restaurant{restaurants.length === 1 ? '' : 's'}
+          </Text>
         </View>
+
+        <Pressable
+          style={({ pressed }) => [
+            styles.addButton,
+            pressed ? styles.pressed : null,
+          ]}
+          onPress={() => navigation.navigate('RestaurantForm')}
+        >
+          <Text style={styles.addButtonText}>+ Add</Text>
+        </Pressable>
       </View>
 
       <FlatList
         data={restaurants}
         keyExtractor={(item) => String(item.id)}
-        refreshing={loading}
-        onRefresh={loadRestaurants}
+        refreshing={isRefreshing}
+        onRefresh={() => loadRestaurants({ refreshing: true })}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.85}
-            onPress={() =>
-              navigation.navigate('RestaurantProducts', {
-                restaurantId: item.id,
-                restaurantName: item.name,
-              })
-            }
-          >
+          <View style={styles.card}>
+            {/* Image */}
             {item.image ? (
               <Image
                 source={{ uri: item.image }}
@@ -130,13 +155,16 @@ export default function MyRestaurantsScreen({ navigation }) {
               />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Text style={styles.imagePlaceholderText}>No image</Text>
+                <Text style={styles.imagePlaceholderInitial}>
+                  {item.name?.charAt(0)?.toUpperCase() || 'R'}
+                </Text>
               </View>
             )}
 
+            {/* Content */}
             <View style={styles.cardContent}>
               <View style={styles.cardTopRow}>
-                <Text style={styles.restaurantName} numberOfLines={1}>
+                <Text numberOfLines={1} style={styles.restaurantName}>
                   {item.name}
                 </Text>
 
@@ -147,170 +175,184 @@ export default function MyRestaurantsScreen({ navigation }) {
                 </View>
               </View>
 
-              <Text style={styles.metaText} numberOfLines={1}>
-                {item.cuisine || 'No cuisine'}
-              </Text>
+              {item.cuisine ? (
+                <Text style={styles.metaText}>{item.cuisine}</Text>
+              ) : null}
 
-              <Text style={styles.addressText} numberOfLines={1}>
-                {item.address || 'No address'}
-              </Text>
+              {item.address ? (
+                <Text numberOfLines={1} style={styles.addressText}>
+                  {item.address}
+                </Text>
+              ) : null}
+
+              {/* Ownership badge */}
+              <View style={styles.ownerBadge}>
+                <Text style={styles.ownerBadgeText}>👤 You own this</Text>
+              </View>
+
+              {/* Actions */}
+              <View style={styles.cardActions}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.editButton,
+                    pressed ? styles.pressed : null,
+                  ]}
+                  onPress={() =>
+                    navigation.navigate('RestaurantForm', { restaurant: item })
+                  }
+                >
+                  <Text style={styles.editButtonText}>Edit</Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.productsButton,
+                    pressed ? styles.pressed : null,
+                  ]}
+                  onPress={() =>
+                    navigation.navigate('RestaurantProducts', {
+                      restaurantId: item.id,
+                      restaurantName: item.name,
+                    })
+                  }
+                >
+                  <Text style={styles.productsButtonText}>Manage products</Text>
+                </Pressable>
+              </View>
             </View>
-          </TouchableOpacity>
+          </View>
         )}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
-// פונקציית עיצוב דינמית וחסינת קריסות (Fallback)
-function createStyles(colors = {}, mode) {
-  const isDark = mode === 'dark';
-
-  // צבעי מגן למקרה שההקשר לא החזיר ערכים
-  const bgColor = colors.background || (isDark ? '#121212' : '#f7f8fa');
-  const cardColor = colors.surface || (isDark ? '#1e1e1e' : '#ffffff');
-  const textColor = colors.text || (isDark ? '#ffffff' : '#111827');
-  const textMutedColor = colors.textMuted || (isDark ? '#9ca3af' : '#5f6b7a');
-  const primaryColor = colors.primary || '#009de0';
-  const onPrimaryColor = colors.onPrimary || '#ffffff';
-  const primarySoftColor = colors.primarySoft || (isDark ? '#153243' : '#e6f6fd');
-  const borderColor = colors.border || (isDark ? '#374151' : '#e5e7eb');
-
+function createStyles(colors) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      backgroundColor: bgColor,
-    },
-    listContent: {
-      paddingBottom: 24,
-    },
+    container: { backgroundColor: colors.background, flex: 1 },
     center: {
+      alignItems: 'center',
+      backgroundColor: colors.background,
       flex: 1,
-      padding: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: bgColor,
-    },
-    headerRow: {
-      marginBottom: 18,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
       gap: 12,
+      justifyContent: 'center',
+      padding: 24,
     },
-    screenTitle: {
-      fontSize: 28,
+    stateEmoji: { fontSize: 48 },
+    stateTitle: {
+      color: colors.text,
+      fontSize: 22,
       fontWeight: '800',
-      color: textColor,
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: '800',
-      marginBottom: 8,
       textAlign: 'center',
-      color: textColor,
     },
     helperText: {
-      marginTop: 8,
-      color: textMutedColor,
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
       textAlign: 'center',
     },
     errorText: {
       color: colors.danger || '#b00020',
+      fontSize: 14,
       textAlign: 'center',
-      marginVertical: 12,
     },
     primaryButton: {
-      marginTop: 18,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 12,
-      backgroundColor: primaryColor,
-    },
-    primaryButtonText: {
-      color: onPrimaryColor,
-      fontWeight: '700',
-    },
-    addButton: {
-      paddingVertical: 9,
-      paddingHorizontal: 15,
+      alignItems: 'center',
+      backgroundColor: colors.primary,
       borderRadius: 14,
-      backgroundColor: primaryColor,
+      marginTop: 8,
+      paddingHorizontal: 24,
+      paddingVertical: 13,
     },
-    addButtonText: {
-      color: onPrimaryColor,
+    primaryButtonText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+    headerRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    screenTitle: { color: colors.text, fontSize: 26, fontWeight: '800' },
+    screenSubtitle: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+    addButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    addButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+    listContent: { gap: 16, padding: 16 },
+    card: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 20,
+      borderWidth: 1,
+      overflow: 'hidden',
+    },
+    restaurantImage: { height: 160, width: '100%' },
+    imagePlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      height: 160,
+      justifyContent: 'center',
+      width: '100%',
+    },
+    imagePlaceholderInitial: {
+      color: colors.primary,
+      fontSize: 56,
       fontWeight: '800',
     },
-    card: {
-      marginBottom: 16,
-      borderRadius: 20,
-      backgroundColor: cardColor,
-      overflow: 'hidden',
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOpacity: isDark ? 0.3 : 0.08,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 4 },
-      borderColor: borderColor,
-      borderWidth: isDark ? 1 : 0,
-    },
-    restaurantImage: {
-      width: '100%',
-      height: 190,
-      backgroundColor: borderColor,
-    },
-    imagePlaceholder: {
-      width: '100%',
-      height: 190,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: primarySoftColor,
-    },
-    imagePlaceholderText: {
-      color: primaryColor,
-      fontWeight: '700',
-    },
-    cardContent: {
-      padding: 16,
-    },
+    cardContent: { gap: 6, padding: 16 },
     cardTopRow: {
-      marginBottom: 6,
-      flexDirection: 'row',
       alignItems: 'center',
+      flexDirection: 'row',
       justifyContent: 'space-between',
     },
     restaurantName: {
+      color: colors.text,
       flex: 1,
       fontSize: 20,
       fontWeight: '800',
-      color: textColor,
       marginRight: 10,
     },
     countBadge: {
-      paddingVertical: 5,
-      paddingHorizontal: 10,
+      backgroundColor: colors.primarySoft,
       borderRadius: 999,
-      backgroundColor: primarySoftColor,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
     },
-    countBadgeText: {
-      color: primaryColor,
-      fontSize: 13,
-      fontWeight: '800',
+    countBadgeText: { color: colors.primary, fontSize: 12, fontWeight: '800' },
+    metaText: { color: colors.textMuted, fontSize: 14 },
+    addressText: { color: colors.textMuted, fontSize: 13 },
+    ownerBadge: {
+      alignSelf: 'flex-start',
+      backgroundColor: colors.primarySoft,
+      borderRadius: 8,
+      marginTop: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
     },
-    metaText: {
-      color: textMutedColor,
-      marginBottom: 5,
-      fontSize: 15,
+    ownerBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+    cardActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+    editButton: {
+      alignItems: 'center',
+      borderColor: colors.primary,
+      borderRadius: 10,
+      borderWidth: 1,
+      flex: 1,
+      paddingVertical: 10,
     },
-    addressText: {
-      color: textMutedColor,
-      fontSize: 14,
+    editButtonText: { color: colors.primary, fontSize: 14, fontWeight: '800' },
+    productsButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      flex: 2,
+      paddingVertical: 10,
     },
+    productsButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+    pressed: { opacity: 0.72 },
   });
 }

@@ -19,6 +19,7 @@ import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RestaurantDetailsScreen from '../screens/RestaurantDetailsScreen';
+import RestaurantFormScreen from '../screens/RestaurantFormScreen';
 import SearchScreen from '../screens/SearchScreen';
 import { createNavigationTheme } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -105,6 +106,11 @@ function AppNavigator({ screenOptions }) {
         component={MyRestaurantsScreen}
         name="MyRestaurants"
         options={{ title: 'My Restaurants' }}
+      />
+      <Stack.Screen
+        component={RestaurantFormScreen}
+        name="RestaurantForm"
+        options={{ title: 'Restaurant' }}
       />
       {isAdmin ? (
         <Stack.Screen
