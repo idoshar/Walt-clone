@@ -9,7 +9,8 @@ const {
     badRequest,
     notFound
 } = require('../utilities/responseHelper');
-const { validateObject } = require('../utilities/validationHelper');
+const { validateObject } =
+    require('../utilities/validationHelper');
 
 function normalizeCategoryName(value) {
     if (typeof value !== 'string') {
@@ -25,6 +26,39 @@ function normalizeMenuType(value) {
     }
 
     return value.trim().toLowerCase();
+}
+
+function normalizeOrderedCategoryIds(categoryIds) {
+    if (!Array.isArray(categoryIds)) {
+        return {
+            error: 'categoryIds must be an array'
+        };
+    }
+
+    const normalizedCategoryIds = categoryIds.map((categoryId) =>
+        typeof categoryId === 'string'
+            ? categoryId.trim()
+            : ''
+    );
+
+    if (normalizedCategoryIds.some((categoryId) => !categoryId)) {
+        return {
+            error: 'categoryIds must contain only non-empty strings'
+        };
+    }
+
+    if (
+        new Set(normalizedCategoryIds).size !==
+        normalizedCategoryIds.length
+    ) {
+        return {
+            error: 'categoryIds must not contain duplicates'
+        };
+    }
+
+    return {
+        value: normalizedCategoryIds
+    };
 }
 
 async function findRestaurant(req, res) {
@@ -60,6 +94,7 @@ async function requireManagedRestaurant(req, res) {
             error: 'Forbidden',
             message: 'You can manage only your own restaurants'
         });
+
         return null;
     }
 
@@ -113,7 +148,7 @@ async function createMenuCategory(req, res) {
     if (existingCategory) {
         return badRequest(
             res,
-            'A category with this name already exists for this restaurant'
+            'A category with this name already exists in this restaurant'
         );
     }
 
@@ -123,7 +158,10 @@ async function createMenuCategory(req, res) {
             restaurantId: req.params.id,
             name,
             normalizedName,
-            menuType
+            menuType,
+            sortOrder: menuCategoryRepository.getDefaultSortOrder(
+                menuType
+            )
         });
 
         return res
@@ -136,7 +174,7 @@ async function createMenuCategory(req, res) {
         if (error?.code === 11000) {
             return badRequest(
                 res,
-                'A category with this name already exists for this restaurant'
+                'A category with this name already exists in this restaurant'
             );
         }
 
@@ -144,7 +182,63 @@ async function createMenuCategory(req, res) {
     }
 }
 
+async function updateMenuCategoryOrder(req, res) {
+    if (!(await requireManagedRestaurant(req, res))) {
+        return;
+    }
+
+    const bodyError = validateObject(req.body);
+
+    if (bodyError) {
+        return badRequest(res, bodyError);
+    }
+
+    const orderInput = normalizeOrderedCategoryIds(req.body.categoryIds);
+
+    if (orderInput.error) {
+        return badRequest(res, orderInput.error);
+    }
+
+    const currentCategories =
+        await menuCategoryRepository.findAllByRestaurant(req.params.id);
+
+    if (currentCategories.length === 0) {
+        return badRequest(res, 'This restaurant has no categories to reorder');
+    }
+
+    if (orderInput.value.length !== currentCategories.length) {
+        return badRequest(
+            res,
+            'categoryIds must include every category in this restaurant exactly once'
+        );
+    }
+
+    const currentCategoryIds = new Set(
+        currentCategories.map((category) => String(category.id))
+    );
+
+    const containsUnknownCategory = orderInput.value.some(
+        (categoryId) => !currentCategoryIds.has(String(categoryId))
+    );
+
+    if (containsUnknownCategory) {
+        return badRequest(
+            res,
+            'categoryIds must include only categories from this restaurant'
+        );
+    }
+
+    const updatedCategories =
+        await menuCategoryRepository.updateOrder(
+            req.params.id,
+            orderInput.value
+        );
+
+    return ok(res, updatedCategories);
+}
+
 module.exports = {
     getAllMenuCategories,
-    createMenuCategory
+    createMenuCategory,
+    updateMenuCategoryOrder
 };
