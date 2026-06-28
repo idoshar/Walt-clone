@@ -30,6 +30,7 @@ function toResponseObject(product) {
         name: product.name,
         price: product.price,
         description: product.description,
+        categoryId: product.categoryId || '',
         category: product.category,
         image: product.image,
         recommendationId: product.recommendationId
@@ -111,6 +112,7 @@ async function save(restaurantId, product) {
         name: product.name,
         price: product.price,
         description: product.description || '',
+        categoryId: product.categoryId || '',
         category: product.category || '',
         image: product.image || '',
         recommendationId

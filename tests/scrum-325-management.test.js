@@ -92,7 +92,7 @@ async function createRestaurant(token, name) {
   return data.id;
 }
 
-async function createProduct(token, restaurantId, name) {
+async function createProduct(token, restaurantId, name, categoryId) {
   const { response } = await request(`/api/restaurants/${restaurantId}/products`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
@@ -100,7 +100,7 @@ async function createProduct(token, restaurantId, name) {
       name,
       price: 42,
       description: 'Test product',
-      category: 'Test',
+      categoryId,
       image: 'https://example.com/product.jpg'
     })
   });
@@ -178,6 +178,27 @@ async function main() {
     expect(directRestaurant.response.status === 404, 'draft should not be reachable on the public restaurant page');
   });
 
+  await scenario('owner can create a menu category for the restaurant', async () => {
+    const { response, data } = await request(
+      `/api/restaurants/${restaurantId}/menu-categories`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ownerToken}` },
+        body: JSON.stringify({
+          name: 'Test',
+          menuType: 'main'
+        })
+      }
+    );
+
+    expect(
+      response.status === 201,
+      `create category expected 201, got ${response.status}`
+    );
+    expect(data?.id, 'created category response is missing an id');
+
+    categoryId = data.id;
+  });
   await scenario('owner can update own restaurant', async () => {
     const { response } = await request(`/api/restaurants/${restaurantId}`, {
       method: 'PATCH',
@@ -229,7 +250,12 @@ async function main() {
   });
 
   await scenario('create product publishes the restaurant', async () => {
-    productId = await createProduct(ownerToken, restaurantId, `My Test Product ${Date.now()}`);
+    productId = await createProduct(
+      ownerToken,
+      restaurantId,
+      `My Test Product ${Date.now()}`,
+      categoryId
+    );
 
     const publicRestaurants = await request('/api/restaurants');
     expect(
@@ -249,6 +275,8 @@ async function main() {
     const product = data.find((currentProduct) => String(currentProduct.id) === String(productId));
     expect(product, 'created product not found');
     expect(product.image === 'https://example.com/product.jpg', 'product image was not saved');
+    expect(String(product.categoryId) === String(categoryId), 'product category id was not saved');
+    expect(product.category === 'Test', 'product category name was not derived from the menu category');
   });
 
   await scenario('other user cannot update or delete owner menu items', async () => {

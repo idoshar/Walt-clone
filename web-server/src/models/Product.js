@@ -26,6 +26,12 @@ const productSchema = new mongoose.Schema(
             default: '',
             trim: true
         },
+        categoryId: {
+            type: String,
+            default: '',
+            trim: true,
+            index: true
+        },
         category: {
             type: String,
             default: '',
@@ -50,6 +56,7 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index({ restaurantId: 1, id: 1 }, { unique: true });
+productSchema.index({ restaurantId: 1, categoryId: 1 });
 productSchema.index({ name: 'text', description: 'text' });
 
 productSchema.methods.toResponseObject = function toResponseObject() {
@@ -59,6 +66,7 @@ productSchema.methods.toResponseObject = function toResponseObject() {
         name: this.name,
         price: this.price,
         description: this.description,
+        categoryId: this.categoryId,
         category: this.category,
         image: this.image,
         recommendationId: this.recommendationId

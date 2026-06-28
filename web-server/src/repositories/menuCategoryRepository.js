@@ -31,6 +31,15 @@ async function findAllByRestaurant(restaurantId) {
     return categories.map(toResponseObject);
 }
 
+async function findById(restaurantId, categoryId) {
+    const category = await MenuCategory.findOne({
+        restaurantId: normalizeRestaurantId(restaurantId),
+        id: normalizeCategoryId(categoryId)
+    }).lean();
+
+    return toResponseObject(category);
+}
+
 async function findByNormalizedName(restaurantId, normalizedName) {
     const category = await MenuCategory.findOne({
         restaurantId: normalizeRestaurantId(restaurantId),
@@ -60,6 +69,7 @@ async function removeAllByRestaurant(restaurantId) {
 
 module.exports = {
     findAllByRestaurant,
+    findById,
     findByNormalizedName,
     save,
     removeAllByRestaurant
