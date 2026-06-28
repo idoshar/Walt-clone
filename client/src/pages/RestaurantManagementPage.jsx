@@ -11,6 +11,10 @@ import {
   getProducts,
   updateProduct
 } from '../api/productApi.js';
+import {
+  createMenuCategory,
+  getMenuCategories
+} from '../api/menuCategoryApi.js';
 import Modal from '../components/Modal.jsx';
 import RestaurantForm from '../components/RestaurantForm.jsx';
 import ProductForm from '../components/ProductForm.jsx';
@@ -52,6 +56,9 @@ function RestaurantManagementPage() {
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [isPostCreatePromptOpen, setIsPostCreatePromptOpen] = useState(false);
   const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
+  const [menuCategories, setMenuCategories] = useState([]);
+  const [isMenuCategoriesLoading, setIsMenuCategoriesLoading] = useState(false);
+  const [isMenuCategoryCreating, setIsMenuCategoryCreating] = useState(false);
 
   async function loadRestaurants() {
     const data = await getMyRestaurants();
@@ -80,6 +87,19 @@ function RestaurantManagementPage() {
     return restaurantProducts;
   }
 
+  async function loadMenuCategories(restaurantId) {
+    setIsMenuCategoriesLoading(true);
+
+    try {
+      const data = await getMenuCategories(restaurantId);
+      const restaurantCategories = Array.isArray(data) ? data : [];
+      setMenuCategories(restaurantCategories);
+      return restaurantCategories;
+    } finally {
+      setIsMenuCategoriesLoading(false);
+    }
+  }
+
   useEffect(() => {
     loadRestaurants().catch((error) => setMessage(error.message));
   }, []);
@@ -97,6 +117,7 @@ function RestaurantManagementPage() {
       setSelectedRestaurant(savedRestaurant);
       setRestaurantSearchQuery('');
       setProducts([]);
+      setMenuCategories([]);
       setIsCreateRestaurantOpen(false);
       setIsPostCreatePromptOpen(true);
       setMessage('Restaurant created successfully.');
@@ -157,6 +178,44 @@ function RestaurantManagementPage() {
     }
   }
 
+  async function handleCreateMenuCategory(categoryInput) {
+    if (!selectedRestaurant) {
+      throw new Error('Select a restaurant before creating a category');
+    }
+
+    setIsMenuCategoryCreating(true);
+
+    try {
+      const createdCategory = await createMenuCategory(
+        selectedRestaurant.id,
+        categoryInput
+      );
+
+      setMenuCategories((currentCategories) =>
+        [...currentCategories, createdCategory].sort(
+          (firstCategory, secondCategory) =>
+            String(firstCategory.menuType).localeCompare(
+              String(secondCategory.menuType)
+            ) ||
+            String(firstCategory.name).localeCompare(
+              String(secondCategory.name)
+            )
+        )
+      );
+
+      setMessage(
+        'Category "' + createdCategory.name + '" created successfully.'
+      );
+
+      return createdCategory;
+    } catch (error) {
+      setMessage(error.message);
+      throw error;
+    } finally {
+      setIsMenuCategoryCreating(false);
+    }
+  }
+
   async function handleDeleteRestaurant() {
     if (!selectedRestaurant) {
       return;
@@ -174,6 +233,7 @@ function RestaurantManagementPage() {
       await deleteRestaurant(selectedRestaurant.id);
       setSelectedRestaurant(null);
       setProducts([]);
+      setMenuCategories([]);
       setIsRestaurantActionsOpen(false);
       setIsRestaurantDetailsOpen(false);
       setIsMenuOpen(false);
@@ -227,16 +287,34 @@ function RestaurantManagementPage() {
     }
   }
 
-  function openAddMenuItem() {
-    setEditingProduct(null);
-    setIsMenuOpen(false);
-    setIsProductFormOpen(true);
+  async function openAddMenuItem() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setEditingProduct(null);
+      setIsMenuOpen(false);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
   }
 
-  function openEditMenuItem(product) {
-    setEditingProduct(product);
-    setIsMenuOpen(false);
-    setIsProductFormOpen(true);
+  async function openEditMenuItem(product) {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setEditingProduct(product);
+      setIsMenuOpen(false);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
   }
 
   function closeProductForm() {
@@ -244,10 +322,19 @@ function RestaurantManagementPage() {
     setIsProductFormOpen(false);
   }
 
-  function handleCreateMenuItemsNow() {
-    setIsPostCreatePromptOpen(false);
-    setEditingProduct(null);
-    setIsProductFormOpen(true);
+  async function handleCreateMenuItemsNow() {
+    if (!selectedRestaurant) {
+      return;
+    }
+
+    try {
+      await loadMenuCategories(selectedRestaurant.id);
+      setIsPostCreatePromptOpen(false);
+      setEditingProduct(null);
+      setIsProductFormOpen(true);
+    } catch (error) {
+      setMessage(error.message);
+    }
   }
 
   const normalizedRestaurantSearchQuery = restaurantSearchQuery.trim().toLowerCase();
@@ -534,6 +621,11 @@ function RestaurantManagementPage() {
                 <article key={product.id} className="management-menu-item">
                   <div>
                     <h3>{product.name}</h3>
+                    {product.category && (
+                      <span className="management-menu-category">
+                        {product.category}
+                      </span>
+                    )}
                     {product.description && <p>{product.description}</p>}
                     <strong>₪{product.price}</strong>
                   </div>
@@ -568,6 +660,10 @@ function RestaurantManagementPage() {
           <ProductForm
             key={editingProduct ? `product-${editingProduct.id}` : 'new-product'}
             initialProduct={editingProduct}
+            categories={menuCategories}
+            isCategoriesLoading={isMenuCategoriesLoading}
+            isCreatingCategory={isMenuCategoryCreating}
+            onCreateCategory={handleCreateMenuCategory}
             onSubmit={handleSaveProduct}
           />
         </Modal>

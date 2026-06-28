@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   font-family: Arial, Helvetica, sans-serif;
 
   --color-bg: #f8f9fa;
@@ -3064,5 +3064,168 @@ body.dark .product-card {
 
   .header-search-button {
     min-width: 68px;
+  }
+}
+
+/* SCRUM-445 menu category selector */
+.product-form {
+  display: grid;
+  gap: 16px;
+}
+
+.product-form-field {
+  display: grid;
+  gap: 7px;
+}
+
+.product-form-field > label,
+.product-form-category-heading > label {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.product-form input,
+.product-form select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.product-form input:focus,
+.product-form select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  border-color: var(--color-primary);
+}
+
+.product-form-control-error {
+  border-color: var(--color-danger) !important;
+}
+
+.product-form-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.product-form-category-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.product-form-inline-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.product-form-category-empty,
+.product-form-inline-category > p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.product-form-inline-category {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+}
+
+.product-form-inline-category-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.7fr);
+  gap: 12px;
+}
+
+.product-form-submit {
+  justify-self: start;
+}
+
+.management-menu-category {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 4px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .product-form-category-heading,
+  .product-form-inline-category-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .product-form-submit,
+  .product-form-inline-category button {
+    width: 100%;
+  }
+}
+
+/* SCRUM-445 empty category state refinement */
+.product-form-category-loading {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.product-form-category-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+}
+
+.product-form-category-empty-state p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.product-form-create-category-button {
+  flex: 0 0 auto;
+  min-width: 176px;
+}
+
+@media (max-width: 640px) {
+  .product-form-category-empty-state {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .product-form-create-category-button {
+    width: 100%;
   }
 }
