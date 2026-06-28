@@ -1,7 +1,8 @@
 const responseHelper = require('../utilities/responseHelper');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const productRepository = require('../repositories/productRepository');
-const Restaurant = require('../models/Restaurant');
+const menuCategoryRepository =
+    require('../repositories/menuCategoryRepository');const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
 const {
     validateObject,
@@ -248,7 +249,10 @@ class RestaurantController {
                 });
             }
 
-            await productRepository.removeAllByRestaurant(req.params.id);
+            await Promise.all([
+                productRepository.removeAllByRestaurant(req.params.id),
+                menuCategoryRepository.removeAllByRestaurant(req.params.id)
+            ]);
             await restaurantRepository.deleteById(req.params.id);
 
             return responseHelper.noContent(res);

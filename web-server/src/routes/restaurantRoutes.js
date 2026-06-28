@@ -1,7 +1,9 @@
-﻿const express = require('express');
+const express = require('express');
 
-const restaurantController = require('../controllers/restaurantController');
+const restaurantController =
+    require('../controllers/restaurantController');
 const productRoutes = require('./productRoutes');
+const menuCategoryRoutes = require('./menuCategoryRoutes');
 const authMiddleware = require('../middleware/authMiddleware');
 const asyncHandler = require('../middleware/asyncHandler');
 
@@ -21,6 +23,9 @@ router.get(
 
 router.get('/', asyncHandler(restaurantController.getAllRestaurants));
 
+router.use('/:id/menu-categories', menuCategoryRoutes);
+router.use('/:id/products', productRoutes);
+
 router.get(
     '/:id',
     asyncHandler(restaurantController.getRestaurantById)
@@ -37,7 +42,5 @@ router.delete(
     authMiddleware,
     asyncHandler(restaurantController.deleteRestaurant)
 );
-
-router.use('/:id/products', productRoutes);
 
 module.exports = router;
