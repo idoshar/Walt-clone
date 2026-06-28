@@ -138,6 +138,11 @@ const orderSchema = new mongoose.Schema(
             default: '',
             trim: true
         },
+        restaurantImage: {
+            type: String,
+            default: '',
+            trim: true
+        },
         items: {
             type: [orderItemSchema],
             required: true,
@@ -176,6 +181,7 @@ orderSchema.methods.toResponseObject = function toResponseObject() {
         userId: this.userId,
         restaurantId: this.restaurantId,
         restaurantName: this.restaurantName,
+        restaurantImage: this.restaurantImage || '',
         items: this.items,
         deliveryDetails: toDeliveryDetailsResponse(
             this.deliveryDetails

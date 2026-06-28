@@ -6,6 +6,7 @@ class OrderRepository {
         userId,
         restaurantId,
         restaurantName,
+        restaurantImage,
         items,
         deliveryDetails
     }) {
@@ -19,6 +20,7 @@ class OrderRepository {
             userId: String(userId),
             restaurantId: String(restaurantId),
             restaurantName,
+            restaurantImage,
             items,
             deliveryDetails,
             totalPrice,
@@ -158,6 +160,7 @@ class OrderRepository {
             userId: _uid,
             restaurantId: _rid,
             restaurantName: _restaurantName,
+            restaurantImage: _restaurantImage,
             deliveryDetails: _deliveryDetails,
             createdAt: _ca,
             ...safeUpdates

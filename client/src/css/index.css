@@ -4168,3 +4168,125 @@ body.dark .checkout-field input[type='number'] {
     width: 100%;
   }
 }
+
+
+/* SCRUM-440 delivery details and restaurant image in order history */
+.order-history-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+}
+
+.order-history-restaurant-media {
+  flex: 0 0 auto;
+}
+
+.order-history-restaurant-image,
+.order-history-restaurant-fallback {
+  width: 68px;
+  height: 68px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.order-history-restaurant-image {
+  display: block;
+  object-fit: cover;
+  background: var(--color-surface-muted);
+}
+
+.order-history-restaurant-fallback {
+  display: grid;
+  place-items: center;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.order-history-restaurant-summary {
+  min-width: 0;
+}
+
+.order-history-restaurant-summary h3 {
+  overflow: hidden;
+  margin: 3px 0 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-history-delivery {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.order-history-delivery h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.order-history-delivery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  margin: 0;
+}
+
+.order-history-delivery-grid > div {
+  min-width: 0;
+}
+
+.order-history-delivery-grid-wide {
+  grid-column: 1 / -1;
+}
+
+.order-history-delivery-grid dt {
+  margin: 0 0 4px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.order-history-delivery-grid dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.order-history-delivery-unavailable {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .order-history-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .order-history-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .order-history-delivery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-history-delivery-grid-wide {
+    grid-column: auto;
+  }
+}

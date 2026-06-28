@@ -408,6 +408,7 @@ async function createOrder(req, res) {
         userId,
         restaurantId,
         restaurantName: restaurant.name,
+        restaurantImage: restaurant.image || '',
         items: itemSnapshots,
         deliveryDetails: deliverySnapshot.value
     });
