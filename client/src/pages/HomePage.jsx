@@ -6,7 +6,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
-import RestaurantSection from '../components/RestaurantSection.jsx';
+import RestaurantCarousel from '../components/RestaurantCarousel.jsx';
+import { getFeaturedRestaurants } from '../utils/featuredRestaurants.js';
 
 function getUserFirstName() {
   const savedUser = localStorage.getItem('user');
@@ -229,8 +230,8 @@ function HomePage() {
       });
   }, [restaurants, selectedCategory, userLocation]);
 
-  const popularRestaurants = useMemo(() => {
-    return restaurants.slice(0, 3);
+  const featuredRestaurants = useMemo(() => {
+    return getFeaturedRestaurants(restaurants);
   }, [restaurants]);
 
   const locationButtonText =
@@ -325,14 +326,16 @@ function HomePage() {
             </div>
           </section>
 
-          <RestaurantSection
-            eyebrow="Hand-picked from today’s list"
-            title="Popular picks"
-            restaurants={popularRestaurants}
-            emptyMessage="No popular restaurants are available right now."
+          <RestaurantCarousel
+            sectionId="featured-restaurants"
+            eyebrow="Selected from restaurants available today"
+            title="Featured restaurants"
+            restaurants={featuredRestaurants}
+            emptyMessage="No featured restaurants are available right now."
           />
 
-          <RestaurantSection
+          <RestaurantCarousel
+            sectionId="nearby-restaurants"
             eyebrow={nearbyEyebrow}
             title="Nearby restaurants"
             restaurants={nearbyRestaurants}

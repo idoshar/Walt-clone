@@ -4346,3 +4346,144 @@ body.dark .checkout-field input[type='number'] {
     width: 100%;
   }
 }
+
+/* SCRUM-429 and SCRUM-430 restaurant carousels */
+.restaurant-carousel-section {
+  min-width: 0;
+}
+
+.restaurant-carousel-viewport {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.restaurant-carousel-track {
+  display: flex;
+  gap: 22px;
+  min-width: 100%;
+  padding: 2px 2px 14px;
+  overflow: visible;
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+  touch-action: pan-y;
+  user-select: none;
+  will-change: transform;
+}
+
+.restaurant-carousel-track:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.restaurant-carousel-slide {
+  flex: 0 0 calc((100% - 66px) / 4);
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.restaurant-carousel-slide .restaurant-card {
+  height: 100%;
+}
+
+.restaurant-carousel-edge-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.restaurant-carousel-edge-control {
+  position: absolute;
+  top: 50%;
+  width: 46px;
+  height: 88px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 18px;
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 70%,
+    transparent
+  );
+  color: var(--color-text);
+  font: inherit;
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1;
+  opacity: 0.16;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    opacity 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.restaurant-carousel-viewport:hover
+  .restaurant-carousel-edge-control {
+  opacity: 0.58;
+}
+
+.restaurant-carousel-edge-control:hover,
+.restaurant-carousel-edge-control:focus-visible {
+  opacity: 1;
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+
+.restaurant-carousel-edge-control:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.restaurant-carousel-edge-control-previous {
+  left: 6px;
+}
+
+.restaurant-carousel-edge-control-next {
+  right: 6px;
+}
+
+@media (hover: none) {
+  .restaurant-carousel-edge-control {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 1080px) {
+  .restaurant-carousel-slide {
+    flex-basis: calc((100% - 44px) / 3);
+  }
+}
+
+@media (max-width: 760px) {
+  .restaurant-carousel-slide {
+    flex-basis: calc((100% - 22px) / 2);
+  }
+
+  .restaurant-carousel-edge-control {
+    width: 40px;
+    height: 72px;
+    font-size: 34px;
+  }
+
+  .restaurant-carousel-edge-control-previous {
+    left: 3px;
+  }
+
+  .restaurant-carousel-edge-control-next {
+    right: 3px;
+  }
+}
+
+@media (max-width: 640px) {
+  .restaurant-carousel-track {
+    gap: 16px;
+  }
+
+  .restaurant-carousel-slide {
+    flex-basis: min(82vw, 300px);
+  }
+}
