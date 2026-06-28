@@ -1,4 +1,4 @@
-const Order = require('../models/Order');
+﻿const Order = require('../models/Order');
 const { generateId } = require('../utilities/idGenerator');
 
 class OrderRepository {
@@ -29,6 +29,118 @@ class OrderRepository {
 
     async findAll() {
         return Order.find({}).sort({ createdAt: -1 });
+    }
+
+    async getRestaurantSalesStatistics(restaurantId) {
+        const [result] = await Order.aggregate([
+            {
+                $match: {
+                    restaurantId: String(restaurantId),
+                    status: {
+                        $ne: 'cancelled'
+                    }
+                }
+            },
+            {
+                $facet: {
+                    summary: [
+                        {
+                            $group: {
+                                _id: null,
+                                totalOrders: {
+                                    $sum: 1
+                                },
+                                totalRevenue: {
+                                    $sum: '$totalPrice'
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                totalOrders: 1,
+                                totalRevenue: 1,
+                                averageOrderValue: {
+                                    $divide: [
+                                        '$totalRevenue',
+                                        '$totalOrders'
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    productSales: [
+                        {
+                            $unwind: '$items'
+                        },
+                        {
+                            $group: {
+                                _id: {
+                                    productId: '$items.productId',
+                                    productName: '$items.productName'
+                                },
+                                orderIds: {
+                                    $addToSet: '$id'
+                                },
+                                quantitySold: {
+                                    $sum: '$items.quantity'
+                                },
+                                revenue: {
+                                    $sum: {
+                                        $multiply: [
+                                            '$items.price',
+                                            '$items.quantity'
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                productId: '$_id.productId',
+                                productName: '$_id.productName',
+                                ordersContainingProduct: {
+                                    $size: '$orderIds'
+                                },
+                                quantitySold: 1,
+                                revenue: 1
+                            }
+                        },
+                        {
+                            $sort: {
+                                quantitySold: -1,
+                                revenue: -1,
+                                productName: 1
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const summary = result?.summary?.[0] || {
+            totalOrders: 0,
+            totalRevenue: 0,
+            averageOrderValue: 0
+        };
+
+        const productSales = result?.productSales || [];
+
+        return {
+            ...summary,
+            topProduct: productSales[0]
+                ? {
+                    productId: productSales[0].productId,
+                    productName: productSales[0].productName,
+                    ordersContainingProduct:
+                        productSales[0].ordersContainingProduct,
+                    quantitySold: productSales[0].quantitySold,
+                    revenue: productSales[0].revenue
+                }
+                : null,
+            productSales
+        };
     }
 
     async update(id, updates) {
