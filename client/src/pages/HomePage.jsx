@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
-import RestaurantSection from '../components/RestaurantSection.jsx';
+import RestaurantCarousel from '../components/RestaurantCarousel.jsx';
 import { getFeaturedRestaurants } from '../utils/featuredRestaurants.js';
 
 function getUserFirstName() {
@@ -326,14 +326,16 @@ function HomePage() {
             </div>
           </section>
 
-          <RestaurantSection
+          <RestaurantCarousel
+            sectionId="featured-restaurants"
             eyebrow="Selected from restaurants available today"
             title="Featured restaurants"
             restaurants={featuredRestaurants}
             emptyMessage="No featured restaurants are available right now."
           />
 
-          <RestaurantSection
+          <RestaurantCarousel
+            sectionId="nearby-restaurants"
             eyebrow={nearbyEyebrow}
             title="Nearby restaurants"
             restaurants={nearbyRestaurants}
