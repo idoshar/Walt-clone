@@ -15,11 +15,8 @@ import { cancelOrder, deleteOrder, getOrderById } from '../api/orders';
 import { useAuth } from '../auth/AuthContext';
 import AppState from '../components/AppState';
 import ThemeToggle from '../components/ThemeToggle';
+import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
-
-function formatPrice(price) {
-  return `\u20AA${Number(price || 0).toFixed(2)}`;
-}
 
 function formatDate(value) {
   const date = new Date(value);
@@ -53,6 +50,7 @@ function getStatusColor(status, colors) {
 }
 
 export default function OrderDetailsScreen({ navigation, route }) {
+  const { formatPrice } = useCurrency();
   const orderId = String(route.params?.orderId || '').trim();
 
   const { token } = useAuth();

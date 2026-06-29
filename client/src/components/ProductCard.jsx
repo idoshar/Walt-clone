@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
+import { useCurrency } from '../context/CurrencyContext.jsx';
 import { getCartItemKey } from '../utils/cart.js';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
 
@@ -53,6 +54,7 @@ function ProductCard({
   disabled = false
 }) {
   const { cartItems, addToCart, removeFromCart } = useCart();
+  const { formatPrice } = useCurrency();
 
   const cartKey = getCartItemKey(product);
 
@@ -85,7 +87,7 @@ function ProductCard({
       <div>
         <h3>{product.name}</h3>
         <p>{product.description || 'Fresh and tasty dish'}</p>
-        <strong>{product.price !== undefined ? `${product.price} ₪` : ''}</strong>
+        <strong>{product.price !== undefined ? formatPrice(product.price) : ''}</strong>
       </div>
 
       <img src={displayImage} alt={product.name} className="product-image" />

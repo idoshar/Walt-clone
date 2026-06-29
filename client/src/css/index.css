@@ -4487,3 +4487,45 @@ body.dark .checkout-field input[type='number'] {
     flex-basis: min(82vw, 300px);
   }
 }
+
+/* SCRUM-431 currency selector */
+.currency-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.currency-selector-label {
+  white-space: nowrap;
+}
+
+.currency-selector-control {
+  min-height: 34px;
+  padding: 5px 28px 5px 9px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.currency-selector-control:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.currency-selector-control:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .currency-selector-label {
+    display: none;
+  }
+}
