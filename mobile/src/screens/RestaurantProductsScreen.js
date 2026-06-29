@@ -16,6 +16,7 @@ import {
   getProductsByRestaurant,
 } from '../api/products';
 import { useAuth } from '../auth/AuthContext';
+import { useCurrency } from '../currency/CurrencyContext';
 
 function getProductId(product) {
   return product?.id || product?.productId || product?._id;
@@ -23,6 +24,7 @@ function getProductId(product) {
 
 export default function RestaurantProductsScreen({ navigation, route }) {
   const { token } = useAuth();
+  const { formatPrice } = useCurrency();
   const { theme } = useAppTheme();
   const styles = createStyles(theme.colors); 
   const { restaurantId, restaurantName } = route.params || {};
@@ -141,7 +143,7 @@ export default function RestaurantProductsScreen({ navigation, route }) {
                 <Text style={styles.description} numberOfLines={2}>
                   {item.description || 'No description'}
                 </Text>
-                <Text style={styles.price}>₪{Number(item.price).toFixed(0)}</Text>
+                <Text style={styles.price}>{formatPrice(item.price)}</Text>
 
                 <View style={styles.actions}>
                   <TouchableOpacity

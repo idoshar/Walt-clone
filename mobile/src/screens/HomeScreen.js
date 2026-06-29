@@ -18,6 +18,7 @@ import AppCard from '../components/AppCard';
 import AppState from '../components/AppState';
 import SponsoredRestaurantCard from '../components/SponsoredRestaurantCard';
 import ThemeToggle from '../components/ThemeToggle';
+import CurrencySelector from '../components/CurrencySelector';
 import { sortRestaurantsByDistance } from '../location/distance';
 import {
   LOCATION_STATUS,
@@ -166,6 +167,8 @@ export default function HomeScreen({ navigation }) {
             </View>
             <ThemeToggle compact />
           </View>
+
+          <CurrencySelector />
 
           <View style={styles.headerActions}>
             <Pressable

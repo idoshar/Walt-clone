@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCurrency } from '../context/CurrencyContext.jsx';
 import { createOrder } from '../api/orderApi.js';
 import {
-  formatCurrency,
   groupCartItemsByRestaurant
 } from '../utils/cart.js';
 
@@ -214,6 +214,7 @@ function getLocationErrorMessage(error) {
 }
 
 function CheckoutPage() {
+  const { formatPrice } = useCurrency();
   const {
     cartItems,
     clearRestaurantCart
@@ -551,7 +552,7 @@ function CheckoutPage() {
                 {item.name}{' \u00d7 '}{item.quantity}
               </span>
 
-              <span>{formatCurrency(item.price * item.quantity)}</span>
+              <span>{formatPrice(item.price * item.quantity)}</span>
             </div>
           ))}
         </div>
@@ -562,7 +563,7 @@ function CheckoutPage() {
           <span>Total Amount:</span>
 
           <span className="checkout-total-price">
-            {formatCurrency(selectedGroup.totalPrice)}
+            {formatPrice(selectedGroup.totalPrice)}
           </span>
         </div>
 

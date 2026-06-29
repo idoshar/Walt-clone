@@ -52,11 +52,3 @@ export function groupCartItemsByRestaurant(items = []) {
 
   return Array.from(groups.values());
 }
-
-export function formatCurrency(value) {
-  const numericValue = Number(value) || 0;
-
-  return Number.isInteger(numericValue)
-    ? `₪${numericValue}`
-    : `₪${numericValue.toFixed(2)}`;
-}

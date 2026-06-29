@@ -1,16 +1,7 @@
-﻿import EmptyState from './EmptyState.jsx';
+import EmptyState from './EmptyState.jsx';
 import ErrorMessage from './ErrorMessage.jsx';
 import LoadingState from './LoadingState.jsx';
-
-function formatCurrency(value) {
-  const amount = Number(value);
-
-  return new Intl.NumberFormat('he-IL', {
-    style: 'currency',
-    currency: 'ILS',
-    maximumFractionDigits: 2
-  }).format(Number.isFinite(amount) ? amount : 0);
-}
+import { useCurrency } from '../context/CurrencyContext.jsx';
 
 function formatNumber(value) {
   const amount = Number(value);
@@ -26,6 +17,7 @@ function RestaurantSalesStatistics({
   isLoading,
   error
 }) {
+  const { formatPrice } = useCurrency();
   if (isLoading) {
     return <LoadingState message="Loading restaurant sales statistics..." />;
   }
@@ -68,13 +60,13 @@ function RestaurantSalesStatistics({
 
         <article className="analytics-summary-card">
           <span className="analytics-summary-label">Total revenue</span>
-          <strong>{formatCurrency(statistics.totalRevenue)}</strong>
+          <strong>{formatPrice(statistics.totalRevenue)}</strong>
           <small>Revenue from all qualifying orders</small>
         </article>
 
         <article className="analytics-summary-card">
           <span className="analytics-summary-label">Average order value</span>
-          <strong>{formatCurrency(statistics.averageOrderValue)}</strong>
+          <strong>{formatPrice(statistics.averageOrderValue)}</strong>
           <small>Average revenue per order</small>
         </article>
 
@@ -157,7 +149,7 @@ function RestaurantSalesStatistics({
                   </span>
 
                   <span>
-                    <strong>{formatCurrency(product.revenue)}</strong>
+                    <strong>{formatPrice(product.revenue)}</strong>
                     revenue
                   </span>
                 </div>
