@@ -4,6 +4,13 @@ const { backfillRecommendationIds } = require('./services/recommendationIdMigrat
 const { seedRestaurants } = require('./seed/seedRestaurants');
 const { seedInitialAdmin } = require('./seed/seedInitialAdmin');
 const { seedProducts } = require('./seed/seedProducts');
+const {
+    seedMenuCategories
+} = require('./seed/seedMenuCategories');
+
+const {
+    backfillRestaurantSponsorship
+} = require('./services/restaurantSponsorshipMigration');
 
 const PORT = process.env.PORT || 3000;
 
@@ -11,6 +18,8 @@ async function startServer() {
     await connectDatabase();
     await backfillRecommendationIds();
     await seedRestaurants();
+    await backfillRestaurantSponsorship();
+    await seedMenuCategories();
     await seedInitialAdmin();
     await seedProducts();
 

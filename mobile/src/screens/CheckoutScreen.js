@@ -14,13 +14,11 @@ import { createOrder } from '../api/orders';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
+import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
-function formatPrice(price) {
-  return `\u20AA${Number(price || 0).toFixed(2)}`;
-}
-
 export default function CheckoutScreen({ navigation, route }) {
+  const { formatPrice } = useCurrency();
   const restaurantId = String(route.params?.restaurantId || '').trim();
 
   const { token } = useAuth();

@@ -4,11 +4,11 @@ import { getOrders } from '../api/orderApi.js';
 import { apiRequest } from '../api/client.js';
 import { getMenuCategories } from '../api/menuCategoryApi.js';
 import { useCart } from '../context/CartContext.jsx';
+import { useCurrency } from '../context/CurrencyContext.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
 import {
-  formatCurrency,
   normalizeCartItem
 } from '../utils/cart.js';
 
@@ -199,6 +199,7 @@ function DeliveryDetails({ deliveryDetails }) {
 }
 
 function OrdersPage() {
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const { setCartItems } = useCart();
 
@@ -493,7 +494,7 @@ function OrdersPage() {
                           </span>
 
                           <strong>
-                            {formatCurrency(
+                            {formatPrice(
                               (Number(item.price) || 0) *
                                 (Number(item.quantity) || 0)
                             )}
@@ -516,7 +517,7 @@ function OrdersPage() {
                   <span>Total</span>
 
                   <strong>
-                    {formatCurrency(
+                    {formatPrice(
                       order.totalPrice ?? order.total ?? 0
                     )}
                   </strong>

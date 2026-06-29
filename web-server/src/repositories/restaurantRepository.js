@@ -40,6 +40,19 @@ class RestaurantRepository {
         );
     }
 
+    async updateSponsorship(id, sponsorship) {
+        return Restaurant.findOneAndUpdate(
+            { id: String(id) },
+            {
+                $set: {
+                    isSponsored: sponsorship.isSponsored,
+                    sponsoredRank: sponsorship.sponsoredRank
+                }
+            },
+            { new: true, runValidators: true }
+        );
+    }
+
     async search(query) {
         const normalizedQuery = String(query || '').trim();
 

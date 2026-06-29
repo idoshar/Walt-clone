@@ -34,7 +34,7 @@ function HeaderSearch() {
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search restaurants or dishes"
+        placeholder="Search food..."
         className="header-search-input"
         aria-label="Search restaurants or dishes"
       />

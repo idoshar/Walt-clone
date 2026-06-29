@@ -25,6 +25,7 @@ import ProductForm from '../components/ProductForm.jsx';
 import MenuCategoryManager from '../components/MenuCategoryManager.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
 import RestaurantSalesStatistics from '../components/RestaurantSalesStatistics.jsx';
+import { useCurrency } from '../context/CurrencyContext.jsx';
 
 function getProductCount(restaurant) {
   const count = Number(restaurant?.productCount);
@@ -50,6 +51,7 @@ function getRestaurantStatus(restaurant) {
 }
 
 function RestaurantManagementPage() {
+  const { formatPrice } = useCurrency();
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
@@ -860,7 +862,7 @@ function RestaurantManagementPage() {
                       </span>
                     )}
                     {product.description && <p>{product.description}</p>}
-                    <strong>₪{product.price}</strong>
+                    <strong>{formatPrice(product.price)}</strong>
                   </div>
                   <div className="management-menu-item-actions">
                     <button

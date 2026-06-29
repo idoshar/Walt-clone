@@ -11,12 +11,27 @@ import RestaurantManagementPage from './pages/RestaurantManagementPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import OrderStatusPage from './pages/OrderStatusPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function RequireAdmin({ children }) {
+  const { token, user } = useAuth();
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -61,6 +76,15 @@ function App() {
             <RequireAuth>
               <RestaurantManagementPage />
             </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminPage />
+            </RequireAdmin>
           }
         />
 
