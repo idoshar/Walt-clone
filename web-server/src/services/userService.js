@@ -31,6 +31,39 @@ function normalizeCoordinate(value, fieldName, minimum, maximum) {
     return coordinate;
 }
 
+function normalizeProfileImage(value) {
+    if (typeof value !== 'string') {
+        const error = new Error('image must be a string');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const image = value.trim();
+
+    if (image === '') {
+        return '';
+    }
+
+    if (image.length > 4 * 1024 * 1024) {
+        const error = new Error('image is too large');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const supportedDataImage =
+        /^data:image\/(png|jpe?g|webp|heic);base64,[a-z0-9+/=\r\n]+$/i;
+
+    if (!supportedDataImage.test(image)) {
+        const error = new Error(
+            'image must be an image data URI or an empty string'
+        );
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return image;
+}
+
 function getOptionalLocation(userData) {
     const hasLatitude =
         Object.prototype.hasOwnProperty.call(userData, 'latitude') &&
@@ -109,6 +142,28 @@ class UserService {
 
         if (!user) {
             throw createError('User not found', 404);
+        }
+
+        return user;
+    }
+
+    async updateCurrentUserImage(userId, imageData) {
+        const data = imageData || {};
+
+        if (!Object.prototype.hasOwnProperty.call(data, 'image')) {
+            const error = new Error('image is required');
+            error.statusCode = 400;
+            throw error;
+        }
+
+        const user = await userRepository.update(userId, {
+            image: normalizeProfileImage(data.image)
+        });
+
+        if (!user) {
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
         }
 
         return user;

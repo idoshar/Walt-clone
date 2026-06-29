@@ -15,6 +15,12 @@ router.patch(
 );
 
 router.patch(
+    '/me/image',
+    authMiddleware,
+    asyncHandler(userController.updateCurrentUserImage)
+);
+
+router.patch(
     '/me/location',
     authMiddleware,
     asyncHandler(userController.updateCurrentUserLocation)
