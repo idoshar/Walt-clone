@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import HeaderSearch from './HeaderSearch.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import CartDropdown from './CartDropdown.jsx';
+import CurrencySelector from './CurrencySelector.jsx';
 
 function getSavedUser() {
   const savedUser = localStorage.getItem('user');
@@ -67,6 +68,7 @@ function Header({ token, onLogout }) {
 
             <div className="navbar-utilities">
               <CartDropdown />
+              <CurrencySelector />
               <ThemeToggle />
 
               <div className="user-area">

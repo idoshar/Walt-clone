@@ -16,11 +16,8 @@ import { getRestaurantProducts } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
+import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
-
-function formatPrice(price) {
-  return `\u20AA${Number(price || 0).toFixed(2)}`;
-}
 
 function hasImage(item) {
   return typeof item?.image === 'string' && item.image.trim().length > 0;
@@ -87,6 +84,7 @@ function getCategoryFallback(allProducts, cartItems) {
 }
 
 export default function CartScreen({ navigation }) {
+  const { formatPrice } = useCurrency();
   const {
     items,
     itemCount,

@@ -14,11 +14,8 @@ import {
 import { getRestaurants } from '../api/restaurants';
 import { useCart } from '../cart/CartContext';
 import { useAppTheme } from '../theme/ThemeContext';
+import { useCurrency } from '../currency/CurrencyContext';
 
-function formatPrice(price) {
-  const n = Number(price);
-  return Number.isFinite(n) ? `\u20AA${n.toFixed(2)}` : '';
-}
 
 function hasImage(item) {
   return typeof item?.image === 'string' && item.image.trim().length > 0;
@@ -59,6 +56,7 @@ function searchData(restaurants, query) {
 
 export default function SearchScreen({ navigation }) {
   const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 

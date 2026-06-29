@@ -1,9 +1,9 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
+import { useCurrency } from '../context/CurrencyContext.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
 import {
-  formatCurrency,
   groupCartItemsByRestaurant
 } from '../utils/cart.js';
 
@@ -57,6 +57,7 @@ function getCartProductImage(item = {}) {
 }
 
 function CartDropdown() {
+  const { formatPrice } = useCurrency();
   const {
     cartItems,
     addToCart,
@@ -236,7 +237,7 @@ function CartDropdown() {
 
                               <div className="cart-item-info">
                                 <h5>{item.name}</h5>
-                                <span>{formatCurrency(item.price)}</span>
+                                <span>{formatPrice(item.price)}</span>
                               </div>
                             </div>
 
@@ -295,7 +296,7 @@ function CartDropdown() {
 
                       <div className="cart-restaurant-total">
                         <span>{group.restaurantName} total</span>
-                        <strong>{formatCurrency(group.totalPrice)}</strong>
+                        <strong>{formatPrice(group.totalPrice)}</strong>
                       </div>
 
                       <button
@@ -314,7 +315,7 @@ function CartDropdown() {
 
               <div className="cart-total">
                 <span>All restaurants total</span>
-                <strong>{formatCurrency(totalPrice)}</strong>
+                <strong>{formatPrice(totalPrice)}</strong>
               </div>
 
               <button

@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingState from '../components/LoadingState.jsx';
 import RestaurantCarousel from '../components/RestaurantCarousel.jsx';
+import SponsoredPromotionRail from '../components/SponsoredPromotionRail.jsx';
 import { getFeaturedRestaurants } from '../utils/featuredRestaurants.js';
 
 function getUserFirstName() {
@@ -234,6 +235,38 @@ function HomePage() {
     return getFeaturedRestaurants(restaurants);
   }, [restaurants]);
 
+    const sponsoredRestaurants = useMemo(() => {
+      const rankedSponsoredRestaurants = restaurants
+        .filter((restaurant) => restaurant?.isSponsored === true)
+        .sort((leftRestaurant, rightRestaurant) => {
+          const leftRank = Number(leftRestaurant.sponsoredRank);
+          const rightRank = Number(rightRestaurant.sponsoredRank);
+
+          const normalizedLeftRank =
+            Number.isInteger(leftRank) && leftRank > 0
+              ? leftRank
+              : Number.MAX_SAFE_INTEGER;
+
+          const normalizedRightRank =
+            Number.isInteger(rightRank) && rightRank > 0
+              ? rightRank
+              : Number.MAX_SAFE_INTEGER;
+
+          if (normalizedLeftRank !== normalizedRightRank) {
+            return normalizedLeftRank - normalizedRightRank;
+          }
+
+          return String(leftRestaurant.name || '').localeCompare(
+            String(rightRestaurant.name || '')
+          );
+        });
+
+      return rankedSponsoredRestaurants.length > 0
+        ? rankedSponsoredRestaurants.slice(0, 3)
+        : featuredRestaurants.slice(0, 3);
+    }, [featuredRestaurants, restaurants]);
+
+
   const locationButtonText =
     locationStatus === 'requesting'
       ? 'Finding your location...'
@@ -252,41 +285,42 @@ function HomePage() {
   return (
     <section className="page-container home-page">
       <section className="home-hero" aria-labelledby="home-title">
-        <p className="home-eyebrow">Food delivery made easy</p>
+      <p className="home-eyebrow">Food delivery made easy</p>
 
-        <h1 id="home-title">Hi {userFirstName}, what are you craving today?</h1>
+      <h1 id="home-title">Hi {userFirstName}, what are you craving today?</h1>
 
-        <p className="home-hero-description">
-          Explore restaurants nearby, discover dishes and choose your next meal.
+      <p className="home-hero-description">
+        Explore restaurants nearby, discover dishes and choose your next meal.
+      </p>
+
+      <div className="home-hero-actions">
+        <Link to="/search" className="home-search-cta">
+          Search restaurants or dishes
+          <span aria-hidden="true">→</span>
+        </Link>
+
+        <button
+          type="button"
+          className="home-location-cta"
+          onClick={handleUseMyLocation}
+          disabled={locationStatus === 'requesting'}
+        >
+          {locationButtonText}
+        </button>
+      </div>
+
+      {locationMessage && (
+        <p
+          className={`location-feedback ${
+            locationStatus === 'error' ? 'location-feedback-error' : ''
+          }`}
+          role={locationStatus === 'error' ? 'alert' : 'status'}
+        >
+          {locationMessage}
         </p>
-
-        <div className="home-hero-actions">
-          <Link to="/search" className="home-search-cta">
-            Search restaurants or dishes
-            <span aria-hidden="true">→</span>
-          </Link>
-
-          <button
-            type="button"
-            className="home-location-cta"
-            onClick={handleUseMyLocation}
-            disabled={locationStatus === 'requesting'}
-          >
-            {locationButtonText}
-          </button>
-        </div>
-
-        {locationMessage && (
-          <p
-            className={`location-feedback ${
-              locationStatus === 'error' ? 'location-feedback-error' : ''
-            }`}
-            role={locationStatus === 'error' ? 'alert' : 'status'}
-          >
-            {locationMessage}
-          </p>
-        )}
+      )}
       </section>
+
 
       {loading && <LoadingState message="Loading restaurants..." />}
 
@@ -300,7 +334,14 @@ function HomePage() {
       )}
 
       {!loading && !error && restaurants.length > 0 && (
-        <div className="home-sections">
+          <div className="home-content-with-rails">
+            <SponsoredPromotionRail
+              placement="left"
+              initialIndex={0}
+              restaurants={sponsoredRestaurants}
+            />
+
+            <div className="home-sections">
           <section className="categories-section" aria-labelledby="categories-title">
             <div className="restaurant-section-heading">
               <div>
@@ -341,7 +382,14 @@ function HomePage() {
             restaurants={nearbyRestaurants}
             emptyMessage={`No ${selectedCategory.toLowerCase()} restaurants are available right now.`}
           />
-        </div>
+            </div>
+
+            <SponsoredPromotionRail
+              placement="right"
+              initialIndex={1}
+              restaurants={sponsoredRestaurants}
+            />
+          </div>
       )}
     </section>
   );
