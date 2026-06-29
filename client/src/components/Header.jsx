@@ -1,47 +1,17 @@
 import { Link, NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 import HeaderSearch from './HeaderSearch.jsx';
 import ThemeToggle from './ThemeToggle.jsx';
 import CartDropdown from './CartDropdown.jsx';
 import CurrencySelector from './CurrencySelector.jsx';
 
-function getSavedUser() {
-  const savedUser = localStorage.getItem('user');
-
-  if (!savedUser) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(savedUser);
-  } catch {
-    return null;
-  }
-}
-
-function getUserLabel() {
-  const savedUser = localStorage.getItem('user');
-
-  if (savedUser) {
-    try {
-      const user = JSON.parse(savedUser);
-      return user.fullName || user.displayName || user.username || 'Signed in';
-    } catch {
-      return 'Signed in';
-    }
-  }
-
-  const userId = localStorage.getItem('userId');
-
-  if (userId) {
-    return `User ${userId}`;
-  }
-
-  return 'Signed in';
+function getUserLabel(user) {
+  return user?.fullName || user?.displayName || user?.username || 'Signed in';
 }
 
 function Header({ token, onLogout }) {
-  const user = token ? getSavedUser() : null;
-  const userLabel = token ? getUserLabel() : '';
+  const { user } = useAuth();
+  const userLabel = token ? getUserLabel(user) : '';
   const userImage = user?.image || '';
 
   return (
@@ -72,15 +42,21 @@ function Header({ token, onLogout }) {
               <ThemeToggle />
 
               <div className="user-area">
-                {userImage ? (
-                  <img src={userImage} alt={userLabel} className="user-avatar" />
-                ) : (
-                  <span className="user-avatar" aria-hidden="true">
-                    {userLabel.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <Link
+                  to="/profile"
+                  className="profile-link"
+                  aria-label={`Open profile for ${userLabel}`}
+                >
+                  {userImage ? (
+                    <img src={userImage} alt="" className="user-avatar" />
+                  ) : (
+                    <span className="user-avatar" aria-hidden="true">
+                      {userLabel.charAt(0).toUpperCase()}
+                    </span>
+                  )}
 
-                <span className="user-label">{userLabel}</span>
+                  <span className="user-label">{userLabel}</span>
+                </Link>
 
                 <button type="button" onClick={onLogout} className="logout-button">
                   Log Out

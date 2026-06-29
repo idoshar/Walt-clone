@@ -13,6 +13,7 @@ import OrderStatusPage from './pages/OrderStatusPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -121,6 +122,15 @@ function App() {
           element={
             <RequireAuth>
               <CheckoutPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <ProfilePage />
             </RequireAuth>
           }
         />

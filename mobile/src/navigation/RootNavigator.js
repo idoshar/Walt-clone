@@ -1,6 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProductFormScreen from '../screens/ProductFormScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import RestaurantProductsScreen from '../screens/RestaurantProductsScreen';
 import { useMemo } from 'react';
 import {
@@ -88,6 +89,11 @@ function AppNavigator({ screenOptions }) {
         component={HomeScreen}
         name="Home"
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        component={ProfileScreen}
+        name="Profile"
+        options={{ title: 'Your profile' }}
       />
       <Stack.Screen
         component={SearchScreen}

@@ -157,6 +157,10 @@ export default function HomeScreen({ navigation }) {
   const isRestaurantsError = restaurantsState === 'error';
   const isLocationLoading = locationState === 'loading';
   const isAdmin = user?.role === 'admin';
+  const userLabel = user?.fullName || user?.username || 'Customer';
+  const userInitial = userLabel.trim().charAt(0).toUpperCase() || 'C';
+  const hasProfileImage =
+    typeof user?.image === 'string' && user.image.trim().length > 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -186,6 +190,43 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <CurrencySelector />
+
+          <Pressable
+            accessibilityLabel={`Open profile for ${userLabel}`}
+            accessibilityRole="button"
+            onPress={() => navigation.navigate('Profile')}
+            style={({ pressed }) => [
+              styles.accountButton,
+              pressed ? styles.pressedButton : null,
+            ]}
+          >
+            {hasProfileImage ? (
+              <Image
+                source={{ uri: user.image }}
+                style={styles.accountAvatar}
+              />
+            ) : (
+              <View
+                style={[
+                  styles.accountAvatar,
+                  styles.accountAvatarPlaceholder,
+                ]}
+              >
+                <Text style={styles.accountAvatarInitial}>{userInitial}</Text>
+              </View>
+            )}
+
+            <View style={styles.accountDetails}>
+              <Text numberOfLines={1} style={styles.accountName}>
+                {userLabel}
+              </Text>
+              <Text numberOfLines={1} style={styles.accountHint}>
+                View profile and manage your photo
+              </Text>
+            </View>
+
+            <Text style={styles.accountArrow}>›</Text>
+          </Pressable>
 
           <View style={styles.headerActions}>
             <Pressable
@@ -518,6 +559,51 @@ function createStyles(colors) {
     },
     title: { color: colors.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.7 },
     subtitle: { color: colors.textMuted, fontSize: 15, marginTop: 5 },
+    accountButton: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 16,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: 12,
+      padding: 12,
+    },
+    accountAvatar: {
+      borderRadius: 999,
+      height: 48,
+      width: 48,
+    },
+    accountAvatarPlaceholder: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      justifyContent: 'center',
+    },
+    accountAvatarInitial: {
+      color: colors.primary,
+      fontSize: 20,
+      fontWeight: '800',
+    },
+    accountDetails: {
+      flex: 1,
+      gap: 3,
+      minWidth: 0,
+    },
+    accountName: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    accountHint: {
+      color: colors.textMuted,
+      fontSize: 12,
+    },
+    accountArrow: {
+      color: colors.primary,
+      fontSize: 28,
+      fontWeight: '400',
+      lineHeight: 30,
+    },
     headerActions: { flexDirection: 'row', gap: 8 },
     myRestaurantsButton: {
       alignItems: 'center',

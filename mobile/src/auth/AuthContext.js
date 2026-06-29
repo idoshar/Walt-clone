@@ -105,6 +105,19 @@ export function AuthProvider({ children }) {
         await saveSession(normalizeSession(passwordChangeResponse));
       },
 
+      async updateUser(updatedUser) {
+        if (!session?.token) {
+          throw new Error('You must be signed in to update your profile.');
+        }
+
+        await saveSession(
+          normalizeSession({
+            token: session.token,
+            user: updatedUser,
+          })
+        );
+      },
+
       async signOut() {
         await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
         setSession(null);
