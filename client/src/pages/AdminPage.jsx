@@ -1,11 +1,12 @@
+import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ADMIN_TOOLS = [
   {
     title: 'Restaurant moderation',
     description:
-      'Review and manage platform restaurants. Full moderation tools will be added next.',
-    status: 'Coming soon'
+      'Review platform restaurants, edit non-system entries and protect the catalog.',
+    status: 'Available now'
   },
   {
     title: 'Sponsored promotions',
@@ -82,6 +83,8 @@ function AdminPage() {
           ))}
         </div>
       </section>
+
+      <AdminRestaurantModerationPanel />
     </section>
   );
 }
