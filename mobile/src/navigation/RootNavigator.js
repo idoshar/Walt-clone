@@ -13,6 +13,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModerationScreen';
 import AdminScreen from '../screens/AdminScreen';
+import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
 import AdminStatisticsScreen from '../screens/AdminStatisticsScreen';
 import CartScreen from '../screens/CartScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
@@ -150,6 +151,11 @@ function AppNavigator({ screenOptions }) {
             component={AdminRestaurantModerationScreen}
             name="AdminRestaurantModeration"
             options={{ title: 'Restaurant moderation' }}
+          />
+          <Stack.Screen
+            component={AdminUserManagementScreen}
+            name="AdminUserManagement"
+            options={{ title: 'User account management' }}
           />
           <Stack.Screen
             component={AdminStatisticsScreen}

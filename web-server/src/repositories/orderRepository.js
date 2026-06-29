@@ -38,6 +38,10 @@ class OrderRepository {
         });
     }
 
+    async countByUserId(userId) {
+        return Order.countDocuments({ userId: String(userId) });
+    }
+
     async findAll() {
         return Order.find({}).sort({ createdAt: -1 });
     }

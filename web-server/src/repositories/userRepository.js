@@ -84,6 +84,48 @@ class UserRepository {
         );
     }
 
+    async updateAccountStatusAndInvalidateTokens(id, isActive) {
+        return User.findOneAndUpdate(
+            { id: String(id) },
+            {
+                $set: {
+                    isActive: Boolean(isActive)
+                },
+                $inc: {
+                    tokenVersion: 1
+                }
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+    }
+
+    async updateRoleAndInvalidateTokens(id, role) {
+        return User.findOneAndUpdate(
+            { id: String(id) },
+            {
+                $set: {
+                    role
+                },
+                $inc: {
+                    tokenVersion: 1
+                }
+            },
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+    }
+
+    async deleteById(id) {
+        const result = await User.deleteOne({ id: String(id) });
+
+        return result.deletedCount > 0;
+    }
+
     async getAll() {
         return User.find({});
     }

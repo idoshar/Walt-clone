@@ -25,6 +25,10 @@ class RestaurantRepository {
         return Restaurant.findOne({ id: String(id) });
     }
 
+    async countByOwnerId(ownerId) {
+        return Restaurant.countDocuments({ ownerId: String(ownerId) });
+    }
+
     async update(id, updatedFields) {
         const {
             id: _id,

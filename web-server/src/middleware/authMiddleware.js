@@ -27,6 +27,7 @@ async function authMiddleware(req, res, next) {
 
         if (
             !user ||
+            user.isActive === false ||
             Number(user.tokenVersion || 0) !== tokenPayload.tokenVersion
         ) {
             return unauthorized(res, 'Invalid token');

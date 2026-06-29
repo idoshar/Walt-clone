@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema(
             default: 0,
             min: 0
         },
+        isActive: {
+            type: Boolean,
+            default: true,
+            index: true
+        },
         fullName: {
             type: String,
             required: true,
@@ -84,6 +89,7 @@ userSchema.methods.toResponseObject = function toResponseObject() {
         phone: this.phone,
         address: this.address,
         image: this.image,
+        isActive: this.isActive !== false,
         role: this.role,
         latitude: this.latitude,
         longitude: this.longitude,

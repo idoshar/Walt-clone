@@ -1,4 +1,5 @@
 import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
+import AdminUserManagementPanel from '../components/AdminUserManagementPanel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ADMIN_TOOLS = [
@@ -15,10 +16,10 @@ const ADMIN_TOOLS = [
     status: 'Coming soon'
   },
   {
-    title: 'User roles',
+    title: 'User accounts',
     description:
-      'Review platform roles and safely manage administrator access.',
-    status: 'Coming soon'
+      'Manage access, roles, temporary passwords and eligible account deletion.',
+    status: 'Available now'
   },
   {
     title: 'Platform insights',
@@ -85,6 +86,7 @@ function AdminPage() {
       </section>
 
       <AdminRestaurantModerationPanel />
+      <AdminUserManagementPanel />
     </section>
   );
 }
