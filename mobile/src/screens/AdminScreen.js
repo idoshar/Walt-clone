@@ -1,5 +1,6 @@
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -10,72 +11,178 @@ import AppCard from '../components/AppCard';
 import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
+const ADMIN_TOOLS = [
+  {
+    area: 'RESTAURANTS',
+    title: 'Restaurant moderation',
+    description:
+      'Review platform restaurants and manage moderation workflows.',
+  },
+  {
+    area: 'PROMOTIONS',
+    title: 'Sponsored promotions',
+    description:
+      'Choose which restaurants appear in sponsored placements.',
+  },
+  {
+    area: 'ACCESS',
+    title: 'User roles',
+    description:
+      'Review user roles and safely manage administrator access.',
+  },
+  {
+    area: 'INSIGHTS',
+    title: 'Platform insights',
+    description:
+      'View platform activity, restaurant health and operational trends.',
+  },
+];
+
 export default function AdminScreen() {
   const { user } = useAuth();
   const { theme } = useAppTheme();
 
-  const displayName = user?.fullName || user?.username || 'Administrator';
+  const displayName =
+    user?.fullName || user?.displayName || user?.username || 'Administrator';
+
   const username = user?.username || 'Unknown user';
 
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerText}>
-            <Text style={[styles.eyebrow, { color: theme.colors.primary }]}>
-              MANAGEMENT
-            </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            <View style={styles.headerText}>
+              <Text style={[styles.eyebrow, { color: theme.colors.primary }]}>
+                ADMINISTRATION
+              </Text>
 
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              Admin area
-            </Text>
+              <Text style={[styles.title, { color: theme.colors.text }]}>
+                Admin workspace
+              </Text>
 
-            <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-              Manage restaurants, products and platform activity from one place.
+              <Text
+                style={[styles.subtitle, { color: theme.colors.textMuted }]}
+              >
+                Use this workspace as the central entry point for platform
+                administration.
+              </Text>
+            </View>
+
+            <ThemeToggle compact />
+          </View>
+
+          <AppCard style={styles.profileCard}>
+            <View>
+              <Text
+                style={[styles.cardLabel, { color: theme.colors.textMuted }]}
+              >
+                SIGNED IN AS
+              </Text>
+
+              <Text style={[styles.userName, { color: theme.colors.text }]}>
+                {displayName}
+              </Text>
+
+              <Text
+                style={[styles.username, { color: theme.colors.textMuted }]}
+              >
+                @{username}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: theme.colors.primarySoft },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.roleBadgeText,
+                  { color: theme.colors.primary },
+                ]}
+              >
+                Administrator
+              </Text>
+            </View>
+          </AppCard>
+
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text
+                style={[styles.eyebrow, { color: theme.colors.primary }]}
+              >
+                WORKSPACE
+              </Text>
+
+              <Text
+                style={[styles.sectionTitle, { color: theme.colors.text }]}
+              >
+                Management tools
+              </Text>
+            </View>
+
+            <Text
+              style={[
+                styles.sectionDescription,
+                { color: theme.colors.textMuted },
+              ]}
+            >
+              Features are enabled here as their dedicated workflows are
+              delivered.
             </Text>
           </View>
 
-          <ThemeToggle compact />
+          <View style={styles.toolsList}>
+            {ADMIN_TOOLS.map((tool) => (
+              <AppCard key={tool.title} style={styles.toolCard}>
+                <Text
+                  style={[
+                    styles.toolArea,
+                    { color: theme.colors.primary },
+                  ]}
+                >
+                  {tool.area}
+                </Text>
+
+                <Text
+                  style={[styles.toolTitle, { color: theme.colors.text }]}
+                >
+                  {tool.title}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.toolDescription,
+                    { color: theme.colors.textMuted },
+                  ]}
+                >
+                  {tool.description}
+                </Text>
+
+                <View
+                  style={[
+                    styles.comingSoonBadge,
+                    { backgroundColor: theme.colors.primarySoft },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.comingSoonText,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Coming soon
+                  </Text>
+                </View>
+              </AppCard>
+            ))}
+          </View>
         </View>
-
-        <AppCard style={styles.profileCard}>
-          <Text style={[styles.cardLabel, { color: theme.colors.textMuted }]}>
-            SIGNED IN AS
-          </Text>
-
-          <Text style={[styles.userName, { color: theme.colors.text }]}>
-            {displayName}
-          </Text>
-
-          <Text style={[styles.username, { color: theme.colors.textMuted }]}>
-            @{username}
-          </Text>
-
-          <View
-            style={[
-              styles.roleBadge,
-              { backgroundColor: theme.colors.primarySoft },
-            ]}
-          >
-            <Text style={[styles.roleBadgeText, { color: theme.colors.primary }]}>
-              Administrator
-            </Text>
-          </View>
-        </AppCard>
-
-        <AppCard style={styles.infoCard}>
-          <Text style={[styles.infoTitle, { color: theme.colors.text }]}>
-            Management tools are on the way
-          </Text>
-
-          <Text style={[styles.infoMessage, { color: theme.colors.textMuted }]}>
-            Restaurant ownership, product management and analytics will be added
-            in the upcoming mobile management tasks.
-          </Text>
-        </AppCard>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -84,10 +191,13 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
-    flex: 1,
     gap: 16,
     padding: 24,
+    paddingBottom: 40,
   },
   headerRow: {
     alignItems: 'flex-start',
@@ -115,7 +225,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   profileCard: {
-    gap: 8,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     padding: 22,
   },
   cardLabel: {
@@ -124,17 +236,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.9,
   },
   userName: {
-    fontSize: 22,
+    fontSize: 21,
     fontWeight: '800',
-    marginTop: 4,
+    marginTop: 5,
   },
   username: {
     fontSize: 14,
+    marginTop: 2,
   },
   roleBadge: {
-    alignSelf: 'flex-start',
     borderRadius: 999,
-    marginTop: 10,
     paddingHorizontal: 12,
     paddingVertical: 7,
   },
@@ -142,16 +253,47 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
-  infoCard: {
+  sectionHeader: {
     gap: 8,
-    padding: 22,
+    marginTop: 10,
   },
-  infoTitle: {
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  toolsList: {
+    gap: 12,
+  },
+  toolCard: {
+    gap: 8,
+    padding: 20,
+  },
+  toolArea: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  toolTitle: {
     fontSize: 18,
     fontWeight: '800',
   },
-  infoMessage: {
+  toolDescription: {
     fontSize: 15,
     lineHeight: 22,
+  },
+  comingSoonBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    marginTop: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+  },
+  comingSoonText: {
+    fontSize: 12,
+    fontWeight: '800',
   },
 });
