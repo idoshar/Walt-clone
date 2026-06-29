@@ -4810,3 +4810,35 @@ body.dark .checkout-field input[type='number'] {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+/* SCRUM-494: keep the original desktop header order without horizontal overflow. */
+@media (min-width: 901px) {
+  .header-search {
+    flex: 1 1 250px;
+    min-width: 0;
+    max-width: 320px;
+    margin: 0 16px;
+  }
+
+  .header-search-input {
+    min-width: 0;
+  }
+
+  .navbar-actions {
+    gap: 14px;
+  }
+
+  .primary-nav-links,
+  .navbar-utilities {
+    gap: 14px;
+  }
+
+  .user-area {
+    gap: 10px;
+  }
+
+  .logout-button {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}

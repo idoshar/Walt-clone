@@ -61,6 +61,9 @@ function Header({ token, onLogout }) {
               <NavLink to="/search" className="nav-link">Search</NavLink>
               <NavLink to="/orders" className="nav-link">Orders</NavLink>
               <NavLink to="/management" className="nav-link">Management</NavLink>
+              {user?.role === 'admin' ? (
+                <NavLink to="/admin" className="nav-link">Admin</NavLink>
+              ) : null}
             </div>
 
             <div className="navbar-utilities">
