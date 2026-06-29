@@ -23,6 +23,28 @@ class UserController {
         }
     }
 
+    async updateCurrentUserImage(req, res, next) {
+        try {
+            const userId = req.user?.sub;
+
+            if (!userId) {
+                return res.status(401).json({
+                    error: 'Unauthorized',
+                    message: 'Missing authenticated user'
+                });
+            }
+
+            const user = await userService.updateCurrentUserImage(
+                userId,
+                req.body
+            );
+
+            return res.status(200).json(user.toResponseObject());
+        } catch (err) {
+            next(err);
+        }
+    }
+
     async updateCurrentUserLocation(req, res, next) {
         try {
             const userId = req.user?.sub;
