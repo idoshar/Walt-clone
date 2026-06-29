@@ -15,6 +15,7 @@ import {
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
 import AppCard from '../components/AppCard';
+import RestaurantDiscoveryCarousel from '../components/RestaurantDiscoveryCarousel';
 import AppState from '../components/AppState';
 import SponsoredRestaurantCard from '../components/SponsoredRestaurantCard';
 import ThemeToggle from '../components/ThemeToggle';
@@ -25,6 +26,7 @@ import {
   requestCurrentLocation,
 } from '../location/locationService';
 import { useAppTheme } from '../theme/ThemeContext';
+import { getFeaturedRestaurants } from '../utils/featuredRestaurants';
 
 const ALL_CUISINES = 'All';
 
@@ -117,6 +119,21 @@ export default function HomeScreen({ navigation }) {
     if (!userCoordinates) return filtered;
     return sortRestaurantsByDistance(filtered, userCoordinates);
   }, [restaurants, selectedCuisine, userCoordinates]);
+
+  const featuredRestaurants = useMemo(
+    () => getFeaturedRestaurants(restaurants),
+    [restaurants]
+  );
+
+  const nearbyRestaurants = useMemo(() => {
+    if (!userCoordinates) {
+      return [];
+    }
+
+    return visibleRestaurants
+      .filter((restaurant) => restaurant.distanceKm !== null)
+      .slice(0, 6);
+  }, [userCoordinates, visibleRestaurants]);
 
   const handleUseMyLocation = useCallback(async () => {
     setLocationState('loading');
@@ -271,7 +288,7 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </AppCard>
 
-          {!isLoadingRestaurants && !isRestaurantsError ? (
+        {!isLoadingRestaurants && !isRestaurantsError ? (
             <SponsoredRestaurantCard
               navigation={navigation}
               restaurants={restaurants
@@ -301,6 +318,41 @@ export default function HomeScreen({ navigation }) {
                 .slice(0, 3)}
             />
           ) : null}
+
+        {!isLoadingRestaurants && !isRestaurantsError && restaurants.length > 0 ? (
+          <RestaurantDiscoveryCarousel
+            eyebrow="Selected from restaurants available today"
+            emptyMessage="No featured restaurants are available right now."
+            onPressRestaurant={(restaurant) =>
+              navigation.navigate('RestaurantDetails', {
+                restaurantId: restaurant.id,
+                restaurant,
+              })
+            }
+            restaurants={featuredRestaurants}
+            title="Featured restaurants"
+          />
+        ) : null}
+
+        {!isLoadingRestaurants && !isRestaurantsError && userCoordinates ? (
+          <RestaurantDiscoveryCarousel
+            eyebrow={
+              selectedCuisine === ALL_CUISINES
+                ? 'Sorted by distance from your location'
+                : `${selectedCuisine} restaurants sorted by distance`
+            }
+            emptyMessage="No nearby restaurants with a saved location are available right now."
+            onPressRestaurant={(restaurant) =>
+              navigation.navigate('RestaurantDetails', {
+                restaurantId: restaurant.id,
+                restaurant,
+              })
+            }
+            restaurants={nearbyRestaurants}
+            showDistance
+            title="Nearby restaurants"
+          />
+        ) : null}
 
         <View style={styles.sectionHeader}>
           <View style={styles.sectionText}>
