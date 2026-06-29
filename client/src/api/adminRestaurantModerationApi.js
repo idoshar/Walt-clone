@@ -1,0 +1,28 @@
+import { apiRequest } from './client.js';
+
+function getRestaurantPath(restaurantId = '') {
+  const normalizedId = String(restaurantId || '').trim();
+
+  if (!normalizedId) {
+    throw new Error('A restaurant id is required.');
+  }
+
+  return `/admin/restaurants/${encodeURIComponent(normalizedId)}`;
+}
+
+export function getAdminRestaurants() {
+  return apiRequest('/admin/restaurants');
+}
+
+export function updateAdminRestaurant(restaurantId, restaurantUpdates) {
+  return apiRequest(getRestaurantPath(restaurantId), {
+    method: 'PATCH',
+    body: JSON.stringify(restaurantUpdates)
+  });
+}
+
+export function deleteAdminRestaurant(restaurantId) {
+  return apiRequest(getRestaurantPath(restaurantId), {
+    method: 'DELETE'
+  });
+}

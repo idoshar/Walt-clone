@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 
 import { useAuth } from '../auth/AuthContext';
+import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModerationScreen';
 import AdminScreen from '../screens/AdminScreen';
+import AdminStatisticsScreen from '../screens/AdminStatisticsScreen';
 import CartScreen from '../screens/CartScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -125,11 +127,23 @@ function AppNavigator({ screenOptions }) {
         options={{ title: 'Restaurant' }}
       />
       {isAdmin ? (
-        <Stack.Screen
-          component={AdminScreen}
-          name="Admin"
-          options={{ title: 'Admin area' }}
-        />
+        <>
+          <Stack.Screen
+            component={AdminScreen}
+            name="Admin"
+            options={{ title: 'Admin area' }}
+          />
+          <Stack.Screen
+            component={AdminRestaurantModerationScreen}
+            name="AdminRestaurantModeration"
+            options={{ title: 'Restaurant moderation' }}
+          />
+          <Stack.Screen
+            component={AdminStatisticsScreen}
+            name="AdminStatistics"
+            options={{ title: 'Platform insights' }}
+          />
+        </>
       ) : null}
     </Stack.Navigator>
   );

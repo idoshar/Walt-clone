@@ -1,4 +1,5 @@
 import {
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -17,6 +18,8 @@ const ADMIN_TOOLS = [
     title: 'Restaurant moderation',
     description:
       'Review platform restaurants and manage moderation workflows.',
+    route: 'AdminRestaurantModeration',
+    status: 'Available now',
   },
   {
     area: 'PROMOTIONS',
@@ -35,10 +38,12 @@ const ADMIN_TOOLS = [
     title: 'Platform insights',
     description:
       'View platform activity, restaurant health and operational trends.',
+    route: 'AdminStatistics',
+    status: 'Available now',
   },
 ];
 
-export default function AdminScreen() {
+export default function AdminScreen({ navigation }) {
   const { user } = useAuth();
   const { theme } = useAppTheme();
 
@@ -138,47 +143,56 @@ export default function AdminScreen() {
 
           <View style={styles.toolsList}>
             {ADMIN_TOOLS.map((tool) => (
-              <AppCard key={tool.title} style={styles.toolCard}>
-                <Text
-                  style={[
-                    styles.toolArea,
-                    { color: theme.colors.primary },
-                  ]}
-                >
-                  {tool.area}
-                </Text>
-
-                <Text
-                  style={[styles.toolTitle, { color: theme.colors.text }]}
-                >
-                  {tool.title}
-                </Text>
-
-                <Text
-                  style={[
-                    styles.toolDescription,
-                    { color: theme.colors.textMuted },
-                  ]}
-                >
-                  {tool.description}
-                </Text>
-
-                <View
-                  style={[
-                    styles.comingSoonBadge,
-                    { backgroundColor: theme.colors.primarySoft },
-                  ]}
-                >
+              <Pressable
+                key={tool.title}
+                disabled={!tool.route}
+                onPress={() => navigation.navigate(tool.route)}
+                style={({ pressed }) =>
+                  pressed && tool.route ? styles.toolPressed : null
+                }
+              >
+                <AppCard style={styles.toolCard}>
                   <Text
                     style={[
-                      styles.comingSoonText,
+                      styles.toolArea,
                       { color: theme.colors.primary },
                     ]}
                   >
-                    Coming soon
+                    {tool.area}
                   </Text>
-                </View>
-              </AppCard>
+
+                  <Text
+                    style={[styles.toolTitle, { color: theme.colors.text }]}
+                  >
+                    {tool.title}
+                  </Text>
+
+                  <Text
+                    style={[
+                      styles.toolDescription,
+                      { color: theme.colors.textMuted },
+                    ]}
+                  >
+                    {tool.description}
+                  </Text>
+
+                  <View
+                    style={[
+                      styles.comingSoonBadge,
+                      { backgroundColor: theme.colors.primarySoft },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.comingSoonText,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      {tool.status || 'Coming soon'}
+                    </Text>
+                  </View>
+                </AppCard>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -271,6 +285,9 @@ const styles = StyleSheet.create({
   toolCard: {
     gap: 8,
     padding: 20,
+  },
+  toolPressed: {
+    opacity: 0.78,
   },
   toolArea: {
     fontSize: 11,

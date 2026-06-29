@@ -1,8 +1,11 @@
 const express = require('express');
-const adminStatisticsController =
-    require('../controllers/adminStatisticsController');
+
+const adminRestaurantModerationController =
+    require('../controllers/adminRestaurantModerationController');
 const adminSponsorshipController =
     require('../controllers/adminSponsorshipController');
+const adminStatisticsController =
+    require('../controllers/adminStatisticsController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const asyncHandler = require('../middleware/asyncHandler');
@@ -27,7 +30,7 @@ router.get(
     '/restaurants',
     authMiddleware,
     adminMiddleware,
-    asyncHandler(adminSponsorshipController.getRestaurants)
+    asyncHandler(adminRestaurantModerationController.getRestaurants)
 );
 
 router.patch(
@@ -37,11 +40,25 @@ router.patch(
     asyncHandler(adminSponsorshipController.updateRestaurantSponsorship)
 );
 
+router.patch(
+    '/restaurants/:id',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminRestaurantModerationController.updateRestaurant)
+);
+
+router.delete(
+    '/restaurants/:id',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminRestaurantModerationController.deleteRestaurant)
+);
+
 router.get(
     '/statistics',
     authMiddleware,
     adminMiddleware,
-    adminStatisticsController.getAdminStatistics
+    asyncHandler(adminStatisticsController.getAdminStatistics)
 );
 
 module.exports = router;
