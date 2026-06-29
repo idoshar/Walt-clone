@@ -16,6 +16,7 @@ import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
 import AppCard from '../components/AppCard';
 import AppState from '../components/AppState';
+import SponsoredRestaurantCard from '../components/SponsoredRestaurantCard';
 import ThemeToggle from '../components/ThemeToggle';
 import { sortRestaurantsByDistance } from '../location/distance';
 import {
@@ -266,6 +267,37 @@ export default function HomeScreen({ navigation }) {
             )}
           </Pressable>
         </AppCard>
+
+          {!isLoadingRestaurants && !isRestaurantsError ? (
+            <SponsoredRestaurantCard
+              navigation={navigation}
+              restaurants={restaurants
+                .filter((restaurant) => restaurant?.isSponsored === true)
+                .sort((leftRestaurant, rightRestaurant) => {
+                  const leftRank = Number(leftRestaurant.sponsoredRank);
+                  const rightRank = Number(rightRestaurant.sponsoredRank);
+
+                  const normalizedLeftRank =
+                    Number.isInteger(leftRank) && leftRank > 0
+                      ? leftRank
+                      : Number.MAX_SAFE_INTEGER;
+
+                  const normalizedRightRank =
+                    Number.isInteger(rightRank) && rightRank > 0
+                      ? rightRank
+                      : Number.MAX_SAFE_INTEGER;
+
+                  if (normalizedLeftRank !== normalizedRightRank) {
+                    return normalizedLeftRank - normalizedRightRank;
+                  }
+
+                  return String(leftRestaurant.name || '').localeCompare(
+                    String(rightRestaurant.name || '')
+                  );
+                })
+                .slice(0, 3)}
+            />
+          ) : null}
 
         <View style={styles.sectionHeader}>
           <View style={styles.sectionText}>

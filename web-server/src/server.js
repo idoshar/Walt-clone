@@ -2,6 +2,9 @@ const app = require('./app');
 const { connectDatabase } = require('./config/database');
 const { backfillRecommendationIds } = require('./services/recommendationIdMigration');
 const { seedRestaurants } = require('./seed/seedRestaurants');
+const {
+    backfillRestaurantSponsorship
+} = require('./services/restaurantSponsorshipMigration');
 const { seedInitialAdmin } = require('./seed/seedInitialAdmin');
 const { seedProducts } = require('./seed/seedProducts');
 
@@ -11,6 +14,7 @@ async function startServer() {
     await connectDatabase();
     await backfillRecommendationIds();
     await seedRestaurants();
+    await backfillRestaurantSponsorship();
     await seedInitialAdmin();
     await seedProducts();
 

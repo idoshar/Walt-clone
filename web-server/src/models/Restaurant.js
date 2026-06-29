@@ -56,6 +56,16 @@ const restaurantSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
             index: true
+        },
+        isSponsored: {
+            type: Boolean,
+            default: false,
+            index: true
+        },
+        sponsoredRank: {
+            type: Number,
+            default: null,
+            min: 1
         }
     },
     {
@@ -64,6 +74,7 @@ const restaurantSchema = new mongoose.Schema(
 );
 
 restaurantSchema.index({ name: 'text', description: 'text', cuisine: 'text' });
+restaurantSchema.index({ isSponsored: 1, sponsoredRank: 1 });
 
 restaurantSchema.methods.toResponseObject = function toResponseObject() {
     return {
@@ -77,7 +88,9 @@ restaurantSchema.methods.toResponseObject = function toResponseObject() {
         latitude: this.latitude,
         longitude: this.longitude,
         ownerId: this.ownerId,
-        isDefault: this.isDefault
+        isDefault: this.isDefault,
+        isSponsored: this.isSponsored,
+        sponsoredRank: this.sponsoredRank
     };
 };
 

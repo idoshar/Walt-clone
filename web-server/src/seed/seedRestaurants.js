@@ -10,7 +10,9 @@ const defaultRestaurants = [
         description: 'Italian pizza restaurant with pasta and fresh tomato sauce',
         latitude: 32.0616,
         longitude: 34.7743,
-        isDefault: true
+        isDefault: true,
+        isSponsored: true,
+        sponsoredRank: 1
     },
     {
         id: '2',
@@ -21,7 +23,9 @@ const defaultRestaurants = [
         description: 'American burger restaurant with fries and grilled meat',
         latitude: 32.077,
         longitude: 34.774,
-        isDefault: true
+        isDefault: true,
+        isSponsored: true,
+        sponsoredRank: 2
     },
     {
         id: '3',
@@ -32,7 +36,9 @@ const defaultRestaurants = [
         description: 'Japanese sushi restaurant with rolls, rice and fish',
         latitude: 32.0627,
         longitude: 34.7726,
-        isDefault: true
+        isDefault: true,
+        isSponsored: true,
+        sponsoredRank: 3
     }
 ];
 
