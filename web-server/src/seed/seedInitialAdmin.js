@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { generateId } = require('../utilities/idGenerator');
+const { hashPassword } = require('../utilities/passwordHelper');
 
 const ADMIN_FIELDS = [
     'INITIAL_ADMIN_USERNAME',
@@ -60,14 +61,22 @@ async function seedInitialAdmin() {
         return;
     }
 
+    const passwordHash = await hashPassword(admin.password);
+
     const result = await User.updateOne(
         { username: admin.username },
         {
             $setOnInsert: {
                 id: generateId('admin'),
-                ...admin,
+                username: admin.username,
+                password: passwordHash,
+                fullName: admin.fullName,
+                phone: admin.phone,
+                address: admin.address,
                 image: '',
                 role: 'admin',
+                mustChangePassword: false,
+                tokenVersion: 0,
                 latitude: null,
                 longitude: null
             }

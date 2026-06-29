@@ -24,7 +24,17 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true
+            required: true,
+            select: false
+        },
+        mustChangePassword: {
+            type: Boolean,
+            default: false
+        },
+        tokenVersion: {
+            type: Number,
+            default: 0,
+            min: 0
         },
         fullName: {
             type: String,
@@ -76,7 +86,8 @@ userSchema.methods.toResponseObject = function toResponseObject() {
         image: this.image,
         role: this.role,
         latitude: this.latitude,
-        longitude: this.longitude
+        longitude: this.longitude,
+        mustChangePassword: Boolean(this.mustChangePassword)
     };
 };
 

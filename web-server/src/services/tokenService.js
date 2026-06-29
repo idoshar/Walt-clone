@@ -1,44 +1,20 @@
-const crypto = require('crypto');
 const userRepository = require('../repositories/userRepository');
+const {
+    hashLegacyPassword,
+    verifyPassword
+} = require('../utilities/passwordHelper');
+const { createJwt } = require('../utilities/tokenHelper');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-for-course-project';
-const JWT_EXPIRES_IN_SECONDS = 60 * 60 * 2;
-
-function base64UrlEncode(value) {
-    return Buffer
-        .from(JSON.stringify(value))
-        .toString('base64url');
+function createBadRequestError(message) {
+    const error = new Error(message);
+    error.statusCode = 400;
+    return error;
 }
 
-function createSignature(header, payload) {
-    return crypto
-        .createHmac('sha256', JWT_SECRET)
-        .update(`${header}.${payload}`)
-        .digest('base64url');
-}
-
-function createJwt(user) {
-    const now = Math.floor(Date.now() / 1000);
-
-    const header = {
-        alg: 'HS256',
-        typ: 'JWT'
-    };
-
-    const payload = {
-        sub: String(user.id),
-        username: user.username,
-        fullName: user.fullName,
-        role: user.role,
-        iat: now,
-        exp: now + JWT_EXPIRES_IN_SECONDS
-    };
-
-    const encodedHeader = base64UrlEncode(header);
-    const encodedPayload = base64UrlEncode(payload);
-    const signature = createSignature(encodedHeader, encodedPayload);
-
-    return `${encodedHeader}.${encodedPayload}.${signature}`;
+function createInvalidCredentialsError() {
+    const error = new Error('Invalid username or password');
+    error.statusCode = 401;
+    return error;
 }
 
 class TokenService {
@@ -46,39 +22,49 @@ class TokenService {
         const { username, password } = body || {};
 
         if (typeof username !== 'string' || username.trim() === '') {
-            const err = new Error('username is required');
-            err.statusCode = 400;
-            throw err;
+            throw createBadRequestError('username is required');
         }
 
         if (typeof password !== 'string' || password.trim() === '') {
-            const err = new Error('password is required');
-            err.statusCode = 400;
-            throw err;
+            throw createBadRequestError('password is required');
         }
 
-        const user = await userRepository.findByUsername(username.trim());
+        const user = await userRepository.findByUsernameWithPassword(
+            username.trim()
+        );
 
-        if (!user || user.password !== password.trim()) {
-            const err = new Error('Invalid username or password');
-            err.statusCode = 401;
-            throw err;
+        if (!user) {
+            throw createInvalidCredentialsError();
+        }
+
+        const passwordVerification = await verifyPassword(
+            password,
+            user.password
+        );
+
+        if (!passwordVerification.matches) {
+            throw createInvalidCredentialsError();
+        }
+
+        let authenticatedUser = user;
+
+        if (passwordVerification.needsUpgrade) {
+            const passwordHash = await hashLegacyPassword(password);
+
+            authenticatedUser = await userRepository.upgradeLegacyPassword(
+                user.id,
+                passwordHash
+            );
+
+            if (!authenticatedUser) {
+                throw new Error('Unable to upgrade legacy password');
+            }
         }
 
         return {
-            token: createJwt(user),
-            userId: user.id,
-            user: {
-                id: user.id,
-                username: user.username,
-                fullName: user.fullName,
-                phone: user.phone,
-                address: user.address,
-                image: user.image,
-                role: user.role,
-                latitude: user.latitude,
-                longitude: user.longitude
-            }
+            token: createJwt(authenticatedUser),
+            userId: authenticatedUser.id,
+            user: authenticatedUser.toResponseObject()
         };
     }
 }

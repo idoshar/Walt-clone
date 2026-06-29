@@ -12,6 +12,7 @@ import OrdersPage from './pages/OrdersPage.jsx';
 import OrderStatusPage from './pages/OrderStatusPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -38,7 +39,16 @@ function RequireAdmin({ children }) {
 }
 
 function App() {
-  const { token, logout } = useAuth();
+  const { token, user, logout } = useAuth();
+
+  if (token && user?.mustChangePassword) {
+    return (
+      <Routes>
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="*" element={<Navigate to="/change-password" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <Routes>

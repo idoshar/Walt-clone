@@ -1,89 +1,61 @@
-const crypto = require('crypto');
+const userRepository = require('../repositories/userRepository');
+const { verifyJwt } = require('../utilities/tokenHelper');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-for-course-project';
-
-
-function decodeBase64Url(value) {
-    return JSON.parse(
-        Buffer
-            .from(value, 'base64url')
-            .toString()
-    );
+function unauthorized(res, message) {
+    return res.status(401).json({
+        error: 'Unauthorized',
+        message
+    });
 }
 
+async function authMiddleware(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
 
-function verifyJwt(token) {
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return unauthorized(res, 'Missing token');
+        }
 
-    const parts = token.split('.');
+        const token = authHeader.substring(7);
+        const tokenPayload = verifyJwt(token);
 
-    if (parts.length !== 3) {
-        return null;
+        if (!tokenPayload) {
+            return unauthorized(res, 'Invalid token');
+        }
+
+        const user = await userRepository.findById(tokenPayload.sub);
+
+        if (
+            !user ||
+            Number(user.tokenVersion || 0) !== tokenPayload.tokenVersion
+        ) {
+            return unauthorized(res, 'Invalid token');
+        }
+
+        req.user = {
+            sub: user.id,
+            username: user.username,
+            fullName: user.fullName,
+            role: user.role,
+            tokenVersion: Number(user.tokenVersion || 0),
+            mustChangePassword: Boolean(user.mustChangePassword)
+        };
+
+        const isPasswordChangeRequest =
+            req.method === 'PATCH' &&
+            req.originalUrl.split('?')[0] === '/api/users/me/password';
+
+        if (user.mustChangePassword && !isPasswordChangeRequest) {
+            return res.status(403).json({
+                error: 'PasswordChangeRequired',
+                message: 'Password change is required before continuing'
+            });
+        }
+
+        return next();
+    } catch (error) {
+        return next(error);
     }
-
-
-    const [header, payload, signature] = parts;
-
-
-    const expectedSignature = crypto
-        .createHmac('sha256', JWT_SECRET)
-        .update(`${header}.${payload}`)
-        .digest('base64url');
-
-
-    if (signature !== expectedSignature) {
-        return null;
-    }
-
-
-    const decodedPayload = decodeBase64Url(payload);
-
-
-    if (decodedPayload.exp < Math.floor(Date.now() / 1000)) {
-        return null;
-    }
-
-
-    return decodedPayload;
 }
-
-
-
-function authMiddleware(req, res, next) {
-
-    const authHeader = req.headers.authorization;
-
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-
-        return res.status(401).json({
-            error: 'Unauthorized',
-            message: 'Missing token'
-        });
-
-    }
-
-
-    const token = authHeader.substring(7);
-
-
-    const user = verifyJwt(token);
-
-
-    if (!user) {
-
-        return res.status(401).json({
-            error: 'Unauthorized',
-            message: 'Invalid token'
-        });
-
-    }
-
-
-    req.user = user;
-
-    next();
-}
-
-
 
 module.exports = authMiddleware;

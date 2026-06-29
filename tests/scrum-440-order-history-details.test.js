@@ -47,7 +47,7 @@ async function createUserAndToken() {
     method: 'POST',
     body: JSON.stringify({
       username,
-      password: '123456',
+      password: 'TestPass123',
       fullName: 'Order History Customer',
       phone: '052-4444444',
       address: '40 History Street, Jerusalem'
@@ -63,7 +63,7 @@ async function createUserAndToken() {
     method: 'POST',
     body: JSON.stringify({
       username,
-      password: '123456'
+      password: 'TestPass123'
     })
   });
 

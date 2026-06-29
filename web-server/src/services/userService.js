@@ -1,26 +1,31 @@
 const userRepository = require('../repositories/userRepository');
+const {
+    hashPassword,
+    verifyPassword
+} = require('../utilities/passwordHelper');
+const { createJwt } = require('../utilities/tokenHelper');
+
+function createError(message, statusCode) {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    return error;
+}
 
 function validateRequiredString(value, fieldName) {
     if (typeof value !== 'string' || value.trim() === '') {
-        const error = new Error(`${fieldName} is required`);
-        error.statusCode = 400;
-        throw error;
+        throw createError(`${fieldName} is required`, 400);
     }
 }
 
 function normalizeCoordinate(value, fieldName, minimum, maximum) {
     if (value === null || value === undefined || value === '') {
-        const error = new Error(`${fieldName} is required`);
-        error.statusCode = 400;
-        throw error;
+        throw createError(`${fieldName} is required`, 400);
     }
 
     const coordinate = Number(value);
 
     if (!Number.isFinite(coordinate) || coordinate < minimum || coordinate > maximum) {
-        const error = new Error(`${fieldName} must be a valid coordinate`);
-        error.statusCode = 400;
-        throw error;
+        throw createError(`${fieldName} must be a valid coordinate`, 400);
     }
 
     return coordinate;
@@ -45,14 +50,20 @@ function getOptionalLocation(userData) {
     }
 
     if (!hasLatitude || !hasLongitude) {
-        const error = new Error('latitude and longitude must be provided together');
-        error.statusCode = 400;
-        throw error;
+        throw createError(
+            'latitude and longitude must be provided together',
+            400
+        );
     }
 
     return {
         latitude: normalizeCoordinate(userData.latitude, 'latitude', -90, 90),
-        longitude: normalizeCoordinate(userData.longitude, 'longitude', -180, 180)
+        longitude: normalizeCoordinate(
+            userData.longitude,
+            'longitude',
+            -180,
+            180
+        )
     };
 }
 
@@ -67,26 +78,29 @@ class UserService {
         validateRequiredString(phone, 'phone');
         validateRequiredString(address, 'address');
 
-        const existingUser = await userRepository.findByUsername(username.trim());
+        const normalizedUsername = username.trim();
+        const existingUser = await userRepository.findByUsername(
+            normalizedUsername
+        );
 
         if (existingUser) {
-            const error = new Error('username already exists');
-            error.statusCode = 409;
-            throw error;
+            throw createError('username already exists', 409);
         }
 
         const location = getOptionalLocation(data);
+        const passwordHash = await hashPassword(password);
 
-        return await userRepository.create({
-            username: data.username.trim(),
-            password: data.password,
-            fullName: data.fullName.trim(),
-            phone: data.phone.trim(),
-            address: data.address.trim(),
-            image: data.image || '',
+        return userRepository.create({
+            username: normalizedUsername,
+            password: passwordHash,
+            fullName: fullName.trim(),
+            phone: phone.trim(),
+            address: address.trim(),
+            image: typeof data.image === 'string' ? data.image.trim() : '',
             role: 'customer',
-            latitude: data.latitude || null,
-            longitude: data.longitude || null
+            mustChangePassword: false,
+            tokenVersion: 0,
+            ...location
         });
     }
 
@@ -94,9 +108,7 @@ class UserService {
         const user = await userRepository.findById(id);
 
         if (!user) {
-            const error = new Error('User not found');
-            error.statusCode = 404;
-            throw error;
+            throw createError('User not found', 404);
         }
 
         return user;
@@ -106,7 +118,12 @@ class UserService {
         const data = locationData || {};
 
         const latitude = normalizeCoordinate(data.latitude, 'latitude', -90, 90);
-        const longitude = normalizeCoordinate(data.longitude, 'longitude', -180, 180);
+        const longitude = normalizeCoordinate(
+            data.longitude,
+            'longitude',
+            -180,
+            180
+        );
 
         const user = await userRepository.update(userId, {
             latitude,
@@ -114,12 +131,58 @@ class UserService {
         });
 
         if (!user) {
-            const error = new Error('User not found');
-            error.statusCode = 404;
-            throw error;
+            throw createError('User not found', 404);
         }
 
         return user;
+    }
+
+    async changeCurrentUserPassword(userId, passwordData) {
+        const data = passwordData || {};
+        const user = await userRepository.findByIdWithPassword(userId);
+
+        if (!user) {
+            throw createError('User not found', 404);
+        }
+
+        const currentPasswordVerification = await verifyPassword(
+            data.currentPassword,
+            user.password
+        );
+
+        if (!currentPasswordVerification.matches) {
+            throw createError('Current password is incorrect', 400);
+        }
+
+        const passwordHash = await hashPassword(data.newPassword);
+
+        const newPasswordVerification = await verifyPassword(
+            data.newPassword,
+            user.password
+        );
+
+        if (newPasswordVerification.matches) {
+            throw createError(
+                'newPassword must be different from currentPassword',
+                400
+            );
+        }
+
+        const updatedUser =
+            await userRepository.updatePasswordAndInvalidateTokens(userId, {
+                passwordHash,
+                mustChangePassword: false
+            });
+
+        if (!updatedUser) {
+            throw createError('User not found', 404);
+        }
+
+        return {
+            token: createJwt(updatedUser),
+            userId: updatedUser.id,
+            user: updatedUser.toResponseObject()
+        };
     }
 }
 

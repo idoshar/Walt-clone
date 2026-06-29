@@ -15,6 +15,7 @@ import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModeratio
 import AdminScreen from '../screens/AdminScreen';
 import AdminStatisticsScreen from '../screens/AdminStatisticsScreen';
 import CartScreen from '../screens/CartScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -60,6 +61,18 @@ function AuthNavigator({ screenOptions }) {
         component={RegisterScreen}
         name="Register"
         options={{ title: 'Create account' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function PasswordChangeNavigator({ screenOptions }) {
+  return (
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen
+        component={ChangePasswordScreen}
+        name="ChangePassword"
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -150,7 +163,7 @@ function AppNavigator({ screenOptions }) {
 }
 
 export default function RootNavigator() {
-  const { isAuthenticated, isRestoringSession } = useAuth();
+  const { isAuthenticated, isRestoringSession, user } = useAuth();
   const { isRestoringTheme, theme } = useAppTheme();
 
   const navigationTheme = useMemo(
@@ -176,10 +189,12 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {isAuthenticated ? (
-        <AppNavigator screenOptions={screenOptions} />
-      ) : (
+      {!isAuthenticated ? (
         <AuthNavigator screenOptions={screenOptions} />
+      ) : user?.mustChangePassword ? (
+        <PasswordChangeNavigator screenOptions={screenOptions} />
+      ) : (
+        <AppNavigator screenOptions={screenOptions} />
       )}
     </NavigationContainer>
   );

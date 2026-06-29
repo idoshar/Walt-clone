@@ -49,7 +49,7 @@ async function createUserAndToken(prefix) {
     method: 'POST',
     body: JSON.stringify({
       username,
-      password: '123456',
+      password: 'TestPass123',
       fullName: 'Management User',
       phone: '0500000000',
       address: 'Test Address'
@@ -58,7 +58,7 @@ async function createUserAndToken(prefix) {
 
   const login = await request('/api/tokens', {
     method: 'POST',
-    body: JSON.stringify({ username, password: '123456' })
+    body: JSON.stringify({ username, password: 'TestPass123' })
   });
 
   expect(login.response.status === 200, `login expected 200, got ${login.response.status}`);
