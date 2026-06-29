@@ -4842,3 +4842,22 @@ body.dark .checkout-field input[type='number'] {
     padding-right: 12px;
   }
 }
+
+.password-change-signout {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.password-change-signout:hover {
+  background-color: var(--color-hover-bg);
+}
+
+.password-change-signout:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

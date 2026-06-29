@@ -94,7 +94,11 @@ function LoginPage() {
       }
 
       login(String(receivedToken), data?.user || null);
-      navigate('/');
+
+      navigate(
+        data?.user?.mustChangePassword ? '/change-password' : '/',
+        { replace: true }
+      );
     } catch (err) {
       setError(err.message || 'Login failed. Please check your details and try again.');
     } finally {

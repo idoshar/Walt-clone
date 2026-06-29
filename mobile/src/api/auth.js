@@ -30,3 +30,18 @@ export async function registerUser({
     },
   });
 }
+
+export async function changeCurrentPassword(
+  token,
+  currentPassword,
+  newPassword
+) {
+  return apiRequest('/users/me/password', {
+    method: 'PATCH',
+    token,
+    body: {
+      currentPassword,
+      newPassword,
+    },
+  });
+}

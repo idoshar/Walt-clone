@@ -47,7 +47,7 @@ async function createUserAndToken() {
     method: 'POST',
     body: JSON.stringify({
       username,
-      password: '123456',
+      password: 'TestPass123',
       fullName: 'Delivery Snapshot User',
       phone: '050-1234567',
       address: '10 Snapshot Street, Jerusalem'
@@ -63,7 +63,7 @@ async function createUserAndToken() {
     method: 'POST',
     body: JSON.stringify({
       username,
-      password: '123456'
+      password: 'TestPass123'
     })
   });
 

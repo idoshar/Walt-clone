@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
+  changeCurrentPassword,
   loginWithCredentials,
   registerUser,
 } from '../api/auth';
@@ -17,7 +18,7 @@ function normalizeSession(loginResponse) {
     !loginResponse.token ||
     !loginResponse.user
   ) {
-    throw new Error('The server returned an invalid login response.');
+    throw new Error('The server returned an invalid authentication response.');
   }
 
   return {
@@ -58,6 +59,15 @@ export function AuthProvider({ children }) {
     restoreSession();
   }, []);
 
+  async function saveSession(nextSession) {
+    await AsyncStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify(nextSession)
+    );
+
+    setSession(nextSession);
+  }
+
   const value = useMemo(
     () => ({
       token: session?.token || null,
@@ -67,14 +77,7 @@ export function AuthProvider({ children }) {
 
       async signIn(username, password) {
         const loginResponse = await loginWithCredentials(username, password);
-        const nextSession = normalizeSession(loginResponse);
-
-        await AsyncStorage.setItem(
-          AUTH_STORAGE_KEY,
-          JSON.stringify(nextSession)
-        );
-
-        setSession(nextSession);
+        await saveSession(normalizeSession(loginResponse));
       },
 
       async signUp(userData) {
@@ -85,14 +88,21 @@ export function AuthProvider({ children }) {
           userData.password
         );
 
-        const nextSession = normalizeSession(loginResponse);
+        await saveSession(normalizeSession(loginResponse));
+      },
 
-        await AsyncStorage.setItem(
-          AUTH_STORAGE_KEY,
-          JSON.stringify(nextSession)
+      async changePassword(currentPassword, newPassword) {
+        if (!session?.token) {
+          throw new Error('You must be signed in to change your password.');
+        }
+
+        const passwordChangeResponse = await changeCurrentPassword(
+          session.token,
+          currentPassword,
+          newPassword
         );
 
-        setSession(nextSession);
+        await saveSession(normalizeSession(passwordChangeResponse));
       },
 
       async signOut() {
