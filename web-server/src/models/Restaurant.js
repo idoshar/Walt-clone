@@ -52,6 +52,11 @@ const restaurantSchema = new mongoose.Schema(
             default: null,
             index: true
         },
+        editorIds: {
+            type: [String],
+            default: [],
+            index: true
+        },
         isDefault: {
             type: Boolean,
             default: false,

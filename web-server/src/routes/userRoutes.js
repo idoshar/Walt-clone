@@ -26,6 +26,12 @@ router.patch(
     asyncHandler(userController.updateCurrentUserLocation)
 );
 
+router.get(
+    '/lookup',
+    authMiddleware,
+    asyncHandler(userController.lookupUserByUsername)
+);
+
 router.get('/:id', asyncHandler(userController.getUserById));
 
 module.exports = router;

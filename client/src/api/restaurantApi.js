@@ -1,4 +1,4 @@
-﻿import { apiRequest } from './client.js';
+import { apiRequest } from './client.js';
 
 export function getRestaurants() {
   return apiRequest('/restaurants');
@@ -14,6 +14,30 @@ export function getRestaurantById(id) {
 
 export function getRestaurantStatistics(id) {
   return apiRequest(`/restaurants/${id}/statistics`);
+}
+
+export function getRestaurantAccess(id) {
+  return apiRequest(`/restaurants/${id}/access`);
+}
+
+export function addRestaurantEditor(id, userId) {
+  return apiRequest(`/restaurants/${id}/editors`, {
+    method: 'POST',
+    body: JSON.stringify({ userId })
+  });
+}
+
+export function removeRestaurantEditor(id, userId) {
+  return apiRequest(`/restaurants/${id}/editors/${userId}`, {
+    method: 'DELETE'
+  });
+}
+
+export function transferRestaurantOwnership(id, userId) {
+  return apiRequest(`/restaurants/${id}/owner`, {
+    method: 'PUT',
+    body: JSON.stringify({ userId })
+  });
 }
 
 export function createRestaurant(restaurant) {

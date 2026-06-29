@@ -16,6 +16,10 @@ const {
     validateObject,
     validateRequiredFields
 } = require('../utilities/validationHelper');
+const {
+    canManageRestaurant,
+    getRequestUserId
+} = require('../services/restaurantAccessService');
 
 function normalizeCategoryId(value) {
     if (typeof value !== 'string') {
@@ -36,15 +40,6 @@ async function findRestaurant(req, res) {
     return restaurant;
 }
 
-function canManageRestaurant(req, restaurant) {
-    const userId = req.user?.sub || req.user?.id;
-
-    return Boolean(
-        restaurant.ownerId &&
-        userId &&
-        String(restaurant.ownerId) === String(userId)
-    );
-}
 
 async function requireManagedRestaurant(req, res) {
     const restaurant = await findRestaurant(req, res);
@@ -53,10 +48,11 @@ async function requireManagedRestaurant(req, res) {
         return null;
     }
 
-    if (!canManageRestaurant(req, restaurant)) {
+    if (!canManageRestaurant(restaurant, getRequestUserId(req))) {
         res.status(403).json({
             error: 'Forbidden',
-            message: 'You can manage only your own restaurants'
+            message:
+                'You can manage only restaurants where you are an owner or editor'
         });
         return null;
     }

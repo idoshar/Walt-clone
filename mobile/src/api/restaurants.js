@@ -17,6 +17,16 @@ function normalizeId(value) {
   return String(value || '').trim();
 }
 
+function restaurantPath(restaurantId) {
+  const normalizedRestaurantId = normalizeId(restaurantId);
+
+  if (!normalizedRestaurantId) {
+    throw new Error('A restaurant id is required.');
+  }
+
+  return `/restaurants/${encodeURIComponent(normalizedRestaurantId)}`;
+}
+
 export async function getMyRestaurants(token) {
   const response = await apiRequest('/restaurants/mine', {
     token,
@@ -31,31 +41,58 @@ export async function getRestaurants({ signal } = {}) {
 }
 
 export async function getRestaurantById(restaurantId, { signal } = {}) {
-  const normalizedRestaurantId = normalizeId(restaurantId);
-
-  if (!normalizedRestaurantId) {
-    throw new Error('A restaurant id is required.');
-  }
-
-  return apiRequest(
-    `/restaurants/${encodeURIComponent(normalizedRestaurantId)}`,
-    { signal }
-  );
+  return apiRequest(restaurantPath(restaurantId), { signal });
 }
 
 export async function getRestaurantProducts(restaurantId, { signal } = {}) {
-  const normalizedRestaurantId = normalizeId(restaurantId);
-
-  if (!normalizedRestaurantId) {
-    throw new Error('A restaurant id is required.');
-  }
-
   const response = await apiRequest(
-    `/restaurants/${encodeURIComponent(normalizedRestaurantId)}/products`,
+    `${restaurantPath(restaurantId)}/products`,
     { signal }
   );
 
   return extractCollection(response);
+}
+
+export async function getRestaurantAccess(restaurantId, token) {
+  return apiRequest(`${restaurantPath(restaurantId)}/access`, {
+    token,
+  });
+}
+
+export async function addRestaurantEditor(restaurantId, userId, token) {
+  return apiRequest(`${restaurantPath(restaurantId)}/editors`, {
+    method: 'POST',
+    token,
+    body: { userId },
+  });
+}
+
+export async function removeRestaurantEditor(
+  restaurantId,
+  userId,
+  token
+) {
+  return apiRequest(
+    `${restaurantPath(restaurantId)}/editors/${encodeURIComponent(
+      String(userId)
+    )}`,
+    {
+      method: 'DELETE',
+      token,
+    }
+  );
+}
+
+export async function transferRestaurantOwnership(
+  restaurantId,
+  userId,
+  token
+) {
+  return apiRequest(`${restaurantPath(restaurantId)}/owner`, {
+    method: 'PUT',
+    token,
+    body: { userId },
+  });
 }
 
 export async function createRestaurant(data, token) {
@@ -67,17 +104,15 @@ export async function createRestaurant(data, token) {
 }
 
 export async function updateRestaurant(restaurantId, data, token) {
-  const normalizedId = normalizeId(restaurantId);
-  return apiRequest(`/restaurants/${encodeURIComponent(normalizedId)}`, {
-    method: 'PUT',
+  return apiRequest(restaurantPath(restaurantId), {
+    method: 'PATCH',
     token,
     body: data,
   });
 }
 
 export async function deleteRestaurant(restaurantId, token) {
-  const normalizedId = normalizeId(restaurantId);
-  return apiRequest(`/restaurants/${encodeURIComponent(normalizedId)}`, {
+  return apiRequest(restaurantPath(restaurantId), {
     method: 'DELETE',
     token,
   });

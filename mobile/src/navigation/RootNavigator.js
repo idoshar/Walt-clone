@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProductFormScreen from '../screens/ProductFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RestaurantProductsScreen from '../screens/RestaurantProductsScreen';
+import RestaurantAccessScreen from '../screens/RestaurantAccessScreen';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -129,6 +130,11 @@ function AppNavigator({ screenOptions }) {
         component={MyRestaurantsScreen}
         name="MyRestaurants"
         options={{ title: 'My Restaurants' }}
+      />
+      <Stack.Screen
+        component={RestaurantAccessScreen}
+        name="RestaurantAccess"
+        options={{ title: 'Team access' }}
       />
       <Stack.Screen
         component={RestaurantProductsScreen}

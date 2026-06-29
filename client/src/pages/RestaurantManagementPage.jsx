@@ -25,6 +25,7 @@ import ProductForm from '../components/ProductForm.jsx';
 import MenuCategoryManager from '../components/MenuCategoryManager.jsx';
 import { getRestaurantImage } from '../utils/restaurantImages.js';
 import RestaurantSalesStatistics from '../components/RestaurantSalesStatistics.jsx';
+import RestaurantAccessManager from '../components/RestaurantAccessManager.jsx';
 import { useCurrency } from '../context/CurrencyContext.jsx';
 
 function getProductCount(restaurant) {
@@ -75,6 +76,7 @@ function RestaurantManagementPage() {
   const [statistics, setStatistics] = useState(null);
   const [isStatisticsLoading, setIsStatisticsLoading] = useState(false);
   const [statisticsError, setStatisticsError] = useState('');
+  const [isAccessManagerOpen, setIsAccessManagerOpen] = useState(false);
 
   async function loadRestaurants() {
     const data = await getMyRestaurants();
@@ -401,6 +403,7 @@ function RestaurantManagementPage() {
       setIsRestaurantDetailsOpen(false);
       setIsMenuOpen(false);
       setIsMenuCategoryManagerOpen(false);
+      setIsAccessManagerOpen(false);
       await loadRestaurants();
       setMessage('Restaurant deleted successfully.');
     } catch (error) {
@@ -465,6 +468,32 @@ function RestaurantManagementPage() {
     }
   }
 
+  function openAccessManagement() {
+    if (
+      !selectedRestaurant ||
+      selectedRestaurant.accessRole !== 'owner'
+    ) {
+      return;
+    }
+
+    setIsRestaurantActionsOpen(false);
+    setIsAccessManagerOpen(true);
+  }
+
+  async function handleOwnershipTransferred() {
+    await loadRestaurants();
+
+    setSelectedRestaurant(null);
+    setProducts([]);
+    setMenuCategories([]);
+    setIsAccessManagerOpen(false);
+    setIsRestaurantActionsOpen(false);
+
+    setMessage(
+      'Restaurant ownership transferred successfully. You no longer have management access.'
+    );
+  }
+
   async function openAddMenuItem() {
     if (!selectedRestaurant) {
       return;
@@ -502,6 +531,7 @@ function RestaurantManagementPage() {
     setIsMenuOpen(false);
     setIsMenuCategoryManagerOpen(false);
     setIsStatisticsOpen(false);
+    setIsAccessManagerOpen(false);
     setIsPostCreatePromptOpen(false);
     setIsRestaurantActionsOpen(true);
   }
@@ -653,6 +683,17 @@ function RestaurantManagementPage() {
                             {productCount}{' '}
                             {productCount === 1 ? 'menu item' : 'menu items'}
                           </span>
+                          <span
+                            className={`management-role-badge ${
+                              restaurant.accessRole === 'editor'
+                                ? 'management-role-editor'
+                                : 'management-role-owner'
+                            }`}
+                          >
+                            {restaurant.accessRole === 'editor'
+                              ? 'Editor access'
+                              : 'Owner'}
+                          </span>
                         </div>
 
                         <h3>{restaurant.name}</h3>
@@ -771,17 +812,48 @@ function RestaurantManagementPage() {
               <span>View Sales Statistics</span>
               <small>Review orders, revenue, and best-selling menu items.</small>
             </button>
+
+            {selectedRestaurant.accessRole === 'owner' && (
+              <button
+                type="button"
+                className="management-action-button"
+                onClick={openAccessManagement}
+              >
+                <span>Manage Team Access</span>
+                <small>
+                  Add or remove editors, and transfer restaurant ownership.
+                </small>
+              </button>
+            )}
           </div>
 
-          <button
-            type="button"
-            className="management-danger-button"
-            onClick={handleDeleteRestaurant}
-          >
-            Delete Restaurant
-          </button>
+          {selectedRestaurant.accessRole === 'owner' && (
+            <button
+              type="button"
+              className="management-danger-button"
+              onClick={handleDeleteRestaurant}
+            >
+              Delete Restaurant
+            </button>
+          )}
         </Modal>
       )}
+
+      {isAccessManagerOpen &&
+        selectedRestaurant &&
+        selectedRestaurant.accessRole === 'owner' && (
+          <Modal
+            title={`${selectedRestaurant.name} Team Access`}
+            onClose={() => setIsAccessManagerOpen(false)}
+            onBack={returnToRestaurantActions}
+            size="large"
+          >
+            <RestaurantAccessManager
+              restaurant={selectedRestaurant}
+              onOwnershipTransferred={handleOwnershipTransferred}
+            />
+          </Modal>
+        )}
 
       {isRestaurantDetailsOpen && selectedRestaurant && (
         <Modal

@@ -1,15 +1,10 @@
-﻿const orderRepository = require('../repositories/orderRepository');
+const orderRepository = require('../repositories/orderRepository');
 const restaurantRepository = require('../repositories/restaurantRepository');
 
-function canManageRestaurant(req, restaurant) {
-    const userId = req.user?.sub || req.user?.id;
-
-    if (!restaurant.ownerId || !userId) {
-        return false;
-    }
-
-    return String(restaurant.ownerId) === String(userId);
-}
+const {
+    canManageRestaurant,
+    getRequestUserId
+} = require('../services/restaurantAccessService');
 
 class RestaurantStatisticsController {
     async getRestaurantStatistics(req, res, next) {
@@ -24,10 +19,11 @@ class RestaurantStatisticsController {
                 });
             }
 
-            if (!canManageRestaurant(req, restaurant)) {
+            if (!canManageRestaurant(restaurant, getRequestUserId(req))) {
                 return res.status(403).json({
                     error: 'Forbidden',
-                    message: 'You can manage only your own restaurants'
+                    message:
+                        'You can manage only restaurants where you are an owner or editor'
                 });
             }
 
