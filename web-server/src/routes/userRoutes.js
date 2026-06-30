@@ -9,6 +9,12 @@ const router = express.Router();
 router.post('/', asyncHandler(userController.createUser));
 
 router.patch(
+    '/me',
+    authMiddleware,
+    asyncHandler(userController.updateCurrentUserProfile)
+);
+
+router.patch(
     '/me/password',
     authMiddleware,
     asyncHandler(userController.changeCurrentUserPassword)

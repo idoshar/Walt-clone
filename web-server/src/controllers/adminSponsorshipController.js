@@ -39,6 +39,34 @@ function normalizeSponsorship(body) {
     };
 }
 
+function normalizeOrderedRestaurantIds(value) {
+    if (!Array.isArray(value)) {
+        return {
+            error: 'restaurantIds must be an array'
+        };
+    }
+
+    const restaurantIds = value.map((restaurantId) =>
+        String(restaurantId || '').trim()
+    );
+
+    if (restaurantIds.some((restaurantId) => !restaurantId)) {
+        return {
+            error: 'restaurantIds must contain non-empty restaurant ids'
+        };
+    }
+
+    if (new Set(restaurantIds).size !== restaurantIds.length) {
+        return {
+            error: 'restaurantIds must not contain duplicates'
+        };
+    }
+
+    return {
+        value: restaurantIds
+    };
+}
+
 function compareRestaurantsForAdmin(left, right) {
     if (left.isSponsored !== right.isSponsored) {
         return left.isSponsored ? -1 : 1;
@@ -57,16 +85,55 @@ function compareRestaurantsForAdmin(left, right) {
     return left.name.localeCompare(right.name);
 }
 
+function toSortedResponse(restaurants) {
+    return restaurants
+        .map((restaurant) => restaurant.toResponseObject())
+        .sort(compareRestaurantsForAdmin);
+}
+
 class AdminSponsorshipController {
     async getRestaurants(req, res, next) {
         try {
             const restaurants = await restaurantRepository.getAll();
 
-            const response = restaurants
-                .map((restaurant) => restaurant.toResponseObject())
-                .sort(compareRestaurantsForAdmin);
+            return res.status(200).json(toSortedResponse(restaurants));
+        } catch (err) {
+            next(err);
+        }
+    }
 
-            return res.status(200).json(response);
+    async replaceSponsorshipOrder(req, res, next) {
+        try {
+            const orderInput = normalizeOrderedRestaurantIds(
+                req.body?.restaurantIds
+            );
+
+            if (orderInput.error) {
+                return res.status(400).json({
+                    error: orderInput.error
+                });
+            }
+
+            const restaurants = await restaurantRepository.getAll();
+            const existingRestaurantIds = new Set(
+                restaurants.map((restaurant) => String(restaurant.id))
+            );
+            const hasUnknownRestaurant = orderInput.value.some(
+                (restaurantId) => !existingRestaurantIds.has(restaurantId)
+            );
+
+            if (hasUnknownRestaurant) {
+                return res.status(400).json({
+                    error: 'restaurantIds must include only existing restaurants'
+                });
+            }
+
+            const updatedRestaurants =
+                await restaurantRepository.updateSponsorshipOrder(
+                    orderInput.value
+                );
+
+            return res.status(200).json(toSortedResponse(updatedRestaurants));
         } catch (err) {
             next(err);
         }
@@ -80,6 +147,26 @@ class AdminSponsorshipController {
                 return res.status(400).json({
                     error: sponsorship.error
                 });
+            }
+
+            if (sponsorship.value.isSponsored) {
+                const restaurants = await restaurantRepository.getAll();
+                const conflictingRestaurant = restaurants.find(
+                    (restaurant) =>
+                        String(restaurant.id) !== String(req.params.id) &&
+                        restaurant.isSponsored === true &&
+                        Number(restaurant.sponsoredRank) ===
+                            sponsorship.value.sponsoredRank
+                );
+
+                if (conflictingRestaurant) {
+                    return res.status(409).json({
+                        error: 'Conflict',
+                        message:
+                            `Sponsored rank ${sponsorship.value.sponsoredRank} ` +
+                            `is already used by ${conflictingRestaurant.name}`
+                    });
+                }
             }
 
             const restaurant = await restaurantRepository.updateSponsorship(

@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../api/client.js';
 import ErrorMessage from '../components/ErrorMessage.jsx';
@@ -7,12 +7,16 @@ function RegisterPage() {
   const fileInputRef = useRef(null);
   const usernameRef = useRef(null);
   const displayNameRef = useRef(null);
+  const phoneRef = useRef(null);
+  const addressRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const navigate = useNavigate();
 
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [imagePreview, setImagePreview] = useState('');
@@ -71,6 +75,14 @@ function RegisterPage() {
       errors.displayName = 'Display name must be at least 2 characters long';
     }
 
+    if (!phone.trim()) {
+      errors.phone = 'Phone number is required';
+    }
+
+    if (!address.trim()) {
+      errors.address = 'Address is required';
+    }
+
     if (!password) {
       errors.password = 'Password is required';
     } else if (password.length < 8) {
@@ -96,6 +108,16 @@ function RegisterPage() {
 
     if (errors.displayName) {
       displayNameRef.current?.focus();
+      return;
+    }
+
+    if (errors.phone) {
+      phoneRef.current?.focus();
+      return;
+    }
+
+    if (errors.address) {
+      addressRef.current?.focus();
       return;
     }
 
@@ -131,8 +153,8 @@ function RegisterPage() {
           username: username.trim(),
           password,
           fullName: displayName.trim(),
-          phone: '0500000000',
-          address: 'Default address',
+          phone: phone.trim(),
+          address: address.trim(),
           image: imagePreview
         })
       });
@@ -228,6 +250,46 @@ function RegisterPage() {
           />
           <span className={fieldErrors.displayName ? 'field-error' : 'field-helper'}>
             {fieldErrors.displayName || 'This name will appear in the app header.'}
+          </span>
+        </label>
+
+        <label className="form-field">
+          Phone number
+          <input
+            ref={phoneRef}
+            type="tel"
+            value={phone}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              clearFieldError('phone');
+            }}
+            placeholder="050-1234567"
+            autoComplete="tel"
+            disabled={loading}
+            aria-invalid={Boolean(fieldErrors.phone)}
+          />
+          <span className={fieldErrors.phone ? 'field-error' : 'field-helper'}>
+            {fieldErrors.phone || 'Used for delivery updates.'}
+          </span>
+        </label>
+
+        <label className="form-field">
+          Address
+          <input
+            ref={addressRef}
+            type="text"
+            value={address}
+            onChange={(event) => {
+              setAddress(event.target.value);
+              clearFieldError('address');
+            }}
+            placeholder="Street, number, city"
+            autoComplete="street-address"
+            disabled={loading}
+            aria-invalid={Boolean(fieldErrors.address)}
+          />
+          <span className={fieldErrors.address ? 'field-error' : 'field-helper'}>
+            {fieldErrors.address || 'Used as your default delivery address.'}
           </span>
         </label>
 

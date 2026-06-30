@@ -138,7 +138,7 @@ input {
   min-width: 34px;
   border-radius: var(--radius-md);
   background-color: var(--color-primary);
-  color: var(--color-primary-contrast);
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -182,6 +182,25 @@ input {
 
 .header-search-button:hover {
   opacity: 0.9;
+}
+
+@media (max-width: 1100px) and (min-width: 641px) {
+  .navbar {
+    flex-wrap: wrap;
+    min-height: auto;
+    padding: 14px 24px;
+  }
+
+  .header-search {
+    flex-basis: 100%;
+    max-width: none;
+    margin: 0;
+    order: 3;
+  }
+
+  .navbar-actions {
+    margin-left: auto;
+  }
 }
 
 .navbar-actions {
@@ -4502,6 +4521,26 @@ body.dark .checkout-field input[type='number'] {
   white-space: nowrap;
 }
 
+.currency-selector-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 15px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 70%, transparent);
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  line-height: 1;
+}
+
+.currency-selector-flag-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .currency-selector-control {
   min-height: 34px;
   padding: 5px 28px 5px 9px;
@@ -4553,24 +4592,21 @@ body.dark .checkout-field input[type='number'] {
   box-shadow: var(--shadow-card);
 }
 
-.sponsored-side-rail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-  color: var(--color-text-muted);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+.sponsored-side-rail-empty-visual {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 96px;
+  background:
+    linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 58%, var(--color-surface)));
+  color: var(--color-primary-contrast);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.08em;
 }
 
-.sponsored-side-rail-demo-badge {
-  padding: 4px 7px;
-  border-radius: var(--radius-round);
-  background-color: var(--color-info-bg);
-  color: var(--color-primary);
+.sponsored-side-rail-empty-card .sponsored-side-rail-content {
+  min-height: 190px;
 }
 
 .sponsored-side-rail-card {
@@ -4634,80 +4670,7 @@ body.dark .checkout-field input[type='number'] {
   text-decoration: underline;
 }
 
-.sponsored-side-rail-controls {
-  display: grid;
-  grid-template-columns: 27px minmax(0, 1fr) 27px auto;
-  align-items: center;
-  gap: 6px;
-  margin-top: 10px;
-}
-
-.sponsored-side-rail-arrow,
-.sponsored-side-rail-pause,
-.sponsored-side-rail-indicator {
-  border: 0;
-  color: var(--color-text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.sponsored-side-rail-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 50%;
-  background-color: var(--color-surface);
-  font-size: 14px;
-}
-
-.sponsored-side-rail-arrow:hover,
-.sponsored-side-rail-pause:hover {
-  border-color: var(--color-primary);
-  background-color: var(--color-hover-bg);
-}
-
-.sponsored-side-rail-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-}
-
-.sponsored-side-rail-indicator {
-  width: 6px;
-  height: 6px;
-  padding: 0;
-  border-radius: 50%;
-  background-color: var(--color-border-strong);
-}
-
-.sponsored-side-rail-indicator-active {
-  width: 17px;
-  border-radius: var(--radius-round);
-  background-color: var(--color-primary);
-}
-
-.sponsored-side-rail-pause {
-  min-height: 27px;
-  padding: 5px 7px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-round);
-  background-color: var(--color-surface);
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.sponsored-side-rail-pause:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-}
-
-.sponsored-side-rail-cta:focus-visible,
-.sponsored-side-rail-arrow:focus-visible,
-.sponsored-side-rail-indicator:focus-visible,
-.sponsored-side-rail-pause:focus-visible {
+.sponsored-side-rail-cta:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
 }
@@ -4761,6 +4724,16 @@ body.dark .checkout-field input[type='number'] {
     gap: 20px;
   }
 
+  .sponsored-empty-promotion {
+    padding: 18px;
+  }
+
+  .sponsored-side-rail-empty {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
   .sponsored-side-rail-card {
     grid-template-columns: 110px minmax(0, 1fr);
   }
@@ -4805,11 +4778,6 @@ body.dark .checkout-field input[type='number'] {
   -webkit-line-clamp: 3;
 }
 
-.sponsored-side-rail-arrow:disabled,
-.sponsored-side-rail-pause:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
 
 /* SCRUM-494: keep the original desktop header order without horizontal overflow. */
 @media (min-width: 901px) {
@@ -4840,6 +4808,37 @@ body.dark .checkout-field input[type='number'] {
   .logout-button {
     padding-left: 12px;
     padding-right: 12px;
+  }
+}
+
+/* Keep the search field fully usable on desktop browser zoom levels. */
+@media (max-width: 1600px) and (min-width: 641px) {
+  .navbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px 16px;
+  }
+
+  .logo {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .navbar-actions {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+    min-width: 0;
+  }
+
+  .header-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 }
 
@@ -5821,5 +5820,157 @@ body.dark .checkout-field input[type='number'] {
 }
 
 .app-modal-sales-statistics::-webkit-scrollbar {
+  display: none;
+}
+
+/* SCRUM-615: present a stable visual fallback after a product image fails. */
+.product-image-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 2rem;
+}
+
+/* SCRUM-621: editable profile details and password entry point. */
+.profile-details-section,
+.profile-security-section {
+  display: grid;
+  gap: 16px;
+  padding-top: 28px;
+  border-top: 1px solid var(--color-border);
+}
+
+.profile-details-section h2,
+.profile-security-section h2 {
+  margin: 0;
+}
+
+.profile-details-section p,
+.profile-security-section p {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.profile-details-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.profile-field {
+  display: grid;
+  gap: 7px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.profile-field input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.profile-field input:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.profile-field-wide,
+.profile-details-actions {
+  grid-column: 1 / -1;
+}
+
+.profile-details-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-security-section {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.profile-password-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* SCRUM-623: clearer navigation grouping on desktop and compact screens. */
+@media (min-width: 641px) {
+  .primary-nav-links {
+    gap: 3px;
+    padding: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-round);
+    background-color: var(--color-surface-muted);
+  }
+
+  .primary-nav-links .nav-link {
+    padding: 8px 10px;
+    border: 0;
+    border-radius: var(--radius-round);
+    line-height: 1.2;
+    transition: background-color 160ms ease, color 160ms ease;
+  }
+
+  .primary-nav-links .nav-link:hover,
+  .primary-nav-links .nav-link.active {
+    background-color: var(--color-surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+@media (max-width: 640px) {
+  .primary-nav-links {
+    padding: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-muted);
+  }
+
+  .primary-nav-links .nav-link {
+    border: 0;
+    border-radius: 8px;
+  }
+
+  .primary-nav-links .nav-link.active {
+    background-color: var(--color-surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .profile-details-form,
+  .profile-security-section {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-details-actions {
+    justify-content: stretch;
+  }
+
+  .profile-details-actions .primary-button,
+  .profile-password-link {
+    width: 100%;
+  }
+}
+
+/* Keep administrator management inside Restaurant Moderation when it is opened as a modal. */
+.management-page-admin-overlay {
+  margin: 0;
+  padding: 0;
+}
+
+.management-page-admin-overlay > .management-page-workspace {
   display: none;
 }

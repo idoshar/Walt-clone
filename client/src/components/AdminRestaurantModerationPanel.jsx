@@ -1,30 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  deleteAdminRestaurant,
-  getAdminRestaurants,
-  updateAdminRestaurant
-} from '../api/adminRestaurantModerationApi.js';
-import Modal from './Modal.jsx';
-
-function buildDraft(restaurant) {
-  return {
-    name: restaurant?.name ?? '',
-    address: restaurant?.address ?? '',
-    phone: restaurant?.phone ?? '',
-    cuisine: restaurant?.cuisine ?? '',
-    description: restaurant?.description ?? '',
-    image: restaurant?.image ?? '',
-    latitude:
-      restaurant?.latitude === null || restaurant?.latitude === undefined
-        ? ''
-        : String(restaurant.latitude),
-    longitude:
-      restaurant?.longitude === null || restaurant?.longitude === undefined
-        ? ''
-        : String(restaurant.longitude)
-  };
-}
+import { getAdminRestaurants } from '../api/adminRestaurantModerationApi.js';
+import RestaurantManagementPage from '../pages/RestaurantManagementPage.jsx';
 
 function getOwnershipLabel(ownershipStatus) {
   if (ownershipStatus === 'user-owned') {
@@ -46,15 +22,42 @@ function getRestaurantMeta(restaurant) {
   )}`;
 }
 
+function RestaurantCard({ restaurant, isProtected, onManage }) {
+  return (
+    <article
+      style={isProtected ? styles.protectedCard : styles.restaurantCard}
+    >
+      <div style={styles.restaurantContent}>
+        <h4 style={styles.restaurantName}>{restaurant.name}</h4>
+        <p style={styles.restaurantDetails}>
+          {restaurant.cuisine || 'Cuisine not specified'} ·{' '}
+          {restaurant.address || 'Address not specified'}
+        </p>
+        <small style={styles.restaurantMeta}>{getRestaurantMeta(restaurant)}</small>
+      </div>
+
+      <div style={isProtected ? styles.protectedActions : styles.restaurantCardActions}>
+        <button
+          type="button"
+          style={styles.primaryButton}
+          onClick={() => onManage(restaurant)}
+        >
+          Manage Restaurant
+        </button>
+
+        {isProtected ? (
+          <span style={styles.protectedBadge}>Deletion protected</span>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function AdminRestaurantModerationPanel() {
-  const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
-  const [draft, setDraft] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [managedRestaurantId, setManagedRestaurantId] = useState('');
 
   const manageableRestaurants = useMemo(
     () =>
@@ -72,37 +75,13 @@ function AdminRestaurantModerationPanel() {
     [restaurants]
   );
 
-  const selectedRestaurant = useMemo(
-    () =>
-      manageableRestaurants.find(
-        (restaurant) =>
-          String(restaurant.id) === String(selectedRestaurantId)
-      ) || null,
-    [manageableRestaurants, selectedRestaurantId]
-  );
-
-  const loadRestaurants = useCallback(async (preferredRestaurantId = '') => {
+  const loadRestaurants = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
     try {
       const data = await getAdminRestaurants();
-      const nextRestaurants = Array.isArray(data) ? data : [];
-
-      setRestaurants(nextRestaurants);
-
-      const nextSelectedRestaurant = preferredRestaurantId
-        ? nextRestaurants.find(
-            (restaurant) =>
-              restaurant?.isModerationProtected !== true &&
-              String(restaurant.id) === String(preferredRestaurantId)
-          ) || null
-        : null;
-
-      setSelectedRestaurantId(nextSelectedRestaurant?.id || '');
-      setDraft(
-        nextSelectedRestaurant ? buildDraft(nextSelectedRestaurant) : null
-      );
+      setRestaurants(Array.isArray(data) ? data : []);
     } catch (loadError) {
       setError(
         loadError.message ||
@@ -118,146 +97,12 @@ function AdminRestaurantModerationPanel() {
   }, [loadRestaurants]);
 
   function openRestaurantManagement(restaurant) {
-    navigate(
-      `/admin/restaurants/${encodeURIComponent(
-        String(restaurant.id)
-      )}/manage`
-    );
+    setManagedRestaurantId(String(restaurant.id));
   }
 
-  function selectRestaurant(restaurant) {
-    setSelectedRestaurantId(restaurant.id);
-    setDraft(buildDraft(restaurant));
-    setError('');
-    setNotice('');
-  }
-
-  function closeEditor() {
-    setSelectedRestaurantId('');
-    setDraft(null);
-    setError('');
-  }
-
-  function updateDraftField(event) {
-    const { name, value } = event.target;
-
-    setDraft((currentDraft) => ({
-      ...currentDraft,
-      [name]: value
-    }));
-  }
-
-  async function handleSave(event) {
-    event.preventDefault();
-
-    if (!selectedRestaurant || !draft) {
-      return;
-    }
-
-    const latitudeText = String(draft.latitude || '').trim();
-    const longitudeText = String(draft.longitude || '').trim();
-
-    if ((latitudeText && !longitudeText) || (!latitudeText && longitudeText)) {
-      setError('Latitude and longitude must be provided together.');
-      return;
-    }
-
-    const updates = {
-      name: String(draft.name || '').trim(),
-      address: String(draft.address || '').trim(),
-      phone: String(draft.phone || '').trim(),
-      cuisine: String(draft.cuisine || '').trim(),
-      description: String(draft.description || '').trim(),
-      image: String(draft.image || '').trim()
-    };
-
-    if (!updates.name) {
-      setError('Restaurant name is required.');
-      return;
-    }
-
-    if (!latitudeText && !longitudeText) {
-      updates.latitude = null;
-      updates.longitude = null;
-    } else {
-      const latitude = Number(latitudeText);
-      const longitude = Number(longitudeText);
-
-      if (
-        !Number.isFinite(latitude) ||
-        latitude < -90 ||
-        latitude > 90
-      ) {
-        setError('Latitude must be a number between -90 and 90.');
-        return;
-      }
-
-      if (
-        !Number.isFinite(longitude) ||
-        longitude < -180 ||
-        longitude > 180
-      ) {
-        setError('Longitude must be a number between -180 and 180.');
-        return;
-      }
-
-      updates.latitude = latitude;
-      updates.longitude = longitude;
-    }
-
-    setIsSaving(true);
-    setError('');
-    setNotice('');
-
-    try {
-      const updatedRestaurant = await updateAdminRestaurant(
-        selectedRestaurant.id,
-        updates
-      );
-
-      await loadRestaurants();
-      setNotice(`Saved changes for ${updatedRestaurant.name}.`);
-    } catch (saveError) {
-      setError(
-        saveError.message || 'Could not save the restaurant changes.'
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!selectedRestaurant) {
-      return;
-    }
-
-    const shouldDelete = window.confirm(
-      `Delete "${selectedRestaurant.name}" permanently?\n\n` +
-        'Its menu categories and products will also be deleted. Existing order snapshots will be retained.'
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
-
-    setIsSaving(true);
-    setError('');
-    setNotice('');
-
-    try {
-      const deletedName = selectedRestaurant.name;
-
-      await deleteAdminRestaurant(selectedRestaurant.id);
-      await loadRestaurants();
-
-      setNotice(`Deleted ${deletedName}.`);
-    } catch (deleteError) {
-      setError(
-        deleteError.message || 'Could not delete the restaurant.'
-      );
-    } finally {
-      setIsSaving(false);
-    }
+  async function closeRestaurantManagement() {
+    setManagedRestaurantId('');
+    await loadRestaurants();
   }
 
   return (
@@ -269,16 +114,17 @@ function AdminRestaurantModerationPanel() {
             Restaurant moderation
           </h2>
           <p style={styles.description}>
-            Review and manage all platform restaurants. System catalog entries
-            can be managed too, but remain protected from deletion.
+            Review every platform restaurant and open the full management tools
+            for the selected restaurant. System catalog entries are protected
+            from deletion.
           </p>
         </div>
 
         <button
           type="button"
           style={styles.secondaryButton}
-          onClick={() => loadRestaurants()}
-          disabled={isLoading || isSaving}
+          onClick={loadRestaurants}
+          disabled={isLoading}
         >
           Refresh list
         </button>
@@ -287,12 +133,6 @@ function AdminRestaurantModerationPanel() {
       {error ? (
         <p style={styles.errorMessage} role="alert">
           {error}
-        </p>
-      ) : null}
-
-      {notice ? (
-        <p style={styles.noticeMessage} role="status">
-          {notice}
         </p>
       ) : null}
 
@@ -305,7 +145,7 @@ function AdminRestaurantModerationPanel() {
               <strong style={styles.summaryNumber}>
                 {manageableRestaurants.length}
               </strong>
-              <span style={styles.summaryLabel}>Manageable restaurants</span>
+              <span style={styles.summaryLabel}>Standard restaurants</span>
             </article>
 
             <article style={styles.summaryCard}>
@@ -317,12 +157,14 @@ function AdminRestaurantModerationPanel() {
           </div>
 
           <div style={styles.contentGrid}>
-            <div>
-              <h3 style={styles.groupTitle}>Manageable restaurants</h3>
+            <section aria-labelledby="standard-restaurants-heading">
+              <h3 id="standard-restaurants-heading" style={styles.groupTitle}>
+                Standard restaurants
+              </h3>
 
               {manageableRestaurants.length === 0 ? (
                 <div style={styles.emptyCard}>
-                  <strong>No user-managed restaurants yet.</strong>
+                  <strong>No standard restaurants yet.</strong>
                   <p>
                     Restaurants created outside the system catalog will appear
                     here for review.
@@ -330,241 +172,57 @@ function AdminRestaurantModerationPanel() {
                 </div>
               ) : (
                 <div style={styles.restaurantList}>
-                  {manageableRestaurants.map((restaurant) => {
-                    const isSelected =
-                      String(restaurant.id) === String(selectedRestaurantId);
-
-                    return (
-                      <article
-                        key={restaurant.id}
-                        style={{
-                          ...styles.restaurantCard,
-                          ...(isSelected ? styles.selectedRestaurantCard : {})
-                        }}
-                      >
-                        <div>
-                          <h4 style={styles.restaurantName}>
-                            {restaurant.name}
-                          </h4>
-                          <p style={styles.restaurantDetails}>
-                            {restaurant.cuisine || 'Cuisine not specified'} ·{' '}
-                            {restaurant.address || 'Address not specified'}
-                          </p>
-                          <small style={styles.restaurantMeta}>
-                            {getRestaurantMeta(restaurant)}
-                          </small>
-                        </div>
-
-                        <div style={styles.restaurantCardActions}>
-                          <button
-                            type="button"
-                            style={styles.secondaryButton}
-                            onClick={() => selectRestaurant(restaurant)}
-                          >
-                            {isSelected ? 'Editing' : 'Quick edit'}
-                          </button>
-
-                          <button
-                            type="button"
-                            style={styles.primaryButton}
-                            onClick={() =>
-                              openRestaurantManagement(restaurant)
-                            }
-                          >
-                            Manage Restaurant
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-
-              <details style={styles.protectedDetails}>
-                <summary style={styles.protectedSummary}>
-                  View protected system catalog ({protectedRestaurants.length})
-                </summary>
-
-                <p style={styles.protectedExplanation}>
-                  These starter restaurants remain available for full
-                  administrator management, but are protected from deletion.
-                </p>
-
-                <div style={styles.restaurantList}>
-                  {protectedRestaurants.map((restaurant) => (
-                    <article key={restaurant.id} style={styles.protectedCard}>
-                      <div>
-                        <h4 style={styles.restaurantName}>{restaurant.name}</h4>
-                        <p style={styles.restaurantDetails}>
-                          {restaurant.cuisine || 'Cuisine not specified'} ·{' '}
-                          {restaurant.address || 'Address not specified'}
-                        </p>
-                        <small style={styles.restaurantMeta}>
-                          {getRestaurantMeta(restaurant)}
-                        </small>
-                      </div>
-
-                      <div style={styles.protectedActions}>
-                        <button
-                          type="button"
-                          style={styles.primaryButton}
-                          onClick={() => openRestaurantManagement(restaurant)}
-                        >
-                          Manage Restaurant
-                        </button>
-
-                        <span style={styles.protectedBadge}>
-                          Deletion protected
-                        </span>
-                      </div>
-                    </article>
+                  {manageableRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                      isProtected={false}
+                      onManage={openRestaurantManagement}
+                    />
                   ))}
                 </div>
-              </details>
-            </div>
+              )}
+            </section>
 
-          </div>
+            <section aria-labelledby="protected-restaurants-heading">
+              <h3 id="protected-restaurants-heading" style={styles.groupTitle}>
+                Protected system catalog
+              </h3>
 
-          {selectedRestaurant && draft ? (
-            <Modal
-              title={`Edit ${selectedRestaurant.name}`}
-              onClose={closeEditor}
-              size="large"
-            >
-              <div style={styles.modalEditor} aria-live="polite">
-                <p style={styles.editorDescription}>
-                  Changes are applied as an administrator. Ownership,
-                  sponsorship and catalog-protection fields cannot be changed
-                  here.
-                </p>
+              <p style={styles.protectedExplanation}>
+                These starter restaurants can use the same management tools,
+                but their deletion action remains unavailable.
+              </p>
 
-                {error ? (
-                  <p style={styles.errorMessage} role="alert">
-                    {error}
-                  </p>
-                ) : null}
-
-                <form onSubmit={handleSave}>
-                  <div style={styles.formGrid}>
-                    <label style={styles.label}>
-                      Name
-                      <input
-                        required
-                        name="name"
-                        value={draft.name}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Cuisine
-                      <input
-                        name="cuisine"
-                        value={draft.cuisine}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Address
-                      <input
-                        name="address"
-                        value={draft.address}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Phone
-                      <input
-                        name="phone"
-                        value={draft.phone}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Image URL
-                      <input
-                        name="image"
-                        type="url"
-                        value={draft.image}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Latitude
-                      <input
-                        name="latitude"
-                        inputMode="decimal"
-                        value={draft.latitude}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-
-                    <label style={styles.label}>
-                      Longitude
-                      <input
-                        name="longitude"
-                        inputMode="decimal"
-                        value={draft.longitude}
-                        onChange={updateDraftField}
-                        style={styles.input}
-                      />
-                    </label>
-                  </div>
-
-                  <label style={{ ...styles.label, marginTop: '16px' }}>
-                    Description
-                    <textarea
-                      name="description"
-                      rows="4"
-                      value={draft.description}
-                      onChange={updateDraftField}
-                      style={styles.textarea}
+              {protectedRestaurants.length === 0 ? (
+                <div style={styles.emptyCard}>
+                  <strong>No protected catalog entries are available.</strong>
+                </div>
+              ) : (
+                <div style={styles.restaurantList}>
+                  {protectedRestaurants.map((restaurant) => (
+                    <RestaurantCard
+                      key={restaurant.id}
+                      restaurant={restaurant}
+                      isProtected
+                      onManage={openRestaurantManagement}
                     />
-                  </label>
-
-                  <div style={styles.formActions}>
-                    <button
-                      type="button"
-                      style={styles.secondaryButton}
-                      onClick={closeEditor}
-                      disabled={isSaving}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      style={styles.primaryButton}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? 'Saving...' : 'Save changes'}
-                    </button>
-
-                    <button
-                      type="button"
-                      style={styles.dangerButton}
-                      onClick={handleDelete}
-                      disabled={isSaving}
-                    >
-                      Delete restaurant
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </Modal>
-          ) : null}
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
         </>
       )}
+
+      {managedRestaurantId ? (
+        <RestaurantManagementPage
+          mode="admin"
+          presentation="modal"
+          restaurantId={managedRestaurantId}
+          onClose={closeRestaurantManagement}
+        />
+      ) : null}
     </section>
   );
 }
@@ -618,28 +276,11 @@ const styles = {
     fontWeight: 800,
     padding: '10px 13px'
   },
-  dangerButton: {
-    background: 'transparent',
-    border: '1px solid var(--color-danger, #c53b3b)',
-    borderRadius: '10px',
-    color: 'var(--color-danger, #c53b3b)',
-    cursor: 'pointer',
-    fontWeight: 800,
-    padding: '10px 13px'
-  },
   errorMessage: {
     background: 'var(--color-danger-bg, #fff0f0)',
     border: '1px solid var(--color-danger, #c53b3b)',
     borderRadius: '12px',
     color: 'var(--color-danger, #c53b3b)',
-    margin: '0 0 18px',
-    padding: '12px 14px'
-  },
-  noticeMessage: {
-    background: 'var(--color-info-bg)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '12px',
-    color: 'var(--color-text)',
     margin: '0 0 18px',
     padding: '12px 14px'
   },
@@ -686,6 +327,26 @@ const styles = {
     display: 'grid',
     gap: '10px'
   },
+  restaurantCard: {
+    alignItems: 'center',
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '14px',
+    display: 'flex',
+    gap: '14px',
+    justifyContent: 'space-between',
+    padding: '15px'
+  },
+  protectedCard: {
+    alignItems: 'center',
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '14px',
+    display: 'flex',
+    gap: '14px',
+    justifyContent: 'space-between',
+    padding: '15px'
+  },
   restaurantCardActions: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -698,30 +359,8 @@ const styles = {
     flexDirection: 'column',
     gap: '8px'
   },
-  restaurantCard: {
-    alignItems: 'center',
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '14px',
-    display: 'flex',
-    gap: '14px',
-    justifyContent: 'space-between',
-    padding: '15px'
-  },
-  selectedRestaurantCard: {
-    borderColor: 'var(--color-primary)',
-    boxShadow: '0 0 0 2px var(--color-info-bg)'
-  },
-  protectedCard: {
-    alignItems: 'center',
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '14px',
-    display: 'flex',
-    gap: '14px',
-    justifyContent: 'space-between',
-    opacity: 1,
-    padding: '15px'
+  restaurantContent: {
+    minWidth: 0
   },
   restaurantName: {
     fontSize: '1rem',
@@ -744,21 +383,10 @@ const styles = {
     padding: '7px 9px',
     whiteSpace: 'nowrap'
   },
-  protectedDetails: {
-    borderTop: '1px solid var(--color-border)',
-    marginTop: '28px',
-    paddingTop: '18px'
-  },
-  protectedSummary: {
-    color: 'var(--color-text-muted)',
-    cursor: 'pointer',
-    fontSize: '0.94rem',
-    fontWeight: 800
-  },
   protectedExplanation: {
     color: 'var(--color-text-muted)',
     lineHeight: 1.5,
-    margin: '12px 0'
+    margin: '0 0 12px'
   },
   emptyCard: {
     background: 'var(--color-surface)',
@@ -766,55 +394,6 @@ const styles = {
     borderRadius: '14px',
     color: 'var(--color-text-muted)',
     padding: '18px'
-  },
-  modalEditor: {
-    minWidth: 0
-  },
-  editorDescription: {
-    color: 'var(--color-text-muted)',
-    lineHeight: 1.5,
-    margin: '0 0 16px'
-  },
-  formGrid: {
-    display: 'grid',
-    gap: '12px',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))'
-  },
-  label: {
-    color: 'var(--color-text)',
-    display: 'grid',
-    fontSize: '0.84rem',
-    fontWeight: 750,
-    gap: '6px'
-  },
-  input: {
-    background: 'var(--color-background)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '9px',
-    boxSizing: 'border-box',
-    color: 'var(--color-text)',
-    font: 'inherit',
-    minWidth: 0,
-    padding: '10px',
-    width: '100%'
-  },
-  textarea: {
-    background: 'var(--color-background)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '9px',
-    boxSizing: 'border-box',
-    color: 'var(--color-text)',
-    font: 'inherit',
-    minWidth: 0,
-    padding: '10px',
-    resize: 'vertical',
-    width: '100%'
-  },
-  formActions: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
-    marginTop: '18px'
   }
 };
 

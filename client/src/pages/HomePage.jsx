@@ -235,36 +235,32 @@ function HomePage() {
     return getFeaturedRestaurants(restaurants);
   }, [restaurants]);
 
-    const sponsoredRestaurants = useMemo(() => {
-      const rankedSponsoredRestaurants = restaurants
-        .filter((restaurant) => restaurant?.isSponsored === true)
-        .sort((leftRestaurant, rightRestaurant) => {
-          const leftRank = Number(leftRestaurant.sponsoredRank);
-          const rightRank = Number(rightRestaurant.sponsoredRank);
+  const sponsoredRestaurants = useMemo(() => {
+    return restaurants
+      .filter((restaurant) => restaurant?.isSponsored === true)
+      .sort((leftRestaurant, rightRestaurant) => {
+        const leftRank = Number(leftRestaurant.sponsoredRank);
+        const rightRank = Number(rightRestaurant.sponsoredRank);
 
-          const normalizedLeftRank =
-            Number.isInteger(leftRank) && leftRank > 0
-              ? leftRank
-              : Number.MAX_SAFE_INTEGER;
+        const normalizedLeftRank =
+          Number.isInteger(leftRank) && leftRank > 0
+            ? leftRank
+            : Number.MAX_SAFE_INTEGER;
 
-          const normalizedRightRank =
-            Number.isInteger(rightRank) && rightRank > 0
-              ? rightRank
-              : Number.MAX_SAFE_INTEGER;
+        const normalizedRightRank =
+          Number.isInteger(rightRank) && rightRank > 0
+            ? rightRank
+            : Number.MAX_SAFE_INTEGER;
 
-          if (normalizedLeftRank !== normalizedRightRank) {
-            return normalizedLeftRank - normalizedRightRank;
-          }
+        if (normalizedLeftRank !== normalizedRightRank) {
+          return normalizedLeftRank - normalizedRightRank;
+        }
 
-          return String(leftRestaurant.name || '').localeCompare(
-            String(rightRestaurant.name || '')
-          );
-        });
-
-      return rankedSponsoredRestaurants.length > 0
-        ? rankedSponsoredRestaurants.slice(0, 3)
-        : featuredRestaurants.slice(0, 3);
-    }, [featuredRestaurants, restaurants]);
+        return String(leftRestaurant.name || '').localeCompare(
+          String(rightRestaurant.name || '')
+        );
+      });
+  }, [restaurants]);
 
 
   const locationButtonText =
@@ -333,7 +329,53 @@ function HomePage() {
         />
       )}
 
-      {!loading && !error && restaurants.length > 0 && (
+      {!loading && !error && restaurants.length > 0 && (() => {
+        const restaurantSections = (
+          <div className="home-sections">
+            <section className="categories-section" aria-labelledby="categories-title">
+              <div className="restaurant-section-heading">
+                <div>
+                  <p className="section-eyebrow">Browse by cuisine</p>
+                  <h2 id="categories-title">Categories</h2>
+                </div>
+              </div>
+
+              <div className="category-chips" role="list">
+                {categories.map((category) => (
+                  <button
+                    type="button"
+                    key={category}
+                    className={`category-chip ${
+                      selectedCategory === category ? 'category-chip-active' : ''
+                    }`}
+                    onClick={() => setSelectedCategory(category)}
+                    aria-pressed={selectedCategory === category}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <RestaurantCarousel
+              sectionId="featured-restaurants"
+              eyebrow="Selected from restaurants available today"
+              title="Featured restaurants"
+              restaurants={featuredRestaurants}
+              emptyMessage="No featured restaurants are available right now."
+            />
+
+            <RestaurantCarousel
+              sectionId="nearby-restaurants"
+              eyebrow={nearbyEyebrow}
+              title="Nearby restaurants"
+              restaurants={nearbyRestaurants}
+              emptyMessage={`No ${selectedCategory.toLowerCase()} restaurants are available right now.`}
+            />
+          </div>
+        );
+
+        return (
           <div className="home-content-with-rails">
             <SponsoredPromotionRail
               placement="left"
@@ -341,48 +383,7 @@ function HomePage() {
               restaurants={sponsoredRestaurants}
             />
 
-            <div className="home-sections">
-          <section className="categories-section" aria-labelledby="categories-title">
-            <div className="restaurant-section-heading">
-              <div>
-                <p className="section-eyebrow">Browse by cuisine</p>
-                <h2 id="categories-title">Categories</h2>
-              </div>
-            </div>
-
-            <div className="category-chips" role="list">
-              {categories.map((category) => (
-                <button
-                  type="button"
-                  key={category}
-                  className={`category-chip ${
-                    selectedCategory === category ? 'category-chip-active' : ''
-                  }`}
-                  onClick={() => setSelectedCategory(category)}
-                  aria-pressed={selectedCategory === category}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <RestaurantCarousel
-            sectionId="featured-restaurants"
-            eyebrow="Selected from restaurants available today"
-            title="Featured restaurants"
-            restaurants={featuredRestaurants}
-            emptyMessage="No featured restaurants are available right now."
-          />
-
-          <RestaurantCarousel
-            sectionId="nearby-restaurants"
-            eyebrow={nearbyEyebrow}
-            title="Nearby restaurants"
-            restaurants={nearbyRestaurants}
-            emptyMessage={`No ${selectedCategory.toLowerCase()} restaurants are available right now.`}
-          />
-            </div>
+            {restaurantSections}
 
             <SponsoredPromotionRail
               placement="right"
@@ -390,7 +391,8 @@ function HomePage() {
               restaurants={sponsoredRestaurants}
             />
           </div>
-      )}
+        );
+      })()}
     </section>
   );
 }

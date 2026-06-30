@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
 import { useCurrency } from '../context/CurrencyContext.jsx';
@@ -46,6 +47,48 @@ function getProductImage(name = '') {
   return 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80';
 }
 
+function ProductImage({ product }) {
+  const customImage =
+    typeof product.image === 'string' ? product.image.trim() : '';
+
+  const imageSources = useMemo(() => {
+    const fallbackImage = getProductImage(product.name);
+
+    return customImage && customImage !== fallbackImage
+      ? [customImage, fallbackImage]
+      : [fallbackImage];
+  }, [customImage, product.name]);
+
+  const [imageIndex, setImageIndex] = useState(0);
+
+  useEffect(() => {
+    setImageIndex(0);
+  }, [imageSources]);
+
+  const imageSource = imageSources[imageIndex] || '';
+
+  if (!imageSource) {
+    return (
+      <div
+        className="product-image product-image-fallback"
+        role="img"
+        aria-label={`No image available for ${product.name}`}
+      >
+        <span aria-hidden="true">🍽</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imageSource}
+      alt={product.name}
+      className="product-image"
+      onError={() => setImageIndex((currentIndex) => currentIndex + 1)}
+    />
+  );
+}
+
 function ProductCard({
   product,
   linkTo,
@@ -63,7 +106,6 @@ function ProductCard({
 
   const customImage =
     typeof product.image === 'string' ? product.image.trim() : '';
-
   const displayImage = customImage || getProductImage(product.name);
 
   const restaurantImage = getRestaurantImage({
@@ -90,7 +132,7 @@ function ProductCard({
         <strong>{product.price !== undefined ? formatPrice(product.price) : ''}</strong>
       </div>
 
-      <img src={displayImage} alt={product.name} className="product-image" />
+      <ProductImage product={product} />
     </div>
   );
 

@@ -17,6 +17,49 @@ function validateRequiredString(value, fieldName) {
     }
 }
 
+function normalizeProfileText(value, fieldName, maximumLength) {
+    validateRequiredString(value, fieldName);
+
+    const normalizedValue = value.trim();
+
+    if (normalizedValue.length > maximumLength) {
+        throw createError(
+            `${fieldName} must be at most ${maximumLength} characters long`,
+            400
+        );
+    }
+
+    return normalizedValue;
+}
+
+function normalizeCurrentUserProfile(profileData) {
+    if (
+        !profileData ||
+        Array.isArray(profileData) ||
+        typeof profileData !== 'object'
+    ) {
+        throw createError('Profile data must be an object', 400);
+    }
+
+    const supportedFields = new Set(['fullName', 'phone', 'address']);
+    const unsupportedFields = Object.keys(profileData).filter(
+        (field) => !supportedFields.has(field)
+    );
+
+    if (unsupportedFields.length > 0) {
+        throw createError(
+            'Unsupported profile fields: ' + unsupportedFields.join(', '),
+            400
+        );
+    }
+
+    return {
+        fullName: normalizeProfileText(profileData.fullName, 'fullName', 120),
+        phone: normalizeProfileText(profileData.phone, 'phone', 40),
+        address: normalizeProfileText(profileData.address, 'address', 240)
+    };
+}
+
 function normalizeCoordinate(value, fieldName, minimum, maximum) {
     if (value === null || value === undefined || value === '') {
         throw createError(`${fieldName} is required`, 400);
@@ -139,6 +182,17 @@ class UserService {
 
     async getUserById(id) {
         const user = await userRepository.findById(id);
+
+        if (!user) {
+            throw createError('User not found', 404);
+        }
+
+        return user;
+    }
+
+    async updateCurrentUserProfile(userId, profileData) {
+        const profile = normalizeCurrentUserProfile(profileData);
+        const user = await userRepository.update(userId, profile);
 
         if (!user) {
             throw createError('User not found', 404);
