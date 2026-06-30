@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Wolt Clone",
+    "slug": "wolt-clone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,8 +11,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Wolt Delivery to access your photos so you can choose a profile image.",
-          "cameraPermission": "Allow Wolt Delivery to use your camera so you can take a profile image.",
+          "photosPermission": "Allow Wolt Clone to access your photos so you can choose a profile image.",
+          "cameraPermission": "Allow Wolt Clone to use your camera so you can take a profile image.",
           "microphonePermission": false
         }
       ]

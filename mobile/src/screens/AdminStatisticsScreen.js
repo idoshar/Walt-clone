@@ -68,9 +68,11 @@ function buildMetricCards(statistics) {
 }
 
 export default function AdminStatisticsScreen() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
+
+  const isAdmin = user?.role === 'admin' || user?.isAdmin === true;
 
   const [statistics, setStatistics] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +81,12 @@ export default function AdminStatisticsScreen() {
 
   const loadStatistics = useCallback(
     async ({ refreshing = false } = {}) => {
+      // Non-admin guard — don't even hit the API
+      if (!isAdmin) {
+        setIsLoading(false);
+        return;
+      }
+
       if (refreshing) {
         setIsRefreshing(true);
       } else {
@@ -100,7 +108,7 @@ export default function AdminStatisticsScreen() {
         setIsRefreshing(false);
       }
     },
-    [token]
+    [token, isAdmin]
   );
 
   useEffect(() => {
@@ -120,6 +128,18 @@ export default function AdminStatisticsScreen() {
       ),
     [statistics]
   );
+
+  // Non-admin access denied state
+  if (!isAdmin) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.errorTitle}>Access restricted</Text>
+        <Text style={styles.stateText}>
+          This dashboard is available to administrators only.
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   if (isLoading) {
     return (
