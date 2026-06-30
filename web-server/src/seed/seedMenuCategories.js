@@ -3,32 +3,25 @@ const {
     catalogMenuCategories
 } = require('./restaurantCatalog');
 
-async function seedMenuCategories() {
+async function seedMenuCategories(createdCatalogRestaurantIds = []) {
+    const restaurantIdsToSeed = new Set(
+        createdCatalogRestaurantIds.map((restaurantId) => String(restaurantId))
+    );
+
     for (const category of catalogMenuCategories) {
+        if (!restaurantIdsToSeed.has(String(category.restaurantId))) {
+            continue;
+        }
+
         const existingCategory = await MenuCategory.findOne({
             id: category.id
         }).lean();
 
-        if (!existingCategory) {
-            await MenuCategory.create(category);
+        if (existingCategory) {
             continue;
         }
 
-        if (
-            String(existingCategory.restaurantId) !==
-            String(category.restaurantId)
-        ) {
-            console.warn(
-                `Skipping catalog category ${category.id}: ` +
-                    'the id already belongs to another restaurant.'
-            );
-            continue;
-        }
-
-        await MenuCategory.updateOne(
-            { _id: existingCategory._id },
-            { $set: category }
-        );
+        await MenuCategory.create(category);
     }
 }
 

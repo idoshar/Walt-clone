@@ -2,25 +2,22 @@ const Restaurant = require('../models/Restaurant');
 const { catalogRestaurants } = require('./restaurantCatalog');
 
 async function seedRestaurants() {
+    const createdCatalogRestaurantIds = [];
+
     for (const restaurant of catalogRestaurants) {
         const existingRestaurant = await Restaurant.findOne({
             id: restaurant.id
         }).lean();
 
-        if (!existingRestaurant) {
-            await Restaurant.create(restaurant);
+        if (existingRestaurant) {
             continue;
         }
 
-        if (!existingRestaurant.isDefault) {
-            continue;
-        }
-
-        await Restaurant.updateOne(
-            { _id: existingRestaurant._id },
-            { $set: restaurant }
-        );
+        await Restaurant.create(restaurant);
+        createdCatalogRestaurantIds.push(String(restaurant.id));
     }
+
+    return createdCatalogRestaurantIds;
 }
 
 module.exports = { seedRestaurants };

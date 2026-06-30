@@ -19,11 +19,15 @@ class RestaurantStatisticsController {
                 });
             }
 
-            if (!canManageRestaurant(restaurant, getRequestUserId(req))) {
+            if (!canManageRestaurant(
+            restaurant,
+            getRequestUserId(req),
+            req.user?.role
+        )) {
                 return res.status(403).json({
                     error: 'Forbidden',
                     message:
-                        'You can manage only restaurants where you are an owner or editor'
+                        'You can manage only restaurants where you are an owner, editor, or administrator'
                 });
             }
 

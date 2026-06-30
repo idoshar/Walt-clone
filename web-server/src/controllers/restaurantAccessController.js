@@ -3,9 +3,9 @@ const restaurantRepository =
 const userRepository = require('../repositories/userRepository');
 const responseHelper = require('../utilities/responseHelper');
 const {
+    canManageRestaurantAccess,
     getEditorIds,
     getRequestUserId,
-    isRestaurantOwner,
     normalizeEditorIds,
     toUserId
 } = require('../services/restaurantAccessService');
@@ -54,7 +54,7 @@ async function getAccessResponse(restaurant) {
     };
 }
 
-async function getOwnedRestaurant(req, res) {
+async function getAccessManagedRestaurant(req, res) {
     const restaurant = await restaurantRepository.findById(req.params.id);
 
     if (!restaurant) {
@@ -62,10 +62,17 @@ async function getOwnedRestaurant(req, res) {
         return null;
     }
 
-    if (!isRestaurantOwner(restaurant, getRequestUserId(req))) {
+    if (
+        !canManageRestaurantAccess(
+            restaurant,
+            getRequestUserId(req),
+            req.user?.role
+        )
+    ) {
         res.status(403).json({
             error: 'Forbidden',
-            message: 'Only the restaurant owner can manage restaurant access'
+            message:
+                'Only the restaurant owner or an administrator can manage restaurant access'
         });
 
         return null;
@@ -77,7 +84,7 @@ async function getOwnedRestaurant(req, res) {
 class RestaurantAccessController {
     async getAccess(req, res, next) {
         try {
-            const restaurant = await getOwnedRestaurant(req, res);
+            const restaurant = await getAccessManagedRestaurant(req, res);
 
             if (!restaurant) {
                 return;
@@ -94,7 +101,7 @@ class RestaurantAccessController {
 
     async addEditor(req, res, next) {
         try {
-            const restaurant = await getOwnedRestaurant(req, res);
+            const restaurant = await getAccessManagedRestaurant(req, res);
 
             if (!restaurant) {
                 return;
@@ -149,7 +156,7 @@ class RestaurantAccessController {
 
     async removeEditor(req, res, next) {
         try {
-            const restaurant = await getOwnedRestaurant(req, res);
+            const restaurant = await getAccessManagedRestaurant(req, res);
 
             if (!restaurant) {
                 return;
@@ -177,7 +184,7 @@ class RestaurantAccessController {
 
     async transferOwnership(req, res, next) {
         try {
-            const restaurant = await getOwnedRestaurant(req, res);
+            const restaurant = await getAccessManagedRestaurant(req, res);
 
             if (!restaurant) {
                 return;

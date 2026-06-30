@@ -3,33 +3,28 @@ const productRepository =
     require('../repositories/productRepository');
 const { catalogProducts } = require('./restaurantCatalog');
 
-async function seedProducts() {
+async function seedProducts(createdCatalogRestaurantIds = []) {
+    const restaurantIdsToSeed = new Set(
+        createdCatalogRestaurantIds.map((restaurantId) => String(restaurantId))
+    );
+
     for (const product of catalogProducts) {
+        if (!restaurantIdsToSeed.has(String(product.restaurantId))) {
+            continue;
+        }
+
         const existingProduct = await Product.findOne({
             restaurantId: product.restaurantId,
             id: product.id
         }).lean();
 
-        if (!existingProduct) {
-            await productRepository.save(
-                product.restaurantId,
-                product
-            );
+        if (existingProduct) {
             continue;
         }
 
-        await Product.updateOne(
-            { _id: existingProduct._id },
-            {
-                $set: {
-                    name: product.name,
-                    price: product.price,
-                    description: product.description,
-                    categoryId: product.categoryId,
-                    category: product.category,
-                    image: product.image
-                }
-            }
+        await productRepository.save(
+            product.restaurantId,
+            product
         );
     }
 }

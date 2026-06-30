@@ -10,10 +10,11 @@ const {
     validateRequiredFields
 } = require('../utilities/validationHelper');
 const {
+    canDeleteRestaurant,
     canManageRestaurant,
     getRequestUserId,
     getRestaurantAccessRole,
-    isRestaurantOwner
+    isAdministrator
 } = require('../services/restaurantAccessService');
 
 function getLocationFields(body) {
@@ -64,11 +65,15 @@ async function isPublicRestaurant(restaurant) {
     return (await getProductCount(restaurant.id)) > 0;
 }
 
-async function toManagementResponseObject(restaurant, userId) {
+async function toManagementResponseObject(restaurant, userId, userRole) {
     return {
         ...restaurant.toResponseObject(),
         productCount: await getProductCount(restaurant.id),
-        accessRole: getRestaurantAccessRole(restaurant, userId)
+        accessRole: getRestaurantAccessRole(
+            restaurant,
+            userId,
+            userRole
+        )
     };
 }
 
@@ -103,19 +108,22 @@ class RestaurantController {
     async getMyRestaurants(req, res, next) {
         try {
             const userId = getRequestUserId(req);
+            const userRole = req.user?.role;
             const restaurants = restaurantRepository.getAll
                 ? await restaurantRepository.getAll()
                 : await restaurantRepository.findAll();
 
-            const managedRestaurants = restaurants.filter(
-                (restaurant) =>
-                    !restaurant.isDefault &&
-                    canManageRestaurant(restaurant, userId)
-            );
+            const managedRestaurants = isAdministrator(userRole)
+                ? restaurants
+                : restaurants.filter(
+                    (restaurant) =>
+                        !restaurant.isDefault &&
+                        canManageRestaurant(restaurant, userId, userRole)
+                );
 
             const myRestaurants = await Promise.all(
                 managedRestaurants.map((restaurant) =>
-                    toManagementResponseObject(restaurant, userId)
+                    toManagementResponseObject(restaurant, userId, userRole)
                 )
             );
 
@@ -180,7 +188,8 @@ class RestaurantController {
                 .json(
                     await toManagementResponseObject(
                         restaurant,
-                        getRequestUserId(req)
+                        getRequestUserId(req),
+                        req.user?.role
                     )
                 );
         } catch (err) {
@@ -199,13 +208,14 @@ class RestaurantController {
             if (
                 !canManageRestaurant(
                     existingRestaurant,
-                    getRequestUserId(req)
+                    getRequestUserId(req),
+                    req.user?.role
                 )
             ) {
                 return res.status(403).json({
                     error: 'Forbidden',
                     message:
-                        'You can manage only restaurants where you are an owner or editor'
+                        'You can manage only restaurants where you are an owner, editor, or administrator'
                 });
             }
 
@@ -254,10 +264,18 @@ class RestaurantController {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            if (!isRestaurantOwner(restaurant, getRequestUserId(req))) {
+            if (
+                !canDeleteRestaurant(
+                    restaurant,
+                    getRequestUserId(req),
+                    req.user?.role
+                )
+            ) {
                 return res.status(403).json({
                     error: 'Forbidden',
-                    message: 'Only the restaurant owner can delete a restaurant'
+                    message: restaurant.isDefault
+                        ? 'System catalog restaurants cannot be deleted'
+                        : 'Only the restaurant owner or an administrator can delete a restaurant'
                 });
             }
 
