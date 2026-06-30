@@ -27,6 +27,10 @@ export async function getAdminRestaurants(token) {
   return extractCollection(response);
 }
 
+export function getAdminRestaurant(restaurantId, token) {
+  return apiRequest(getRestaurantPath(restaurantId), { token });
+}
+
 export function updateAdminRestaurant(restaurantId, updates, token) {
   return apiRequest(getRestaurantPath(restaurantId), {
     method: 'PATCH',
@@ -39,5 +43,25 @@ export function deleteAdminRestaurant(restaurantId, token) {
   return apiRequest(getRestaurantPath(restaurantId), {
     method: 'DELETE',
     token,
+  });
+}
+
+export function updateAdminRestaurantSponsorship(
+  restaurantId,
+  sponsorship,
+  token
+) {
+  return apiRequest(`${getRestaurantPath(restaurantId)}/sponsorship`, {
+    method: 'PATCH',
+    token,
+    body: sponsorship,
+  });
+}
+
+export function replaceAdminSponsorshipOrder(restaurantIds, token) {
+  return apiRequest('/admin/restaurants/sponsorship-order', {
+    method: 'PUT',
+    token,
+    body: { restaurantIds },
   });
 }

@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Image,
@@ -31,6 +32,7 @@ import { getFeaturedRestaurants } from '../utils/featuredRestaurants';
 import { getRestaurantImage } from '../utils/restaurantImages';
 
 const ALL_CUISINES = 'All';
+const LIVE_RESTAURANT_REFRESH_MS = 10000;
 
 function formatDistance(distanceKm) {
   if (distanceKm === null || distanceKm === undefined) {
@@ -69,37 +71,55 @@ export default function HomeScreen({ navigation }) {
     'Use your location to sort restaurants by distance.'
   );
   const [userCoordinates, setUserCoordinates] = useState(null);
+  const hasLoadedRestaurantsRef = useRef(false);
 
-  const loadRestaurants = useCallback(async ({ refreshing = false } = {}) => {
-    if (refreshing) {
-      setIsRefreshing(true);
-    } else {
-      setRestaurantsState('loading');
-      setRestaurantsMessage('Loading restaurants...');
-    }
+  const loadRestaurants = useCallback(
+    async ({ refreshing = false, background = false } = {}) => {
+      if (refreshing) {
+        setIsRefreshing(true);
+      } else if (!background) {
+        setRestaurantsState('loading');
+        setRestaurantsMessage('Loading restaurants...');
+      }
 
-    try {
-      const nextRestaurants = await getRestaurants();
-      setRestaurants(nextRestaurants);
-      setRestaurantsState('success');
-      setRestaurantsMessage(
-        nextRestaurants.length > 0
-          ? `${nextRestaurants.length} restaurant${nextRestaurants.length === 1 ? '' : 's'} available.`
-          : 'No restaurants are available right now.'
-      );
-    } catch (error) {
-      setRestaurantsState('error');
-      setRestaurantsMessage(
-        error.message || 'Could not load restaurants. Please try again.'
-      );
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
+      try {
+        const nextRestaurants = await getRestaurants();
+        setRestaurants(nextRestaurants);
+        setRestaurantsState('success');
+        setRestaurantsMessage(
+          nextRestaurants.length > 0
+            ? `${nextRestaurants.length} restaurant${nextRestaurants.length === 1 ? '' : 's'} available.`
+            : 'No restaurants are available right now.'
+        );
+      } catch (error) {
+        if (!background) {
+          setRestaurantsState('error');
+          setRestaurantsMessage(
+            error.message || 'Could not load restaurants. Please try again.'
+          );
+        }
+      } finally {
+        setIsRefreshing(false);
+      }
+    },
+    []
+  );
 
-  useEffect(() => {
-    loadRestaurants();
-  }, [loadRestaurants]);
+  useFocusEffect(
+    useCallback(() => {
+      loadRestaurants({
+        background: hasLoadedRestaurantsRef.current
+      });
+
+      hasLoadedRestaurantsRef.current = true;
+
+      const intervalId = setInterval(() => {
+        loadRestaurants({ background: true });
+      }, LIVE_RESTAURANT_REFRESH_MS);
+
+      return () => clearInterval(intervalId);
+    }, [loadRestaurants])
+  );
 
   const cuisines = useMemo(() => {
     const restaurantCuisines = restaurants
@@ -381,8 +401,7 @@ export default function HomeScreen({ navigation }) {
                   return String(leftRestaurant.name || '').localeCompare(
                     String(rightRestaurant.name || '')
                   );
-                })
-                .slice(0, 3)}
+                })}
             />
           ) : null}
 

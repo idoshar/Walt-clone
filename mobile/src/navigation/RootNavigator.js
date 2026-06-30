@@ -16,8 +16,11 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModerationScreen';
+import AdminRestaurantManagementScreen from '../screens/AdminRestaurantManagementScreen';
+import AdminSponsoredPromotionsScreen from '../screens/AdminSponsoredPromotionsScreen';
 import AdminScreen from '../screens/AdminScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
+import AdminUserDetailsScreen from '../screens/AdminUserDetailsScreen';
 import AdminPasswordResetRequestsScreen from '../screens/AdminPasswordResetRequestsScreen';
 import AdminStatisticsScreen from '../screens/AdminStatisticsScreen';
 import CartScreen from '../screens/CartScreen';
@@ -185,9 +188,24 @@ function AppNavigator({ screenOptions }) {
             options={{ title: 'Restaurant moderation' }}
           />
           <Stack.Screen
+            component={AdminRestaurantManagementScreen}
+            name="AdminRestaurantManagement"
+            options={{ title: 'Restaurant management' }}
+          />
+          <Stack.Screen
+            component={AdminSponsoredPromotionsScreen}
+            name="AdminSponsoredPromotions"
+            options={{ title: 'Sponsored promotions' }}
+          />
+          <Stack.Screen
             component={AdminUserManagementScreen}
             name="AdminUserManagement"
             options={{ title: 'User account management' }}
+          />
+          <Stack.Screen
+            component={AdminUserDetailsScreen}
+            name="AdminUserDetails"
+            options={{ title: 'User account' }}
           />
           <Stack.Screen
             component={AdminPasswordResetRequestsScreen}

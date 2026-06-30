@@ -18,6 +18,10 @@ import {
   deleteRestaurant,
   updateRestaurant,
 } from '../api/restaurants';
+import {
+  deleteAdminRestaurant,
+  updateAdminRestaurant,
+} from '../api/adminRestaurantModeration';
 import { useAuth } from '../auth/AuthContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -93,8 +97,11 @@ export default function RestaurantFormScreen({ navigation, route }) {
   // If `restaurant` param is passed → edit mode; otherwise → create mode
   const existing = route.params?.restaurant || null;
   const isEditing = Boolean(existing);
+  const adminMode = route.params?.adminMode === true;
   const canDelete = Boolean(
-    existing && existing.accessRole === 'owner'
+    existing &&
+      !existing.isDefault &&
+      (existing.accessRole === 'owner' || adminMode)
   );
 
   const [fields, setFields] = useState({
@@ -151,7 +158,11 @@ export default function RestaurantFormScreen({ navigation, route }) {
 
     try {
       if (isEditing) {
-        await updateRestaurant(existing.id, body, token);
+        if (adminMode) {
+          await updateAdminRestaurant(existing.id, body, token);
+        } else {
+          await updateRestaurant(existing.id, body, token);
+        }
       } else {
         await createRestaurant(body, token);
       }
@@ -163,7 +174,7 @@ export default function RestaurantFormScreen({ navigation, route }) {
     } finally {
       setSubmitState((s) => (s === 'loading' ? 'idle' : s));
     }
-  }, [fields, isEditing, existing, token, navigation]);
+  }, [adminMode, fields, isEditing, existing, token, navigation]);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -177,7 +188,11 @@ export default function RestaurantFormScreen({ navigation, route }) {
           onPress: async () => {
             setDeleteState('loading');
             try {
-              await deleteRestaurant(existing.id, token);
+              if (adminMode) {
+                await deleteAdminRestaurant(existing.id, token);
+              } else {
+                await deleteRestaurant(existing.id, token);
+              }
               navigation.goBack();
             } catch (err) {
               setDeleteState('idle');
@@ -190,7 +205,7 @@ export default function RestaurantFormScreen({ navigation, route }) {
         },
       ]
     );
-  }, [existing, token, navigation]);
+  }, [adminMode, existing, token, navigation]);
 
   const isSubmitting = submitState === 'loading';
   const isDeleting = deleteState === 'loading';

@@ -39,7 +39,7 @@ function RestaurantCard({ restaurant, isProtected, onManage }) {
       <div style={isProtected ? styles.protectedActions : styles.restaurantCardActions}>
         <button
           type="button"
-          style={styles.primaryButton}
+          style={{ ...styles.primaryButton, ...styles.manageButton }}
           onClick={() => onManage(restaurant)}
         >
           Manage Restaurant
@@ -333,6 +333,7 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: '14px',
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '14px',
     justifyContent: 'space-between',
     padding: '15px'
@@ -343,23 +344,32 @@ const styles = {
     border: '1px solid var(--color-border)',
     borderRadius: '14px',
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '14px',
     justifyContent: 'space-between',
     padding: '15px'
   },
   restaurantCardActions: {
+    alignSelf: 'center',
     display: 'flex',
-    flexWrap: 'wrap',
+    flex: '0 0 auto',
+    flexWrap: 'nowrap',
     gap: '8px',
     justifyContent: 'flex-end'
   },
   protectedActions: {
     alignItems: 'flex-end',
     display: 'flex',
+    flex: '0 0 auto',
     flexDirection: 'column',
     gap: '8px'
   },
+  manageButton: {
+    minWidth: '198px',
+    whiteSpace: 'nowrap'
+  },
   restaurantContent: {
+    flex: '1 1 170px',
     minWidth: 0
   },
   restaurantName: {

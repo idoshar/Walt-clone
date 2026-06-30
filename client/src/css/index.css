@@ -1,22 +1,22 @@
 :root {
   font-family: Arial, Helvetica, sans-serif;
 
-  --color-bg: #f8f9fa;
+  --color-bg: #f6faff;
   --color-surface: #ffffff;
-  --color-surface-muted: #fbfcfd;
-  --color-text: #202125;
-  --color-text-muted: #5e646e;
+  --color-surface-muted: #f8fbfe;
+  --color-text: #0875ad;
+  --color-text-muted: #4b7f9e;
 
   --color-primary: #009de0;
   --color-primary-contrast: #ffffff;
 
-  --color-border: #e2e4e8;
-  --color-border-strong: #ced4da;
-  --color-input-border: #d7d9dd;
+  --color-border: #d8e5ef;
+  --color-border-strong: #bfd2e1;
+  --color-input-border: #cbdce8;
 
-  --color-hover-bg: #eef1f4;
-  --color-info-bg: #e9f7fb;
-  --color-spinner-bg: #d7eff8;
+  --color-hover-bg: #edf7fc;
+  --color-info-bg: #e6f6fd;
+  --color-spinner-bg: #cdeefa;
 
   --color-danger: #b42318;
   --color-danger-bg: #fff6f6;
@@ -29,34 +29,34 @@
   --radius-lg: 16px;
   --radius-round: 999px;
 
-  --theme-toggle-bg: #202125;
+  --theme-toggle-bg: #0875ad;
   --theme-toggle-text: #ffffff;
-  --theme-toggle-border: #202125;
-  --theme-toggle-hover-bg: #000000;
+  --theme-toggle-border: #0875ad;
+  --theme-toggle-hover-bg: #005b89;
 
-  --logout-button-bg: #f8f9fa;
-  --logout-button-text: #202125;
-  --logout-button-border: #ced4da;
-  --logout-button-hover-bg: #eef1f4;
+  --logout-button-bg: #f6faff;
+  --logout-button-text: #0875ad;
+  --logout-button-border: #9fd4eb;
+  --logout-button-hover-bg: #edf7fc;
 }
 
 :root[data-theme='dark'] {
-  --color-bg: #121417;
-  --color-surface: #1b1f24;
-  --color-surface-muted: #20252b;
-  --color-text: #f4f6f8;
-  --color-text-muted: #aeb7c2;
+  --color-bg: #0d1b2a;
+  --color-surface: #14263a;
+  --color-surface-muted: #193047;
+  --color-text: #e8f4fc;
+  --color-text-muted: #a9c2d5;
 
-  --color-primary: #35bdf2;
-  --color-primary-contrast: #061015;
+  --color-primary: #43c7f4;
+  --color-primary-contrast: #062033;
 
-  --color-border: #303741;
-  --color-border-strong: #46505c;
-  --color-input-border: #46505c;
+  --color-border: #2c4961;
+  --color-border-strong: #41617a;
+  --color-input-border: #41617a;
 
-  --color-hover-bg: #252b32;
-  --color-info-bg: #102b38;
-  --color-spinner-bg: #244655;
+  --color-hover-bg: #1d3850;
+  --color-info-bg: #10364a;
+  --color-spinner-bg: #1d5069;
 
   --color-danger: #ff8a80;
   --color-danger-bg: #321b1b;
@@ -64,15 +64,15 @@
 
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.35);
 
-  --theme-toggle-bg: #ffffff;
-  --theme-toggle-text: #121417;
-  --theme-toggle-border: #ffffff;
-  --theme-toggle-hover-bg: #e6e8eb;
+  --theme-toggle-bg: #e8f4fc;
+  --theme-toggle-text: #12304a;
+  --theme-toggle-border: #e8f4fc;
+  --theme-toggle-hover-bg: #cfe8f7;
 
-  --logout-button-bg: #ffffff;
-  --logout-button-text: #121417;
-  --logout-button-border: #ffffff;
-  --logout-button-hover-bg: #e6e8eb;
+  --logout-button-bg: #e8f4fc;
+  --logout-button-text: #12304a;
+  --logout-button-border: #e8f4fc;
+  --logout-button-hover-bg: #cfe8f7;
 }
 
 * {
@@ -100,6 +100,15 @@ a {
 button,
 input {
   font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 58%, transparent);
+  outline-offset: 2px;
 }
 
 .app-shell {
@@ -2871,12 +2880,13 @@ body.dark .product-card {
 /* SCRUM-341 responsive navigation and light-theme visual polish */
 :root:not([data-theme='dark']) {
   --color-surface-muted: #f7fcfe;
-  --color-text-muted: #52697a;
-  --color-border: #d9e6eb;
-  --color-border-strong: #bdd9e5;
-  --color-input-border: #c9dde6;
-  --color-hover-bg: #eaf8fc;
-  --color-info-bg: #e6f7fd;
+  --color-text: #006fa8;
+  --color-text-muted: #39738e;
+  --color-border: #c9e2ed;
+  --color-border-strong: #a9d5e7;
+  --color-input-border: #b9ddea;
+  --color-hover-bg: #e4f7fd;
+  --color-info-bg: #e1f6fd;
 }
 
 /* Keep the cart visually connected to the primary Wolt-blue action language. */
@@ -5973,4 +5983,138 @@ body.dark .checkout-field input[type='number'] {
 
 .management-page-admin-overlay > .management-page-workspace {
   display: none;
+}
+
+/* Visual hierarchy refinement: give the web shell a clearer Wolt-inspired blue/navy identity. */
+.navbar {
+  background: linear-gradient(90deg, #ffffff 0%, #f6fbff 68%, #eaf8ff 100%);
+  border-bottom-color: #c6e5f2;
+  box-shadow: 0 8px 22px rgba(13, 69, 102, 0.08);
+}
+
+.navbar .logo {
+  color: #009de0;
+}
+
+.header-search-input {
+  border-color: #b8dbe9;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.header-search-input:focus {
+  border-color: #00aee8;
+  box-shadow: 0 0 0 3px rgba(0, 174, 232, 0.16);
+}
+
+.header-search-button {
+  background-color: #00aee8;
+  box-shadow: 0 5px 12px rgba(0, 174, 232, 0.2);
+}
+
+.primary-nav-links {
+  border-color: #c6e7f5;
+  background-color: #edf8fe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.primary-nav-links .nav-link {
+  color: #0875ad;
+}
+
+.primary-nav-links .nav-link:hover,
+.primary-nav-links .nav-link.active {
+  color: #008fcb;
+  background-color: #ffffff;
+  box-shadow: 0 3px 10px rgba(13, 69, 102, 0.12);
+}
+
+.navbar-utilities,
+.navbar-utilities .user-label,
+.currency-selector {
+  color: #0875ad;
+}
+
+.logout-button {
+  border-color: #9fd4eb;
+  background-color: #f8fcff;
+  color: #0875ad;
+}
+
+.logout-button:hover {
+  background-color: #e7f6fd;
+}
+
+.page-container h1,
+.page-container h2,
+.page-container h3,
+.page-container h4,
+.page-container h5,
+.page-container h6 {
+  color: #006da4;
+}
+
+:root[data-theme='dark'] .navbar {
+  background: linear-gradient(90deg, #0b2233 0%, #0d2a3d 68%, #10384d 100%);
+  border-bottom-color: #2e607a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-theme='dark'] .header-search-input {
+  border-color: #37627a;
+  box-shadow: none;
+}
+
+:root[data-theme='dark'] .primary-nav-links {
+  border-color: #35647c;
+  background-color: #10364a;
+  box-shadow: none;
+}
+
+:root[data-theme='dark'] .primary-nav-links .nav-link {
+  color: #d8effa;
+}
+
+:root[data-theme='dark'] .primary-nav-links .nav-link:hover,
+:root[data-theme='dark'] .primary-nav-links .nav-link.active {
+  color: #56d5fa;
+  background-color: #173f55;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+}
+
+:root[data-theme='dark'] .navbar-utilities,
+:root[data-theme='dark'] .navbar-utilities .user-label,
+:root[data-theme='dark'] .currency-selector {
+  color: #d8effa;
+}
+
+:root[data-theme='dark'] .logout-button {
+  border-color: #416e86;
+  background-color: #14384d;
+  color: #e8f7ff;
+}
+
+:root[data-theme='dark'] .logout-button:hover {
+  background-color: #1b4960;
+}
+
+/* Wolt-blue hierarchy for administrator account management in Light Mode. */
+:root:not([data-theme='dark']) .admin-user-management-panel {
+  --color-text: #006fa8;
+  --color-text-muted: #39738e;
+}
+
+:root:not([data-theme='dark']) .admin-user-management-panel h2,
+:root:not([data-theme='dark']) .admin-user-management-panel h3,
+:root:not([data-theme='dark']) .admin-user-management-panel label {
+  color: #006fa8;
+}
+
+:root:not([data-theme='dark']) .admin-user-management-panel article {
+  border-color: #c9e2ed;
+  box-shadow: 0 5px 16px rgba(0, 125, 184, 0.06);
+}
+
+:root:not([data-theme='dark']) .admin-user-management-panel article:hover {
+  border-color: #81cdec;
+  box-shadow: 0 8px 22px rgba(0, 125, 184, 0.11);
 }
