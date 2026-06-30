@@ -9,6 +9,7 @@ import {
 
 import AppCard from './AppCard';
 import { useAppTheme } from '../theme/ThemeContext';
+import { getRestaurantImage } from '../utils/restaurantImages';
 
 const ROTATION_INTERVAL_MS = 7000;
 
@@ -116,15 +117,10 @@ export default function SponsoredRestaurantCard({
           pressed ? styles.pressed : null,
         ]}
       >
-        {hasRestaurantImage(restaurant) ? (
-          <Image source={{ uri: restaurant.image }} style={styles.image} />
-        ) : (
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imageInitial}>
-              {getRestaurantInitial(restaurant)}
-            </Text>
-          </View>
-        )}
+        <Image
+          source={{ uri: getRestaurantImage(restaurant) }}
+          style={styles.image}
+        />
 
         <View style={styles.content}>
           <Text style={styles.sponsorLabel}>Sponsored · Demo</Text>

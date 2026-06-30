@@ -86,12 +86,12 @@ The dashboard screen is `mobile/src/screens/AdminStatisticsScreen.js`, reached f
 
 ## Summary
 
-| State | Handling | Result 
+| State | Handling | Result
 |---|---|---|
-| Admin | Full dashboard with metrics + status breakdown 
-| Non-admin | Access restricted message, no API call 
-| Loading | Centered spinner 
-| Empty | "No orders yet" empty state 
-| Server error | Full-screen error + retry; inline error on refresh 
+| Admin | Full dashboard with metrics + status breakdown
+| Non-admin | Access restricted message, no API call
+| Loading | Centered spinner
+| Empty | "No orders yet" empty state
+| Server error | Full-screen error + retry; inline error on refresh
 
 All five required states are handled and verified.

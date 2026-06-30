@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -33,7 +34,7 @@ export default function RestaurantProductsScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState('');
 
   const loadProducts = useCallback(
     async ({ refreshing = false } = {}) => {
@@ -70,6 +71,37 @@ export default function RestaurantProductsScreen({ navigation, route }) {
     loadProducts();
   }, [loadProducts]);
 
+  async function deleteSelectedProduct(product) {
+    const productId = getProductId(product);
+
+    if (!productId) {
+      Alert.alert('Delete failed', 'Product id is missing.');
+      return;
+    }
+
+    setDeletingProductId(String(productId));
+
+    try {
+      await deleteProduct(restaurantId, productId, token);
+
+      setProducts((currentProducts) =>
+        currentProducts.filter(
+          (currentProduct) =>
+            String(getProductId(currentProduct)) !== String(productId)
+        )
+      );
+    } catch (err) {
+      Alert.alert(
+        'Could not delete product',
+        err.status === 403
+          ? 'You are not authorized to manage this restaurant. Only the owner can delete products.'
+          : err.message || 'Something went wrong. Please try again.'
+      );
+    } finally {
+      setDeletingProductId('');
+    }
+  }
+
   function confirmDelete(product) {
     const productId = getProductId(product);
 
@@ -78,30 +110,36 @@ export default function RestaurantProductsScreen({ navigation, route }) {
       return;
     }
 
+    if (deletingProductId) {
+      return;
+    }
+
+    const message = `Delete "${product.name}"? This cannot be undone.`;
+    const confirmDeleteAction = () => {
+      void deleteSelectedProduct(product);
+    };
+
+    if (
+      Platform.OS === 'web' &&
+      typeof window !== 'undefined' &&
+      typeof window.confirm === 'function'
+    ) {
+      if (window.confirm(message)) {
+        confirmDeleteAction();
+      }
+
+      return;
+    }
+
     Alert.alert(
       'Delete product',
-      `Are you sure you want to delete "${product.name}"?`,
+      message,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            setDeletingId(productId);
-            try {
-              await deleteProduct(restaurantId, productId, token);
-              await loadProducts({ refreshing: true });
-            } catch (err) {
-              Alert.alert(
-                'Could not delete product',
-                err.status === 403
-                  ? 'You are not authorized to manage this restaurant. Only the owner can delete products.'
-                  : err.message || 'Something went wrong. Please try again.'
-              );
-            } finally {
-              setDeletingId(null);
-            }
-          },
+          onPress: confirmDeleteAction,
         },
       ]
     );
@@ -142,18 +180,32 @@ export default function RestaurantProductsScreen({ navigation, route }) {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() =>
-            navigation.navigate('ProductForm', {
-              mode: 'create',
-              restaurantId,
-              restaurantName,
-            })
-          }
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.categoriesButton}
+            onPress={() =>
+              navigation.navigate('MenuCategoryManagement', {
+                restaurantId,
+                restaurantName,
+              })
+            }
+          >
+            <Text style={styles.categoriesButtonText}>Categories</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() =>
+              navigation.navigate('ProductForm', {
+                mode: 'create',
+                restaurantId,
+                restaurantName,
+              })
+            }
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {products.length === 0 ? (
@@ -171,7 +223,8 @@ export default function RestaurantProductsScreen({ navigation, route }) {
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => {
             const productId = getProductId(item);
-            const isDeleting = deletingId === productId;
+            const isDeleting =
+              String(deletingProductId) === String(productId);
 
             return (
               <View style={styles.card}>
@@ -296,6 +349,21 @@ function createStyles(colors) {
       paddingVertical: 12,
     },
     primaryButtonText: { color: colors.onPrimary, fontWeight: '800' },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    categoriesButton: {
+      borderColor: colors.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    categoriesButtonText: {
+      color: colors.text,
+      fontWeight: '800',
+    },
     addButton: {
       backgroundColor: colors.primary,
       borderRadius: 12,

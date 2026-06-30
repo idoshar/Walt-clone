@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { getMyRestaurants } from '../api/restaurants';
+import { getRestaurantImage } from '../utils/restaurantImages';
 import { useAuth } from '../auth/AuthContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -147,19 +148,11 @@ export default function MyRestaurantsScreen({ navigation }) {
         renderItem={({ item }) => (
           <View style={styles.card}>
             {/* Image */}
-            {item.image ? (
-              <Image
-                source={{ uri: item.image }}
-                style={styles.restaurantImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Text style={styles.imagePlaceholderInitial}>
-                  {item.name?.charAt(0)?.toUpperCase() || 'R'}
-                </Text>
-              </View>
-            )}
+            <Image
+              source={{ uri: getRestaurantImage(item) }}
+              style={styles.restaurantImage}
+              resizeMode="cover"
+            />
 
             {/* Content */}
             <View style={styles.cardContent}>
@@ -236,6 +229,23 @@ export default function MyRestaurantsScreen({ navigation }) {
                 >
                   <Text style={styles.productsButtonText}>
                     Manage products
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.analyticsButton,
+                    pressed ? styles.pressed : null,
+                  ]}
+                  onPress={() =>
+                    navigation.navigate('RestaurantSalesStatistics', {
+                      restaurantId: item.id,
+                      restaurantName: item.name,
+                    })
+                  }
+                >
+                  <Text style={styles.analyticsButtonText}>
+                    Sales insights
                   </Text>
                 </Pressable>
 
@@ -410,6 +420,20 @@ function createStyles(colors) {
       paddingVertical: 10,
     },
     productsButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+    analyticsButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+      borderRadius: 10,
+      borderWidth: 1,
+      flexBasis: '100%',
+      paddingVertical: 10,
+    },
+    analyticsButtonText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+    },
     teamButton: {
       alignItems: 'center',
       borderColor: colors.border,

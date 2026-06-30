@@ -27,6 +27,7 @@ import {
 } from '../location/locationService';
 import { useAppTheme } from '../theme/ThemeContext';
 import { getFeaturedRestaurants } from '../utils/featuredRestaurants';
+import { getRestaurantImage } from '../utils/restaurantImages';
 
 const ALL_CUISINES = 'All';
 
@@ -487,18 +488,10 @@ export default function HomeScreen({ navigation }) {
                 pressed ? styles.pressedButton : null,
               ]}
             >
-              {hasRestaurantImage(restaurant) ? (
-                <Image
-                  source={{ uri: restaurant.image }}
-                  style={styles.restaurantImage}
-                />
-              ) : (
-                <View style={styles.restaurantImagePlaceholder}>
-                  <Text style={styles.restaurantImageInitial}>
-                    {getRestaurantInitial(restaurant)}
-                  </Text>
-                </View>
-              )}
+              <Image
+                source={{ uri: getRestaurantImage(restaurant) }}
+                style={styles.restaurantImage}
+              />
 
               <View style={styles.restaurantContent}>
                 <View style={styles.restaurantTitleRow}>

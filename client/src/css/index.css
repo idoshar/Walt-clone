@@ -5280,3 +5280,479 @@ body.dark .checkout-field input[type='number'] {
     flex-direction: column;
   }
 }
+
+/* SCRUM-533 restaurant analytics dashboard */
+.analytics-dashboard {
+  display: grid;
+  gap: 20px;
+}
+
+.analytics-dashboard-intro {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-info-bg);
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.analytics-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analytics-summary-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 148px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.analytics-summary-card-featured {
+  border-color: var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-muted),
+    var(--color-info-bg)
+  );
+}
+
+.analytics-summary-label {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.analytics-summary-card strong {
+  display: block;
+  margin: 12px 0 7px;
+  color: var(--color-text);
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.analytics-summary-card small {
+  margin-top: auto;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.analytics-product-section {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-muted);
+}
+
+.analytics-product-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.analytics-product-section-heading h3 {
+  margin: 4px 0 0;
+  color: var(--color-text);
+  font-size: 22px;
+}
+
+.analytics-product-count {
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.analytics-product-list {
+  display: grid;
+  gap: 16px;
+}
+
+.analytics-product-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 0.3fr);
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.analytics-product-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.analytics-product-main {
+  min-width: 0;
+}
+
+.analytics-product-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analytics-product-title-row h4 {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text);
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.analytics-top-product-badge {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-round);
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.analytics-product-main > p {
+  margin: 7px 0 10px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.analytics-sales-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-round);
+  background-color: var(--color-hover-bg);
+}
+
+.analytics-sales-bar-fill {
+  display: block;
+  min-width: 2px;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-primary);
+}
+
+.analytics-product-values {
+  display: grid;
+  gap: 10px;
+  text-align: right;
+}
+
+.analytics-product-values span {
+  display: grid;
+  gap: 2px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.analytics-product-values strong {
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.analytics-product-values span:last-child strong {
+  color: var(--color-primary);
+}
+
+@media (max-width: 820px) {
+  .analytics-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .analytics-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-product-section {
+    padding: 16px;
+  }
+
+  .analytics-product-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .analytics-product-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .analytics-product-values {
+    grid-template-columns: repeat(2, 1fr);
+    text-align: left;
+  }
+}
+
+/* SCRUM-533 stronger restaurant management and analytics emphasis */
+.management-action-summary {
+  border-left: 5px solid var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    var(--color-info-bg),
+    var(--color-surface)
+  );
+}
+
+.management-action-button {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--color-border-strong);
+  border-left: 4px solid var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    var(--color-surface),
+    var(--color-info-bg)
+  );
+  box-shadow: 0 6px 16px rgba(0, 157, 224, 0.06);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.management-action-button:hover {
+  border-color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  background: var(--color-info-bg);
+  box-shadow: 0 10px 22px rgba(0, 157, 224, 0.16);
+  transform: translateY(-2px);
+}
+
+.management-action-button span {
+  color: var(--color-text);
+}
+
+.management-action-button small {
+  color: var(--color-text-muted);
+}
+
+.analytics-dashboard-intro {
+  border-left: 5px solid var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    var(--color-info-bg),
+    var(--color-surface)
+  );
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.analytics-summary-card {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--color-border-strong);
+  border-top: 4px solid var(--color-primary);
+  background: linear-gradient(
+    150deg,
+    var(--color-surface),
+    var(--color-info-bg)
+  );
+  box-shadow: 0 8px 18px rgba(0, 157, 224, 0.07);
+}
+
+.analytics-summary-card:nth-child(2) {
+  border-top-color: #00a878;
+}
+
+.analytics-summary-card:nth-child(3) {
+  border-top-color: #6f42c1;
+}
+
+.analytics-summary-card strong {
+  color: var(--color-text);
+  font-size: clamp(25px, 2.5vw, 33px);
+  font-weight: 900;
+}
+
+.analytics-summary-card-featured {
+  border-color: var(--color-primary);
+  border-top-color: var(--color-primary);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.22),
+      transparent 42%
+    ),
+    var(--color-primary);
+  box-shadow: 0 12px 24px rgba(0, 157, 224, 0.28);
+}
+
+.analytics-summary-card-featured .analytics-summary-label,
+.analytics-summary-card-featured strong,
+.analytics-summary-card-featured small {
+  color: var(--color-primary-contrast);
+}
+
+.analytics-product-section {
+  border-color: var(--color-border-strong);
+  border-top: 4px solid var(--color-primary);
+  background: linear-gradient(
+    180deg,
+    var(--color-info-bg),
+    var(--color-surface)
+  );
+  box-shadow: 0 8px 18px rgba(0, 157, 224, 0.06);
+}
+
+.analytics-product-count,
+.analytics-top-product-badge {
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.analytics-sales-bar {
+  height: 10px;
+  background-color: var(--color-hover-bg);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-sales-bar-fill {
+  background: linear-gradient(
+    90deg,
+    var(--color-primary),
+    #00b8f0
+  );
+  box-shadow: 0 0 10px rgba(0, 157, 224, 0.42);
+}
+
+.analytics-product-values span:last-child strong {
+  color: var(--color-primary);
+  font-size: 17px;
+}
+
+:root[data-theme='dark'] .management-action-button,
+:root[data-theme='dark'] .analytics-summary-card,
+:root[data-theme='dark'] .analytics-product-section,
+:root[data-theme='dark'] .analytics-dashboard-intro {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+:root[data-theme='dark'] .analytics-summary-card:nth-child(2) {
+  border-top-color: #37d49b;
+}
+
+:root[data-theme='dark'] .analytics-summary-card:nth-child(3) {
+  border-top-color: #ae8cff;
+}
+
+@media (max-width: 560px) {
+  .management-action-button:hover {
+    transform: none;
+  }
+}
+
+/* SCRUM-533 analytics palette aligned with the Native application */
+.analytics-dashboard-intro {
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.05);
+}
+
+.analytics-summary-card,
+.analytics-summary-card:nth-child(2),
+.analytics-summary-card:nth-child(3),
+.analytics-summary-card-featured {
+  border: 1px solid var(--color-border-strong);
+  border-top: 3px solid var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.08);
+}
+
+.analytics-summary-card-featured {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 3px 10px rgba(0, 157, 224, 0.16);
+}
+
+.analytics-summary-label,
+.analytics-summary-card-featured .analytics-summary-label {
+  color: var(--color-text);
+}
+
+.analytics-summary-card strong,
+.analytics-summary-card-featured strong {
+  color: var(--color-primary);
+}
+
+.analytics-summary-card small,
+.analytics-summary-card-featured small {
+  color: var(--color-text-muted);
+}
+
+.analytics-product-section {
+  border: 1px solid var(--color-border-strong);
+  border-top: 3px solid var(--color-primary);
+  background: var(--color-surface);
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.08);
+}
+
+.analytics-product-count,
+.analytics-top-product-badge {
+  border: 1px solid var(--color-primary);
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.analytics-product-values strong,
+.analytics-product-values span:last-child strong {
+  color: var(--color-primary);
+}
+
+.analytics-sales-bar {
+  height: 8px;
+  background: var(--color-hover-bg);
+  box-shadow: none;
+}
+
+.analytics-sales-bar-fill {
+  background: var(--color-primary);
+  box-shadow: none;
+}
+
+.analytics-summary-card,
+.analytics-product-section,
+.analytics-dashboard-intro {
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.analytics-summary-card:hover,
+.analytics-product-section:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 7px 16px rgba(0, 157, 224, 0.14);
+  transform: translateY(-1px);
+}
+
+:root[data-theme='dark'] .analytics-summary-card,
+:root[data-theme='dark'] .analytics-summary-card:nth-child(2),
+:root[data-theme='dark'] .analytics-summary-card:nth-child(3),
+:root[data-theme='dark'] .analytics-summary-card-featured,
+:root[data-theme='dark'] .analytics-product-section,
+:root[data-theme='dark'] .analytics-dashboard-intro {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+@media (max-width: 560px) {
+  .analytics-summary-card:hover,
+  .analytics-product-section:hover {
+    transform: none;
+  }
+}
