@@ -6,6 +6,8 @@ const adminSponsorshipController =
     require('../controllers/adminSponsorshipController');
 const adminStatisticsController =
     require('../controllers/adminStatisticsController');
+const adminUserManagementController =
+    require('../controllers/adminUserManagementController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const asyncHandler = require('../middleware/asyncHandler');
@@ -24,6 +26,41 @@ router.get(
             role: req.user.role
         });
     }
+);
+
+router.get(
+    '/users',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminUserManagementController.getUsers)
+);
+
+router.delete(
+    '/users/:id',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminUserManagementController.deleteUser)
+);
+
+router.patch(
+    '/users/:id/status',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminUserManagementController.updateUserStatus)
+);
+
+router.patch(
+    '/users/:id/password',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminUserManagementController.resetUserPassword)
+);
+
+router.patch(
+    '/users/:id/role',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminUserManagementController.updateUserRole)
 );
 
 router.get(

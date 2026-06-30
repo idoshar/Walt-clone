@@ -33,7 +33,7 @@ class TokenService {
             username.trim()
         );
 
-        if (!user) {
+        if (!user || user.isActive === false) {
             throw createInvalidCredentialsError();
         }
 

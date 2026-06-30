@@ -29,9 +29,11 @@ const ADMIN_TOOLS = [
   },
   {
     area: 'ACCESS',
-    title: 'User roles',
+    title: 'User account management',
     description:
-      'Review user roles and safely manage administrator access.',
+      'Manage access, roles, temporary passwords and eligible account deletion.',
+    route: 'AdminUserManagement',
+    status: 'Available now',
   },
   {
     area: 'INSIGHTS',
