@@ -4,6 +4,7 @@ import {
   getAdminRestaurants,
   updateAdminRestaurant
 } from '../api/adminRestaurantModerationApi.js';
+import Modal from './Modal.jsx';
 
 function buildDraft(restaurant) {
   return {
@@ -119,6 +120,12 @@ function AdminRestaurantModerationPanel() {
     setDraft(buildDraft(restaurant));
     setError('');
     setNotice('');
+  }
+
+  function closeEditor() {
+    setSelectedRestaurantId('');
+    setDraft(null);
+    setError('');
   }
 
   function updateDraftField(event) {
@@ -382,27 +389,28 @@ function AdminRestaurantModerationPanel() {
               </details>
             </div>
 
-            <aside
-              style={{
-                ...styles.editorCard,
-                display: selectedRestaurant && draft ? 'block' : 'none'
-              }}
-              aria-live="polite"
+          </div>
+
+          {selectedRestaurant && draft ? (
+            <Modal
+              title={`Edit ${selectedRestaurant.name}`}
+              onClose={closeEditor}
+              size="large"
             >
-              <h3 style={styles.editorTitle}>Edit restaurant</h3>
-
-              {!selectedRestaurant || !draft ? (
-                <p style={styles.stateMessage}>
-                  Select a manageable restaurant to review and edit it.
+              <div style={styles.modalEditor} aria-live="polite">
+                <p style={styles.editorDescription}>
+                  Changes are applied as an administrator. Ownership,
+                  sponsorship and catalog-protection fields cannot be changed
+                  here.
                 </p>
-              ) : (
-                <form onSubmit={handleSave}>
-                  <p style={styles.editorDescription}>
-                    Changes are applied as an administrator. Ownership,
-                    sponsorship and catalog-protection fields cannot be changed
-                    here.
-                  </p>
 
+                {error ? (
+                  <p style={styles.errorMessage} role="alert">
+                    {error}
+                  </p>
+                ) : null}
+
+                <form onSubmit={handleSave}>
                   <div style={styles.formGrid}>
                     <label style={styles.label}>
                       Name
@@ -494,11 +502,7 @@ function AdminRestaurantModerationPanel() {
                     <button
                       type="button"
                       style={styles.secondaryButton}
-                      onClick={() => {
-                        setSelectedRestaurantId('');
-                        setDraft(null);
-                        setError('');
-                      }}
+                      onClick={closeEditor}
                       disabled={isSaving}
                     >
                       Cancel
@@ -522,9 +526,9 @@ function AdminRestaurantModerationPanel() {
                     </button>
                   </div>
                 </form>
-              )}
-            </aside>
-          </div>
+              </div>
+            </Modal>
+          ) : null}
         </>
       )}
     </section>
@@ -717,15 +721,8 @@ const styles = {
     color: 'var(--color-text-muted)',
     padding: '18px'
   },
-  editorCard: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '16px',
-    padding: '20px'
-  },
-  editorTitle: {
-    fontSize: '1.12rem',
-    margin: '0 0 8px'
+  modalEditor: {
+    minWidth: 0
   },
   editorDescription: {
     color: 'var(--color-text-muted)',

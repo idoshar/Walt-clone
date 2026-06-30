@@ -52,7 +52,7 @@ function formatDate(value) {
   return date.toLocaleDateString();
 }
 
-function AdminUserManagementPanel() {
+function AdminUserManagementPanel({ onOpenPasswordResetRequests }) {
   const [users, setUsers] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -269,14 +269,25 @@ function AdminUserManagementPanel() {
           </p>
         </div>
 
-        <button
-          type="button"
-          style={styles.refreshButton}
-          onClick={() => loadUsers(searchQuery)}
-          disabled={isLoading || isBusy}
-        >
-          {isLoading ? 'Loading…' : 'Refresh users'}
-        </button>
+        <div style={styles.headingActions}>
+          <button
+            type="button"
+            style={styles.passwordRequestsButton}
+            onClick={onOpenPasswordResetRequests}
+            disabled={isBusy}
+          >
+            Password reset requests
+          </button>
+
+          <button
+            type="button"
+            style={styles.refreshButton}
+            onClick={() => loadUsers(searchQuery)}
+            disabled={isLoading || isBusy}
+          >
+            {isLoading ? 'Loading…' : 'Refresh users'}
+          </button>
+        </div>
       </div>
 
       <form style={styles.searchForm} onSubmit={handleSearch}>
@@ -578,6 +589,20 @@ const styles = {
     lineHeight: 1.55,
     margin: 0,
     maxWidth: '720px'
+  },
+  headingActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  passwordRequestsButton: {
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '10px',
+    color: 'var(--color-text)',
+    cursor: 'pointer',
+    fontWeight: 800,
+    padding: '10px 13px'
   },
   refreshButton: {
     background: 'var(--color-info-bg)',
