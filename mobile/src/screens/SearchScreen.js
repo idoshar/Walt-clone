@@ -15,6 +15,7 @@ import { getRestaurants } from '../api/restaurants';
 import { useCart } from '../cart/CartContext';
 import { useAppTheme } from '../theme/ThemeContext';
 import { useCurrency } from '../currency/CurrencyContext';
+import { getRestaurantImage } from '../utils/restaurantImages';
 
 
 function hasImage(item) {
@@ -222,13 +223,10 @@ export default function SearchScreen({ navigation }) {
                   })
                 }
               >
-                {hasImage(r) ? (
-                  <Image source={{ uri: r.image }} style={styles.restaurantImage} />
-                ) : (
-                  <View style={styles.restaurantImagePlaceholder}>
-                    <Text style={styles.initial}>{getInitial(r)}</Text>
-                  </View>
-                )}
+                <Image
+                  source={{ uri: getRestaurantImage(r) }}
+                  style={styles.restaurantImage}
+                />
 
                 <View style={styles.restaurantInfo}>
                   <Text numberOfLines={1} style={styles.restaurantName}>

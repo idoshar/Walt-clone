@@ -5,6 +5,7 @@ import {
   Alert,
   FlatList,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,6 +33,7 @@ export default function RestaurantProductsScreen({ navigation, route }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingProductId, setDeletingProductId] = useState('');
 
   const loadProducts = useCallback(async () => {
     try {
@@ -51,28 +53,81 @@ export default function RestaurantProductsScreen({ navigation, route }) {
     return unsubscribe;
   }, [navigation, loadProducts]);
 
-    async function confirmDelete(product) {
-        const productId = getProductId(product);
+  async function deleteSelectedProduct(product) {
+    const productId = getProductId(product);
 
-        if (!productId) {
-            Alert.alert('Delete failed', 'Product id is missing.');
-            return;
-        }
-
-        const confirmed =
-            typeof window !== 'undefined'
-            ? window.confirm(`Delete ${product.name}?`)
-            : true;
-
-        if (!confirmed) return;
-
-        try {
-            await deleteProduct(restaurantId, productId, token);
-            await loadProducts();
-        } catch (err) {
-            Alert.alert('Delete failed', err.message || 'Could not delete product');
-        }
+    if (!productId) {
+      Alert.alert('Delete failed', 'Product id is missing.');
+      return;
     }
+
+    setDeletingProductId(String(productId));
+
+    try {
+      await deleteProduct(restaurantId, productId, token);
+
+      setProducts((currentProducts) =>
+        currentProducts.filter(
+          (currentProduct) =>
+            String(getProductId(currentProduct)) !== String(productId)
+        )
+      );
+    } catch (err) {
+      Alert.alert(
+        'Delete failed',
+        err.message || 'Could not delete product.'
+      );
+    } finally {
+      setDeletingProductId('');
+    }
+  }
+
+  function confirmDelete(product) {
+    const productId = getProductId(product);
+
+    if (!productId) {
+      Alert.alert('Delete failed', 'Product id is missing.');
+      return;
+    }
+
+    if (deletingProductId) {
+      return;
+    }
+
+    const message = `Delete "${product.name}"? This cannot be undone.`;
+
+    const confirmDeleteAction = () => {
+      void deleteSelectedProduct(product);
+    };
+
+    if (
+      Platform.OS === 'web' &&
+      typeof window !== 'undefined' &&
+      typeof window.confirm === 'function'
+    ) {
+      if (window.confirm(message)) {
+        confirmDeleteAction();
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      'Delete product',
+      message,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: confirmDeleteAction,
+        },
+      ]
+    );
+  }
   if (loading) {
     return (
       <View style={styles.center}>
@@ -102,18 +157,32 @@ export default function RestaurantProductsScreen({ navigation, route }) {
           <Text style={styles.subtitle}>{restaurantName}</Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() =>
-            navigation.navigate('ProductForm', {
-              mode: 'create',
-              restaurantId,
-              restaurantName,
-            })
-          }
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.categoriesButton}
+            onPress={() =>
+              navigation.navigate('MenuCategoryManagement', {
+                restaurantId,
+                restaurantName,
+              })
+            }
+          >
+            <Text style={styles.categoriesButtonText}>Categories</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() =>
+              navigation.navigate('ProductForm', {
+                mode: 'create',
+                restaurantId,
+                restaurantName,
+              })
+            }
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {products.length === 0 ? (
@@ -164,10 +233,21 @@ export default function RestaurantProductsScreen({ navigation, route }) {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.deleteButton}
+                    disabled={Boolean(deletingProductId)}
+                    style={[
+                      styles.deleteButton,
+                      deletingProductId
+                        ? styles.actionDisabled
+                        : null,
+                    ]}
                     onPress={() => confirmDelete(item)}
                   >
-                    <Text style={styles.deleteButtonText}>Delete</Text>
+                    <Text style={styles.deleteButtonText}>
+                      {String(deletingProductId) ===
+                      String(getProductId(item))
+                        ? 'Deleting...'
+                        : 'Delete'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -208,6 +288,21 @@ function createStyles(colors) {
     paddingVertical: 12,
   },
   primaryButtonText: { color: colors.onPrimary, fontWeight: '800' },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  categoriesButton: {
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  categoriesButtonText: {
+    color: colors.text,
+    fontWeight: '800',
+  },
   addButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,
@@ -251,5 +346,8 @@ function createStyles(colors) {
     paddingVertical: 8,
   },
   deleteButtonText: {color: colors.danger, fontWeight: '800' },
+  actionDisabled: {
+    opacity: 0.5,
+  },
   });
 }

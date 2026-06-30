@@ -963,6 +963,8 @@ function RestaurantManagementPage() {
         <Modal
           title={`${selectedRestaurant.name} Sales Statistics`}
           onClose={() => setIsStatisticsOpen(false)}
+          onBack={returnToRestaurantActions}
+          backLabel="Back to restaurant actions"
           size="large"
         >
           <RestaurantSalesStatistics

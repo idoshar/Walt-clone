@@ -23,6 +23,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import CurrencySelector from '../components/CurrencySelector';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
+import { getRestaurantImage } from '../utils/restaurantImages';
 
 const ALL_CATEGORIES = 'All';
 
@@ -263,18 +264,10 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
           <>
             {/* Hero card */}
             <View style={styles.heroCard}>
-              {hasImage(restaurant) ? (
-                <Image
-                  source={{ uri: restaurant.image }}
-                  style={styles.heroImage}
-                />
-              ) : (
-                <View style={styles.heroImagePlaceholder}>
-                  <Text style={styles.heroImageInitial}>
-                    {getInitial(restaurant)}
-                  </Text>
-                </View>
-              )}
+              <Image
+                source={{ uri: getRestaurantImage(restaurant) }}
+                style={styles.heroImage}
+              />
 
               <View style={styles.heroContent}>
                 <View style={styles.restaurantTitleRow}>

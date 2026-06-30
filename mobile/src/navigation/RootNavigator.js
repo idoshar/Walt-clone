@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProductFormScreen from '../screens/ProductFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RestaurantProductsScreen from '../screens/RestaurantProductsScreen';
+import RestaurantSalesStatisticsScreen from '../screens/RestaurantSalesStatisticsScreen';
 import RestaurantAccessScreen from '../screens/RestaurantAccessScreen';
 import { useMemo } from 'react';
 import {
@@ -23,6 +24,7 @@ import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
+import MenuCategoryManagementScreen from '../screens/MenuCategoryManagementScreen';
 import OrderDetailsScreen from '../screens/OrderDetailsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -141,6 +143,16 @@ function AppNavigator({ screenOptions }) {
         component={RestaurantProductsScreen}
         name="RestaurantProducts"
         options={{ title: 'Menu management' }}
+      />
+      <Stack.Screen
+        component={RestaurantSalesStatisticsScreen}
+        name="RestaurantSalesStatistics"
+        options={{ title: 'Sales insights' }}
+      />
+      <Stack.Screen
+        component={MenuCategoryManagementScreen}
+        name="MenuCategoryManagement"
+        options={{ title: 'Menu categories' }}
       />
       <Stack.Screen
         component={ProductFormScreen}

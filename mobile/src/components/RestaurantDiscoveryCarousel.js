@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { useAppTheme } from '../theme/ThemeContext';
+import { getRestaurantImage } from '../utils/restaurantImages';
 
 function hasRestaurantImage(restaurant) {
   return (
@@ -76,18 +77,10 @@ export default function RestaurantDiscoveryCarousel({
                   pressed ? styles.cardPressed : null,
                 ]}
               >
-                {hasRestaurantImage(restaurant) ? (
-                  <Image
-                    source={{ uri: restaurant.image }}
-                    style={styles.image}
-                  />
-                ) : (
-                  <View style={styles.imagePlaceholder}>
-                    <Text style={styles.imageInitial}>
-                      {getRestaurantInitial(restaurant)}
-                    </Text>
-                  </View>
-                )}
+                <Image
+                  source={{ uri: getRestaurantImage(restaurant) }}
+                  style={styles.image}
+                />
 
                 <View style={styles.cardContent}>
                   <Text numberOfLines={1} style={styles.restaurantName}>
