@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 
 import { useAuth } from '../auth/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModerationScreen';
 import AdminScreen from '../screens/AdminScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
@@ -217,6 +218,7 @@ export default function RootNavigator() {
     () => ({
       contentStyle: { backgroundColor: theme.colors.background },
       headerBackTitle: 'Back',
+      headerRight: () => <ThemeToggle compact />,
       headerShadowVisible: false,
       headerStyle: { backgroundColor: theme.colors.surface },
       headerTintColor: theme.colors.text,

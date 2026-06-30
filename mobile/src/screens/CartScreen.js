@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
-  Image,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -15,17 +14,9 @@ import { getProductRecommendations } from '../api/products';
 import { getRestaurantProducts } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
-import ThemeToggle from '../components/ThemeToggle';
+import ProductImage from '../components/ProductImage';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
-
-function hasImage(item) {
-  return typeof item?.image === 'string' && item.image.trim().length > 0;
-}
-
-function getInitial(item) {
-  return item?.name?.trim()?.charAt(0)?.toUpperCase() || 'P';
-}
 
 function groupItemsByRestaurant(items) {
   const groups = new Map();
@@ -184,8 +175,6 @@ export default function CartScreen({ navigation }) {
           </View>
 
           <View style={styles.headerActions}>
-            <ThemeToggle compact />
-
             {items.length > 0 ? (
               <Pressable
                 accessibilityRole="button"
@@ -230,18 +219,10 @@ export default function CartScreen({ navigation }) {
 
                 {group.items.map((item) => (
                   <View key={item.key} style={styles.itemCard}>
-                    {hasImage(item) ? (
-                      <Image
-                        source={{ uri: item.image }}
-                        style={styles.itemImage}
-                      />
-                    ) : (
-                      <View style={styles.itemImagePlaceholder}>
-                        <Text style={styles.itemImageInitial}>
-                          {getInitial(item)}
-                        </Text>
-                      </View>
-                    )}
+                    <ProductImage
+                      product={item}
+                      style={styles.itemImage}
+                    />
 
                     <View style={styles.itemContent}>
                       <Text numberOfLines={1} style={styles.itemName}>
@@ -347,18 +328,10 @@ export default function CartScreen({ navigation }) {
                 >
                   {recommendations.map((rec) => (
                     <View key={rec.id} style={styles.recommendationCard}>
-                      {hasImage(rec) ? (
-                        <Image
-                          source={{ uri: rec.image }}
-                          style={styles.recommendationImage}
-                        />
-                      ) : (
-                        <View style={styles.recommendationImagePlaceholder}>
-                          <Text style={styles.recommendationInitial}>
-                            {getInitial(rec)}
-                          </Text>
-                        </View>
-                      )}
+                      <ProductImage
+                        product={rec}
+                        style={styles.recommendationImage}
+                      />
 
                       <Text numberOfLines={2} style={styles.recommendationName}>
                         {rec.name}

@@ -12,7 +12,6 @@ import {
 import { getUserOrders } from '../api/orders';
 import { useAuth } from '../auth/AuthContext';
 import AppState from '../components/AppState';
-import ThemeToggle from '../components/ThemeToggle';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -183,7 +182,6 @@ export default function OrdersScreen({ navigation }) {
           </Text>
         </View>
 
-        <ThemeToggle compact />
       </View>
 
       <FlatList

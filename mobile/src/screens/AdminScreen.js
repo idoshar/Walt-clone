@@ -9,7 +9,6 @@ import {
 
 import { useAuth } from '../auth/AuthContext';
 import AppCard from '../components/AppCard';
-import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
 const ADMIN_TOOLS = [
@@ -86,7 +85,6 @@ export default function AdminScreen({ navigation }) {
               </Text>
             </View>
 
-            <ThemeToggle compact />
           </View>
 
           <AppCard style={styles.profileCard}>

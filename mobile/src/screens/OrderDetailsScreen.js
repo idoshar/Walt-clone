@@ -16,7 +16,6 @@ import { getProductsByRestaurant } from '../api/products';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import AppState from '../components/AppState';
-import ThemeToggle from '../components/ThemeToggle';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -357,7 +356,6 @@ export default function OrderDetailsScreen({ navigation, route }) {
               See the saved details for this order.
             </Text>
           </View>
-          <ThemeToggle compact />
         </View>
 
         {requestState === 'loading' ? (

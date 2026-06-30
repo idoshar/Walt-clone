@@ -14,6 +14,7 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../cart/CartContext';
 import AppCard from '../components/AppCard';
 import RestaurantDiscoveryCarousel from '../components/RestaurantDiscoveryCarousel';
 import AppState from '../components/AppState';
@@ -54,6 +55,7 @@ function getRestaurantInitial(restaurant) {
 
 export default function HomeScreen({ navigation }) {
   const { signOut, user } = useAuth();
+  const { itemCount } = useCart();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
@@ -230,6 +232,29 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
 
           <View style={styles.headerActions}>
+            <Pressable
+              accessibilityLabel={
+                itemCount > 0
+                  ? `Open cart with ${itemCount} item${itemCount === 1 ? '' : 's'}`
+                  : 'Open empty cart'
+              }
+              accessibilityRole="button"
+              onPress={() => navigation.navigate('Cart')}
+              style={({ pressed }) => [
+                styles.cartButton,
+                pressed ? styles.pressedButton : null,
+              ]}
+            >
+              <Text style={styles.cartButtonText}>Cart</Text>
+              {itemCount > 0 ? (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+
             <Pressable
               accessibilityRole="button"
               onPress={() => navigation.navigate('MyOrders')}
@@ -597,7 +622,37 @@ function createStyles(colors) {
       fontWeight: '400',
       lineHeight: 30,
     },
-    headerActions: { flexDirection: 'row', gap: 8 },
+    headerActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    cartButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      flexDirection: 'row',
+      gap: 7,
+      justifyContent: 'center',
+      minHeight: 40,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+    },
+    cartButtonText: {
+      color: '#FFFFFF',
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    cartBadge: {
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 999,
+      justifyContent: 'center',
+      minWidth: 20,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+    },
+    cartBadgeText: {
+      color: colors.primary,
+      fontSize: 10,
+      fontWeight: '800',
+    },
     myRestaurantsButton: {
       alignItems: 'center',
       backgroundColor: colors.surface,
