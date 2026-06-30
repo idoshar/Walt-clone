@@ -7,6 +7,8 @@ const searchRoutes = require('./searchRoutes');
 const orderRoutes = require('./orderRoutes');
 const adminRoutes = require('./adminRoutes');
 const currencyRoutes = require('./currencyRoutes');
+const passwordResetRequestRoutes =
+    require('./passwordResetRequestRoutes');
 
 const router = express.Router();
 
@@ -24,5 +26,9 @@ router.use('/search', searchRoutes);
 router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
 router.use('/currency', currencyRoutes);
+router.use(
+    '/password-reset-requests',
+    passwordResetRequestRoutes
+);
 
 module.exports = router;

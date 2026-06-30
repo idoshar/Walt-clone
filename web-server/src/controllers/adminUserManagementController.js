@@ -5,9 +5,11 @@ const restaurantRepository =
     require('../repositories/restaurantRepository');
 const userRepository = require('../repositories/userRepository');
 const {
-    hashPassword,
     validatePasswordPolicy
 } = require('../utilities/passwordHelper');
+const {
+    issueTemporaryPassword
+} = require('../services/temporaryPasswordService');
 const responseHelper = require('../utilities/responseHelper');
 
 function isActiveUser(user) {
@@ -456,24 +458,11 @@ class AdminUserManagementController {
                 });
             }
 
-            const passwordHash = await hashPassword(temporaryPassword.value);
-
-            const updatedUser =
-                await userRepository.updatePasswordAndInvalidateTokens(
-                    targetUser.id,
-                    {
-                        passwordHash,
-                        mustChangePassword: true
-                    }
-                );
-
-            await adminAuditLogRepository.create({
+            const updatedUser = await issueTemporaryPassword({
                 actorUserId: req.user.sub,
-                targetUserId: targetUser.id,
-                action: 'user.passwordReset',
-                details: {
-                    mustChangePassword: true
-                }
+                targetUser,
+                temporaryPassword: temporaryPassword.value,
+                source: 'adminUserManagement'
             });
 
             const users = await userRepository.getAll();
