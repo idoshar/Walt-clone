@@ -6,7 +6,8 @@ function Modal({
   children,
   size = 'medium',
   onBack = null,
-  backLabel = 'Back to previous screen'
+  backLabel = 'Back to previous screen',
+  modalClassName = ''
 }) {
   useEffect(() => {
     function handleKeyDown(event) {
@@ -37,7 +38,7 @@ function Modal({
       onMouseDown={handleBackdropMouseDown}
     >
       <section
-        className={`app-modal app-modal-${size}`}
+        className={`app-modal app-modal-${size} ${modalClassName}`.trim()}
         role="dialog"
         aria-modal="true"
         aria-label={title}

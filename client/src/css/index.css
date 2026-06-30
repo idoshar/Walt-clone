@@ -5756,3 +5756,70 @@ body.dark .checkout-field input[type='number'] {
     transform: none;
   }
 }
+
+/* SCRUM-612-613 analytics readability and adaptive layout */
+.analytics-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.analytics-summary-card-revenue {
+  grid-column: 1 / -1;
+}
+
+.analytics-summary-card strong,
+.analytics-summary-card-featured strong {
+  min-width: 0;
+  font-size: clamp(22px, 2.25vw, 30px);
+  line-height: 1.12;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.analytics-summary-card:not(.analytics-summary-card-featured):not(.analytics-summary-card-revenue) strong {
+  white-space: nowrap;
+}
+
+.analytics-summary-card-revenue strong {
+  font-size: clamp(24px, 4vw, 38px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.analytics-summary-card-featured strong {
+  white-space: normal;
+}
+
+.analytics-product-title-row h4 {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+}
+
+.analytics-product-values strong {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .analytics-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-summary-card-revenue {
+    grid-column: auto;
+  }
+
+  .analytics-summary-card-revenue strong {
+    font-size: clamp(22px, 8vw, 32px);
+  }
+}
+
+/* SCRUM-612-613 sales statistics modal: keep scrolling, hide scrollbar */
+.app-modal-sales-statistics {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-modal-sales-statistics::-webkit-scrollbar {
+  display: none;
+}

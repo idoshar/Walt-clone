@@ -59,27 +59,15 @@ function RestaurantSalesStatistics({
         </article>
 
         <article className="analytics-summary-card">
-          <span className="analytics-summary-label">Total revenue</span>
-          <strong>{formatPrice(statistics.totalRevenue)}</strong>
-          <small>Revenue from all qualifying orders</small>
-        </article>
-
-        <article className="analytics-summary-card">
           <span className="analytics-summary-label">Average order value</span>
           <strong>{formatPrice(statistics.averageOrderValue)}</strong>
           <small>Average revenue per order</small>
         </article>
 
-        <article className="analytics-summary-card analytics-summary-card-featured">
-          <span className="analytics-summary-label">Most ordered dish</span>
-          <strong>
-            {statistics.topProduct?.productName || 'No sales yet'}
-          </strong>
-          <small>
-            {statistics.topProduct
-              ? `${formatNumber(statistics.topProduct.quantitySold)} units sold`
-              : 'A top dish will appear after orders are placed'}
-          </small>
+        <article className="analytics-summary-card analytics-summary-card-revenue">
+          <span className="analytics-summary-label">Total revenue</span>
+          <strong>{formatPrice(statistics.totalRevenue)}</strong>
+          <small>Revenue from all qualifying orders</small>
         </article>
       </div>
 

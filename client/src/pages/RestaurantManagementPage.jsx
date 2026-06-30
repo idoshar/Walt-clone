@@ -966,6 +966,7 @@ function RestaurantManagementPage() {
           onBack={returnToRestaurantActions}
           backLabel="Back to restaurant actions"
           size="large"
+          modalClassName="app-modal-sales-statistics"
         >
           <RestaurantSalesStatistics
             restaurantName={selectedRestaurant.name}
