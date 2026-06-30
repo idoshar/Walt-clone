@@ -79,6 +79,21 @@ Passed checks:
 - `GET /api/restaurants` no longer returned any of the 12 removed IDs.
 - `git diff --check`.
 
+## Regression-test cleanup
+
+The SCRUM-404 backend regression now removes its temporary restaurant after the
+test flow completes.
+
+Verification:
+
+- `node .\tests\scrum-404-backend.test.js` passed with 13 passed and 0 failed.
+- The test printed `Cleanup - SCRUM-404 test restaurant deleted.`
+- A follow-up API check found zero remaining restaurants whose name starts with
+  `SCRUM 404 Restaurant`.
+
+This prevents the regression test from recreating the legacy restaurant records
+removed by this cleanup work.
+
 ## Result
 
 Confirmed legacy test restaurants and their dependent menu data were removed
