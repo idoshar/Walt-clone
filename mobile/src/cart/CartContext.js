@@ -160,6 +160,64 @@ export function CartProvider({ children }) {
     );
   }, []);
 
+  const replaceRestaurantItems = useCallback(
+    (restaurant, productQuantities) => {
+      const restaurantId = String(restaurant?.id || '').trim();
+
+      if (!restaurantId) {
+        throw new Error('A restaurant is required to prepare a reorder.');
+      }
+
+      if (!Array.isArray(productQuantities) || productQuantities.length === 0) {
+        throw new Error('A reorder must contain at least one available item.');
+      }
+
+      const nextItemsByKey = new Map();
+
+      productQuantities.forEach((entry) => {
+        const quantity = Number.parseInt(entry?.quantity, 10);
+
+        if (
+          !entry?.product ||
+          !Number.isSafeInteger(quantity) ||
+          quantity <= 0
+        ) {
+          throw new Error('A reordered item has an invalid quantity.');
+        }
+
+        const nextItem = createCartItem(entry.product, restaurant);
+        const existingItem = nextItemsByKey.get(nextItem.key);
+
+        nextItemsByKey.set(
+          nextItem.key,
+          existingItem
+            ? {
+                ...existingItem,
+                quantity: existingItem.quantity + quantity,
+              }
+            : {
+                ...nextItem,
+                quantity,
+              }
+        );
+      });
+
+      const nextRestaurantItems = Array.from(nextItemsByKey.values());
+
+      if (nextRestaurantItems.length === 0) {
+        throw new Error('No available items were found for this reorder.');
+      }
+
+      setItems((currentItems) => [
+        ...currentItems.filter(
+          (item) => item.restaurantId !== restaurantId
+        ),
+        ...nextRestaurantItems,
+      ]);
+    },
+    []
+  );
+
   const value = useMemo(() => {
     const itemCount = items.reduce(
       (total, item) => total + item.quantity,
@@ -182,12 +240,14 @@ export function CartProvider({ children }) {
       removeItem,
       clearCart,
       clearRestaurantItems,
+      replaceRestaurantItems,
     };
   }, [
     addItem,
     clearCart,
     clearRestaurantItems,
     decreaseQuantity,
+    replaceRestaurantItems,
     increaseQuantity,
     isRestoringCart,
     items,

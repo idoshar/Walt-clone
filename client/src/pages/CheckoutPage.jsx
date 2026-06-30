@@ -138,12 +138,6 @@ function validateDeliveryDetails(
     };
   }
 
-  if (!address) {
-    return {
-      error: 'Enter a delivery address.'
-    };
-  }
-
   if (
     !Number.isSafeInteger(dinerCount) ||
     dinerCount < 1 ||
@@ -160,13 +154,7 @@ function validateDeliveryDetails(
     };
   }
 
-  const value = {
-    recipientName,
-    phone,
-    address,
-    dinerCount,
-    notes
-  };
+  let location = null;
 
   if (sharedLocation) {
     const latitude = Number(sharedLocation.latitude);
@@ -174,18 +162,33 @@ function validateDeliveryDetails(
 
     if (!isValidLocationCoordinates(latitude, longitude)) {
       return {
-        error: 'The selected location is invalid. Remove it and try again.'
+        error:
+          'The selected location is invalid. Enter an address manually and try again.'
       };
     }
 
-    value.location = {
+    location = {
       latitude,
       longitude
     };
   }
 
+  if (!address && !location) {
+    return {
+      error:
+        'Enter a delivery address or use your current location.'
+    };
+  }
+
   return {
-    value
+    value: {
+      recipientName,
+      phone,
+      address: location ? '' : address,
+      dinerCount,
+      notes,
+      location
+    }
   };
 }
 
@@ -403,7 +406,8 @@ function CheckoutPage() {
 
         setLocationNotice({
           tone: 'success',
-          text: 'Your current location is attached to this order.'
+          text:
+            'Using your current location for delivery. Choose Enter address manually to use a typed address instead.'
         });
       },
       (error) => {
@@ -432,7 +436,8 @@ function CheckoutPage() {
     setSharedLocation(null);
     setLocationNotice({
       tone: 'neutral',
-      text: 'Current location will not be shared with this order.'
+      text:
+        'Enter a delivery address manually. Your previous address text is still available.'
     });
   }
 
@@ -611,25 +616,33 @@ function CheckoutPage() {
               />
             </label>
 
-            <label className="checkout-field checkout-field--wide">
-              Delivery address *
-              <input
-                type="text"
-                name="address"
-                value={deliveryDetails.address}
-                onChange={handleDeliveryFieldChange}
-                maxLength="240"
-                autoComplete="street-address"
-                disabled={isSubmitting}
-              />
-            </label>
+            {!sharedLocation ? (
+              <label className="checkout-field checkout-field--wide">
+                Delivery address *
+                <input
+                  type="text"
+                  name="address"
+                  value={deliveryDetails.address}
+                  onChange={handleDeliveryFieldChange}
+                  maxLength="240"
+                  autoComplete="street-address"
+                  disabled={isSubmitting}
+                />
+              </label>
+            ) : null}
 
             <section className="checkout-location-section checkout-field--wide">
               <div className="checkout-location-heading">
                 <div>
-                  <h3>Current location</h3>
+                  <h3>
+                    {sharedLocation
+                      ? 'Using your current location'
+                      : 'Current location'}
+                  </h3>
                   <p>
-                    Optional. Share your current location to help with delivery.
+                    {sharedLocation
+                      ? 'This order will use your device location instead of a typed address.'
+                      : 'Choose it instead of entering a delivery address manually.'}
                   </p>
                 </div>
 
@@ -640,7 +653,7 @@ function CheckoutPage() {
                     onClick={handleRemoveSharedLocation}
                     disabled={isSubmitting}
                   >
-                    Remove location
+                    Enter address manually
                   </button>
                 ) : (
                   <button

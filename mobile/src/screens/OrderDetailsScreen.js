@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 
 import { cancelOrder, deleteOrder, getOrderById } from '../api/orders';
+import { getProductsByRestaurant } from '../api/products';
 import { useAuth } from '../auth/AuthContext';
+import { useCart } from '../cart/CartContext';
 import AppState from '../components/AppState';
 import ThemeToggle from '../components/ThemeToggle';
 import { useCurrency } from '../currency/CurrencyContext';
@@ -49,11 +51,65 @@ function getStatusColor(status, colors) {
   }
 }
 
+function normalizeDisplayText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function hasValidSavedLocation(location) {
+  const latitude = Number(location?.latitude);
+  const longitude = Number(location?.longitude);
+
+  return (
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    longitude >= -180 &&
+    longitude <= 180
+  );
+}
+
+function getDeliverySnapshot(order) {
+  const details = order?.deliveryDetails;
+
+  if (!details || typeof details !== 'object') {
+    return null;
+  }
+
+  const address = normalizeDisplayText(details.address);
+  const hasLocation = hasValidSavedLocation(details.location);
+
+  return {
+    recipientName:
+      normalizeDisplayText(details.recipientName) || 'Not available',
+    phone: normalizeDisplayText(details.phone) || 'Not available',
+    address,
+    dinerCount: Number.isSafeInteger(Number(details.dinerCount))
+      ? Number(details.dinerCount)
+      : null,
+    notes: normalizeDisplayText(details.notes),
+    usesCurrentLocation: hasLocation && !address,
+  };
+}
+
+function getReorderQuantity(value) {
+  const quantity = Number(value);
+
+  return Number.isSafeInteger(quantity) && quantity > 0
+    ? quantity
+    : null;
+}
+
+function getOrderItemName(item) {
+  return normalizeDisplayText(item?.productName) || 'Menu item';
+}
+
 export default function OrderDetailsScreen({ navigation, route }) {
   const { formatPrice } = useCurrency();
   const orderId = String(route.params?.orderId || '').trim();
 
   const { token } = useAuth();
+  const { replaceRestaurantItems } = useCart();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme.colors), [theme.colors]);
 
@@ -63,6 +119,7 @@ export default function OrderDetailsScreen({ navigation, route }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cancelState, setCancelState] = useState('idle');
   const [deleteState, setDeleteState] = useState('idle');
+  const [reorderState, setReorderState] = useState('idle');
 
   const loadOrder = useCallback(
     async ({ refreshing = false } = {}) => {
@@ -101,6 +158,92 @@ export default function OrderDetailsScreen({ navigation, route }) {
   useEffect(() => {
     loadOrder();
   }, [loadOrder]);
+
+  const handleReorder = useCallback(async () => {
+    if (
+      !order ||
+      reorderState === 'loading' ||
+      cancelState === 'loading' ||
+      deleteState === 'loading'
+    ) {
+      return;
+    }
+
+    const restaurantId = String(order.restaurantId || '').trim();
+    const previousItems = Array.isArray(order.items) ? order.items : [];
+
+    if (!restaurantId || previousItems.length === 0) {
+      Alert.alert(
+        'Cannot reorder',
+        'This order does not contain enough information to prepare a reorder.'
+      );
+      return;
+    }
+
+    setReorderState('loading');
+
+    try {
+      const currentProducts = await getProductsByRestaurant(restaurantId);
+
+      const productsById = new Map(
+        currentProducts
+          .filter(
+            (product) =>
+              product?.id !== undefined &&
+              product?.id !== null
+          )
+          .map((product) => [String(product.id), product])
+      );
+
+      const unavailableItems = previousItems.filter((item) => {
+        const quantity = getReorderQuantity(item?.quantity);
+
+        return (
+          !quantity ||
+          !productsById.has(String(item?.productId || ''))
+        );
+      });
+
+      if (unavailableItems.length > 0) {
+        const unavailableNames = unavailableItems
+          .map(getOrderItemName)
+          .join(', ');
+
+        throw new Error(
+          `These items are no longer available: ${unavailableNames}.`
+        );
+      }
+
+      const restaurant = {
+        id: restaurantId,
+        name: order.restaurantName || 'Restaurant',
+      };
+
+      const productQuantities = previousItems.map((item) => ({
+        product: productsById.get(String(item.productId)),
+        quantity: getReorderQuantity(item.quantity),
+      }));
+
+      replaceRestaurantItems(restaurant, productQuantities);
+
+      navigation.navigate('Cart');
+    } catch (error) {
+      Alert.alert(
+        'Could not prepare reorder',
+        error.message ||
+          'We could not load current products and prices for this order.'
+      );
+    } finally {
+      setReorderState('idle');
+    }
+  }, [
+    cancelState,
+    deleteState,
+    navigation,
+    order,
+    reorderState,
+    replaceRestaurantItems,
+  ]);
 
   const handleCancel = useCallback(() => {
     if (!order) return;
@@ -185,7 +328,8 @@ export default function OrderDetailsScreen({ navigation, route }) {
 
   const isCancelling = cancelState === 'loading';
   const isDeleting = deleteState === 'loading';
-  const isBusy = isCancelling || isDeleting;
+  const isReordering = reorderState === 'loading';
+  const isBusy = isCancelling || isDeleting || isReordering;
 
   const canCancel = order && CANCELLABLE_STATUSES.includes(order.status);
   const canDelete = order && DELETABLE_STATUSES.includes(order.status);
@@ -279,6 +423,98 @@ export default function OrderDetailsScreen({ navigation, route }) {
               </View>
             </View>
 
+            {/* Delivery snapshot */}
+            <View style={styles.deliveryCard}>
+              <View style={styles.deliveryHeading}>
+                <View style={styles.deliveryHeadingText}>
+                  <Text style={styles.sectionTitle}>Delivery details</Text>
+                  <Text style={styles.deliverySubtitle}>
+                    Saved when this order was placed.
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.deliveryMethodBadge,
+                    getDeliverySnapshot(order)?.usesCurrentLocation
+                      ? styles.deliveryMethodBadgeLocation
+                      : styles.deliveryMethodBadgeAddress,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.deliveryMethodBadgeText,
+                      getDeliverySnapshot(order)?.usesCurrentLocation
+                        ? styles.deliveryMethodBadgeTextLocation
+                        : styles.deliveryMethodBadgeTextAddress,
+                    ]}
+                  >
+                    {getDeliverySnapshot(order)?.usesCurrentLocation
+                      ? 'Current location'
+                      : getDeliverySnapshot(order)
+                        ? 'Manual address'
+                        : 'Unavailable'}
+                  </Text>
+                </View>
+              </View>
+
+              {getDeliverySnapshot(order) ? (
+                <>
+                  <View style={styles.deliveryRow}>
+                    <Text style={styles.deliveryLabel}>Recipient</Text>
+                    <Text style={styles.deliveryValue}>
+                      {getDeliverySnapshot(order).recipientName}
+                    </Text>
+                  </View>
+
+                  <View style={styles.deliveryRow}>
+                    <Text style={styles.deliveryLabel}>Phone</Text>
+                    <Text style={styles.deliveryValue}>
+                      {getDeliverySnapshot(order).phone}
+                    </Text>
+                  </View>
+
+                  {getDeliverySnapshot(order).usesCurrentLocation ? (
+                    <View style={styles.deliveryLocationNotice}>
+                      <Text style={styles.deliveryLocationNoticeTitle}>
+                        Current device location
+                      </Text>
+                      <Text style={styles.deliveryLocationNoticeText}>
+                        The device location was saved with this order instead of a typed address.
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.deliveryRow}>
+                      <Text style={styles.deliveryLabel}>Address</Text>
+                      <Text style={styles.deliveryValue}>
+                        {getDeliverySnapshot(order).address || 'Not available'}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.deliveryRow}>
+                    <Text style={styles.deliveryLabel}>Diners</Text>
+                    <Text style={styles.deliveryValue}>
+                      {getDeliverySnapshot(order).dinerCount || 'Not available'}
+                    </Text>
+                  </View>
+
+                  {getDeliverySnapshot(order).notes ? (
+                    <View style={styles.deliveryNotes}>
+                      <Text style={styles.deliveryLabel}>Delivery notes</Text>
+                      <Text style={styles.deliveryNotesValue}>
+                        {getDeliverySnapshot(order).notes}
+                      </Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : (
+                <Text style={styles.deliveryUnavailableText}>
+                  Delivery details were not saved for this older order.
+                </Text>
+              )}
+            </View>
+
             {/* Items */}
             <View style={styles.itemsCard}>
               <Text style={styles.sectionTitle}>Items</Text>
@@ -330,6 +566,28 @@ export default function OrderDetailsScreen({ navigation, route }) {
                   </Text>
                 </View>
               ) : null}
+
+              {/* Reorder */}
+              <Pressable
+                disabled={isBusy}
+                onPress={handleReorder}
+                style={({ pressed }) => [
+                  styles.reorderButton,
+                  isBusy ? styles.disabledButton : null,
+                  pressed && !isBusy ? styles.pressedButton : null,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.reorderButtonText,
+                    isBusy ? styles.disabledText : null,
+                  ]}
+                >
+                  {isReordering
+                    ? 'Preparing reorder...'
+                    : 'Reorder with current prices'}
+                </Text>
+              </Pressable>
 
               {/* Cancel */}
               <Pressable
@@ -438,6 +696,98 @@ function createStyles(colors) {
       textTransform: 'uppercase',
     },
     metadataValue: { color: colors.text, fontSize: 14, fontWeight: '700' },
+    deliveryCard: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 18,
+      borderWidth: 1,
+      gap: 13,
+      padding: 18,
+    },
+    deliveryHeading: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    deliveryHeadingText: {
+      flex: 1,
+      gap: 4,
+    },
+    deliverySubtitle: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    deliveryMethodBadge: {
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    deliveryMethodBadgeAddress: {
+      backgroundColor: colors.primarySoft,
+    },
+    deliveryMethodBadgeLocation: {
+      backgroundColor: colors.successSoft || colors.primarySoft,
+    },
+    deliveryMethodBadgeText: {
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    deliveryMethodBadgeTextAddress: {
+      color: colors.primary,
+    },
+    deliveryMethodBadgeTextLocation: {
+      color: colors.success || colors.primary,
+    },
+    deliveryRow: {
+      gap: 4,
+    },
+    deliveryLabel: {
+      color: colors.textMuted,
+      fontSize: 12,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+    },
+    deliveryValue: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '700',
+      lineHeight: 21,
+    },
+    deliveryLocationNotice: {
+      backgroundColor: colors.primarySoft,
+      borderRadius: 12,
+      gap: 4,
+      padding: 13,
+    },
+    deliveryLocationNoticeTitle: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    deliveryLocationNoticeText: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 19,
+    },
+    deliveryNotes: {
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+      gap: 5,
+      marginTop: 2,
+      paddingTop: 13,
+    },
+    deliveryNotesValue: {
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 21,
+    },
+    deliveryUnavailableText: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 20,
+    },
     itemsCard: {
       backgroundColor: colors.surface,
       borderColor: colors.border,
@@ -487,6 +837,20 @@ function createStyles(colors) {
       color: colors.textMuted,
       fontSize: 13,
       lineHeight: 19,
+    },
+    reorderButton: {
+      alignItems: 'center',
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      justifyContent: 'center',
+      minHeight: 48,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+    },
+    reorderButtonText: {
+      color: '#ffffff',
+      fontSize: 15,
+      fontWeight: '800',
     },
     cancelButton: {
       alignItems: 'center',

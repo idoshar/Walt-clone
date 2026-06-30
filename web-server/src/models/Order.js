@@ -68,7 +68,10 @@ const deliveryDetailsSchema = new mongoose.Schema(
         },
         address: {
             type: String,
-            required: true,
+            default: '',
+            required: function addressIsRequired() {
+                return !this.location;
+            },
             trim: true,
             maxlength: 240
         },
@@ -102,7 +105,7 @@ function toDeliveryDetailsResponse(deliveryDetails) {
     return {
         recipientName: deliveryDetails.recipientName,
         phone: deliveryDetails.phone,
-        address: deliveryDetails.address,
+        address: deliveryDetails.address || '',
         dinerCount: deliveryDetails.dinerCount,
         notes: deliveryDetails.notes || '',
         location: deliveryDetails.location

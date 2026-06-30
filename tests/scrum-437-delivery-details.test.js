@@ -193,6 +193,54 @@ async function main() {
     customOrder = data;
   });
 
+  await scenario('current location can replace a manual address', async () => {
+    const { response, data } = await createOrder(token, {
+      recipientName: 'Location Delivery',
+      phone: '053-1112233',
+      address: '',
+      dinerCount: 2,
+      notes: 'Call when you arrive.',
+      location: {
+        latitude: 31.778,
+        longitude: 35.235
+      }
+    });
+
+    expect(
+      response.status === 201,
+      `expected 201, got ${response.status}`
+    );
+
+    expect(
+      data?.deliveryDetails?.address === '',
+      'expected an empty address for current-location delivery'
+    );
+    expect(
+      data?.deliveryDetails?.location?.latitude === 31.778,
+      'wrong current-location latitude'
+    );
+    expect(
+      data?.deliveryDetails?.location?.longitude === 35.235,
+      'wrong current-location longitude'
+    );
+    expect(
+      data?.deliveryDetails?.location?.source === 'shared',
+      'expected current location to be marked as shared'
+    );
+  });
+
+  await scenario('blank address without a location is rejected', async () => {
+    const { response } = await createOrder(token, {
+      address: '',
+      location: null
+    });
+
+    expect(
+      response.status === 400,
+      `expected 400, got ${response.status}`
+    );
+  });
+
   await scenario('saved details are returned in previous-order views', async () => {
     const byId = await request(`/api/orders/${customOrder.id}`, {
       headers: {
