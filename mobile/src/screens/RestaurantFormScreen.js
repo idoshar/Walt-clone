@@ -93,6 +93,9 @@ export default function RestaurantFormScreen({ navigation, route }) {
   // If `restaurant` param is passed → edit mode; otherwise → create mode
   const existing = route.params?.restaurant || null;
   const isEditing = Boolean(existing);
+  const canDelete = Boolean(
+    existing && existing.accessRole === 'owner'
+  );
 
   const [fields, setFields] = useState({
     name: existing?.name || '',
@@ -352,8 +355,8 @@ export default function RestaurantFormScreen({ navigation, route }) {
             )}
           </Pressable>
 
-          {/* ── Delete (edit mode only) ── */}
-          {isEditing ? (
+          {/* ── Delete (owner only) ── */}
+          {canDelete ? (
             <Pressable
               disabled={isSubmitting || isDeleting}
               onPress={handleDelete}

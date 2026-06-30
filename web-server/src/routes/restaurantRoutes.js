@@ -2,6 +2,8 @@ const express = require('express');
 
 const restaurantController =
     require('../controllers/restaurantController');
+const restaurantAccessController =
+    require('../controllers/restaurantAccessController');
 const restaurantStatisticsController =
     require('../controllers/restaurantStatisticsController');
 const productRoutes = require('./productRoutes');
@@ -21,6 +23,30 @@ router.get(
     '/mine',
     authMiddleware,
     asyncHandler(restaurantController.getMyRestaurants)
+);
+
+router.get(
+    '/:id/access',
+    authMiddleware,
+    asyncHandler(restaurantAccessController.getAccess)
+);
+
+router.post(
+    '/:id/editors',
+    authMiddleware,
+    asyncHandler(restaurantAccessController.addEditor)
+);
+
+router.delete(
+    '/:id/editors/:userId',
+    authMiddleware,
+    asyncHandler(restaurantAccessController.removeEditor)
+);
+
+router.put(
+    '/:id/owner',
+    authMiddleware,
+    asyncHandler(restaurantAccessController.transferOwnership)
 );
 
 router.get(

@@ -5097,3 +5097,186 @@ body.dark .checkout-field input[type='number'] {
   margin: 20px 0 0;
   line-height: 1.4;
 }
+/* SCRUM-598 restaurant editor delegation and ownership transfer */
+.management-restaurant-card-topline {
+  flex-wrap: wrap;
+}
+
+.management-role-badge {
+  padding: 5px 8px;
+  border-radius: var(--radius-round);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.management-role-owner {
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.management-role-editor {
+  background-color: var(--color-hover-bg);
+  color: var(--color-text);
+}
+
+.restaurant-access-manager {
+  display: grid;
+  gap: 20px;
+}
+
+.restaurant-access-intro,
+.restaurant-access-empty,
+.restaurant-access-loading {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.restaurant-access-owner,
+.restaurant-access-section,
+.restaurant-access-candidate {
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.restaurant-access-owner,
+.restaurant-access-editor-row,
+.restaurant-access-candidate,
+.restaurant-access-section-heading,
+.restaurant-access-candidate-actions,
+.restaurant-access-lookup-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.restaurant-access-owner {
+  flex-wrap: wrap;
+}
+
+.restaurant-access-label {
+  display: block;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.restaurant-access-owner strong,
+.restaurant-access-candidate strong,
+.restaurant-access-editor-row strong {
+  display: block;
+}
+
+.restaurant-access-owner small,
+.restaurant-access-candidate small,
+.restaurant-access-editor-row small {
+  color: var(--color-text-muted);
+}
+
+.restaurant-access-section {
+  display: grid;
+  gap: 14px;
+}
+
+.restaurant-access-section-heading h3 {
+  margin: 5px 0 0;
+  font-size: 17px;
+}
+
+.restaurant-access-editor-count {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.restaurant-access-editor-list {
+  display: grid;
+  gap: 10px;
+}
+
+.restaurant-access-editor-row {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+}
+
+.restaurant-access-lookup-form {
+  align-items: stretch;
+}
+
+.restaurant-access-lookup-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.restaurant-access-lookup-form input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.restaurant-access-candidate {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.restaurant-access-candidate-actions {
+  flex-wrap: wrap;
+}
+
+.restaurant-access-feedback,
+.restaurant-access-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  line-height: 1.45;
+}
+
+.restaurant-access-feedback {
+  background-color: var(--color-info-bg);
+  color: var(--color-text);
+}
+
+.restaurant-access-error {
+  border: 1px solid var(--color-danger-border);
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+@media (max-width: 640px) {
+  .restaurant-access-owner,
+  .restaurant-access-editor-row,
+  .restaurant-access-candidate,
+  .restaurant-access-section-heading,
+  .restaurant-access-lookup-form {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .restaurant-access-editor-row button,
+  .restaurant-access-lookup-form button,
+  .restaurant-access-candidate-actions,
+  .restaurant-access-candidate-actions button {
+    width: 100%;
+  }
+
+  .restaurant-access-candidate-actions {
+    flex-direction: column;
+  }
+}

@@ -2,12 +2,19 @@ const responseHelper = require('../utilities/responseHelper');
 const restaurantRepository = require('../repositories/restaurantRepository');
 const productRepository = require('../repositories/productRepository');
 const menuCategoryRepository =
-    require('../repositories/menuCategoryRepository');const Restaurant = require('../models/Restaurant');
+    require('../repositories/menuCategoryRepository');
+const Restaurant = require('../models/Restaurant');
 const { generateId } = require('../utilities/idGenerator');
 const {
     validateObject,
     validateRequiredFields
 } = require('../utilities/validationHelper');
+const {
+    canManageRestaurant,
+    getRequestUserId,
+    getRestaurantAccessRole,
+    isRestaurantOwner
+} = require('../services/restaurantAccessService');
 
 function getLocationFields(body) {
     const hasLatitude = Object.prototype.hasOwnProperty.call(body, 'latitude');
@@ -57,21 +64,12 @@ async function isPublicRestaurant(restaurant) {
     return (await getProductCount(restaurant.id)) > 0;
 }
 
-async function toManagementResponseObject(restaurant) {
+async function toManagementResponseObject(restaurant, userId) {
     return {
         ...restaurant.toResponseObject(),
-        productCount: await getProductCount(restaurant.id)
+        productCount: await getProductCount(restaurant.id),
+        accessRole: getRestaurantAccessRole(restaurant, userId)
     };
-}
-
-function canManageRestaurant(req, restaurant) {
-    const userId = req.user?.sub || req.user?.id;
-
-    if (!restaurant.ownerId || !userId) {
-        return false;
-    }
-
-    return String(restaurant.ownerId) === String(userId);
 }
 
 function normalizeImage(value) {
@@ -104,7 +102,7 @@ class RestaurantController {
 
     async getMyRestaurants(req, res, next) {
         try {
-            const userId = req.user?.sub || req.user?.id;
+            const userId = getRequestUserId(req);
             const restaurants = restaurantRepository.getAll
                 ? await restaurantRepository.getAll()
                 : await restaurantRepository.findAll();
@@ -112,11 +110,13 @@ class RestaurantController {
             const managedRestaurants = restaurants.filter(
                 (restaurant) =>
                     !restaurant.isDefault &&
-                    String(restaurant.ownerId) === String(userId)
+                    canManageRestaurant(restaurant, userId)
             );
 
             const myRestaurants = await Promise.all(
-                managedRestaurants.map(toManagementResponseObject)
+                managedRestaurants.map((restaurant) =>
+                    toManagementResponseObject(restaurant, userId)
+                )
             );
 
             return responseHelper.ok(res, myRestaurants);
@@ -168,7 +168,7 @@ class RestaurantController {
                 description: req.body.description || '',
                 image: normalizeImage(req.body.image),
                 ...(locationResult.coordinates || {}),
-                ownerId: String(req.user?.sub || req.user?.id || ''),
+                ownerId: getRequestUserId(req),
                 isDefault: false
             });
 
@@ -177,7 +177,12 @@ class RestaurantController {
             return res
                 .status(201)
                 .location(`/api/restaurants/${restaurant.id}`)
-                .json(await toManagementResponseObject(restaurant));
+                .json(
+                    await toManagementResponseObject(
+                        restaurant,
+                        getRequestUserId(req)
+                    )
+                );
         } catch (err) {
             next(err);
         }
@@ -191,10 +196,16 @@ class RestaurantController {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            if (!canManageRestaurant(req, existingRestaurant)) {
+            if (
+                !canManageRestaurant(
+                    existingRestaurant,
+                    getRequestUserId(req)
+                )
+            ) {
                 return res.status(403).json({
                     error: 'Forbidden',
-                    message: 'You can manage only your own restaurants'
+                    message:
+                        'You can manage only restaurants where you are an owner or editor'
                 });
             }
 
@@ -213,6 +224,7 @@ class RestaurantController {
             const {
                 id: _id,
                 ownerId: _ownerId,
+                editorIds: _editorIds,
                 isDefault: _isDefault,
                 ...safeUpdates
             } = req.body;
@@ -242,10 +254,10 @@ class RestaurantController {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            if (!canManageRestaurant(req, restaurant)) {
+            if (!isRestaurantOwner(restaurant, getRequestUserId(req))) {
                 return res.status(403).json({
                     error: 'Forbidden',
-                    message: 'You can manage only your own restaurants'
+                    message: 'Only the restaurant owner can delete a restaurant'
                 });
             }
 

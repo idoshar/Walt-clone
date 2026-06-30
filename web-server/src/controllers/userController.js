@@ -1,4 +1,15 @@
 const userService = require('../services/userService');
+const userRepository = require('../repositories/userRepository');
+
+function toAccessUserResponse(user) {
+    return {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+        image: user.image || '',
+        role: user.role
+    };
+}
 
 class UserController {
     async createUser(req, res, next) {
@@ -18,6 +29,35 @@ class UserController {
         try {
             const user = await userService.getUserById(req.params.id);
             return res.status(200).json(user.toResponseObject());
+        } catch (err) {
+            return next(err);
+        }
+    }
+
+    async lookupUserByUsername(req, res, next) {
+        try {
+            const username =
+                typeof req.query.username === 'string'
+                    ? req.query.username.trim()
+                    : '';
+
+            if (!username) {
+                return res.status(400).json({
+                    error: 'BadRequest',
+                    message: 'username is required'
+                });
+            }
+
+            const user = await userRepository.findByUsername(username);
+
+            if (!user) {
+                return res.status(404).json({
+                    error: 'NotFound',
+                    message: 'User not found'
+                });
+            }
+
+            return res.status(200).json(toAccessUserResponse(user));
         } catch (err) {
             return next(err);
         }

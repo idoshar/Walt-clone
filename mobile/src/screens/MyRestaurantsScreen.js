@@ -185,12 +185,28 @@ export default function MyRestaurantsScreen({ navigation }) {
                 </Text>
               ) : null}
 
-              {/* Ownership badge */}
-              <View style={styles.ownerBadge}>
-                <Text style={styles.ownerBadgeText}>👤 You own this</Text>
+              <View
+                style={[
+                  styles.roleBadge,
+                  item.accessRole === 'editor'
+                    ? styles.editorBadge
+                    : styles.ownerBadge,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleBadgeText,
+                    item.accessRole === 'editor'
+                      ? styles.editorBadgeText
+                      : styles.ownerBadgeText,
+                  ]}
+                >
+                  {item.accessRole === 'editor'
+                    ? '✎ Editor access'
+                    : '👤 You own this'}
+                </Text>
               </View>
 
-              {/* Actions */}
               <View style={styles.cardActions}>
                 <Pressable
                   style={({ pressed }) => [
@@ -198,7 +214,9 @@ export default function MyRestaurantsScreen({ navigation }) {
                     pressed ? styles.pressed : null,
                   ]}
                   onPress={() =>
-                    navigation.navigate('RestaurantForm', { restaurant: item })
+                    navigation.navigate('RestaurantForm', {
+                      restaurant: item,
+                    })
                   }
                 >
                   <Text style={styles.editButtonText}>Edit</Text>
@@ -216,8 +234,26 @@ export default function MyRestaurantsScreen({ navigation }) {
                     })
                   }
                 >
-                  <Text style={styles.productsButtonText}>Manage products</Text>
+                  <Text style={styles.productsButtonText}>
+                    Manage products
+                  </Text>
                 </Pressable>
+
+                {item.accessRole === 'owner' ? (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.teamButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                    onPress={() =>
+                      navigation.navigate('RestaurantAccess', {
+                        restaurant: item,
+                      })
+                    }
+                  >
+                    <Text style={styles.teamButtonText}>Manage team</Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
           </View>
@@ -326,16 +362,37 @@ function createStyles(colors) {
     countBadgeText: { color: colors.primary, fontSize: 12, fontWeight: '800' },
     metaText: { color: colors.textMuted, fontSize: 14 },
     addressText: { color: colors.textMuted, fontSize: 13 },
-    ownerBadge: {
+    roleBadge: {
       alignSelf: 'flex-start',
-      backgroundColor: colors.primarySoft,
       borderRadius: 8,
       marginTop: 4,
       paddingHorizontal: 8,
       paddingVertical: 4,
     },
-    ownerBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
-    cardActions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+    ownerBadge: {
+      backgroundColor: colors.primarySoft,
+    },
+    editorBadge: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderWidth: 1,
+    },
+    roleBadgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    ownerBadgeText: {
+      color: colors.primary,
+    },
+    editorBadgeText: {
+      color: colors.text,
+    },
+    cardActions: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginTop: 8,
+    },
     editButton: {
       alignItems: 'center',
       borderColor: colors.primary,
@@ -353,6 +410,19 @@ function createStyles(colors) {
       paddingVertical: 10,
     },
     productsButtonText: { color: '#fff', fontSize: 14, fontWeight: '800' },
+    teamButton: {
+      alignItems: 'center',
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      flexBasis: '100%',
+      paddingVertical: 10,
+    },
+    teamButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '800',
+    },
     pressed: { opacity: 0.72 },
   });
 }

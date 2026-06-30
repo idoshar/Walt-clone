@@ -1,5 +1,13 @@
 import { apiRequest } from './client.js';
 
+export function lookupUserByUsername(username) {
+  const query = new URLSearchParams({
+    username: String(username || '').trim()
+  });
+
+  return apiRequest(`/users/lookup?${query.toString()}`);
+}
+
 export function updateCurrentUserLocation(location) {
   return apiRequest('/users/me/location', {
     method: 'PATCH',

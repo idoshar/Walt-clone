@@ -1,8 +1,7 @@
 const Restaurant = require('../models/Restaurant');
+const { normalizeEditorIds, toUserId } =
+    require('../services/restaurantAccessService');
 
-function toResponseDocument(restaurant) {
-    return restaurant;
-}
 
 class RestaurantRepository {
     async findAll() {
@@ -33,6 +32,7 @@ class RestaurantRepository {
         const {
             id: _id,
             ownerId: _ownerId,
+            editorIds: _editorIds,
             isDefault: _isDefault,
             ...safeUpdates
         } = updatedFields;
@@ -40,6 +40,24 @@ class RestaurantRepository {
         return Restaurant.findOneAndUpdate(
             { id: String(id) },
             safeUpdates,
+            { new: true, runValidators: true }
+        );
+    }
+
+    async updateAccess(id, { ownerId, editorIds }) {
+        const normalizedOwnerId = toUserId(ownerId);
+
+        return Restaurant.findOneAndUpdate(
+            { id: String(id) },
+            {
+                $set: {
+                    ownerId: normalizedOwnerId,
+                    editorIds: normalizeEditorIds(
+                        editorIds,
+                        normalizedOwnerId
+                    )
+                }
+            },
             { new: true, runValidators: true }
         );
     }
