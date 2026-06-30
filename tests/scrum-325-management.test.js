@@ -42,6 +42,29 @@ function getIdFromLocation(response) {
   return location?.split('/').filter(Boolean).pop();
 }
 
+function uniqueTestName(prefix) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
+async function waitForServer() {
+  for (let attempt = 1; attempt <= 30; attempt += 1) {
+    try {
+      const { response } = await request('/api/health');
+
+      if (response.status === 200) {
+        console.log(`Server ready after ${attempt} attempt(s).`);
+        return;
+      }
+    } catch {
+      // Docker may still be starting.
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  throw new Error('web-server did not become ready in time');
+}
+
 async function createUserAndToken(prefix) {
   const username = `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
@@ -119,6 +142,9 @@ async function main() {
   let restaurantId;
   let productId;
 
+  try {
+  await waitForServer();
+
   await scenario('management user login returns JWT', async () => {
     ownerToken = await createUserAndToken('management_owner');
     expect(ownerToken.split('.').length === 3, 'token is not JWT');
@@ -157,7 +183,7 @@ async function main() {
   });
 
   await scenario('new restaurant is a private draft until it has menu items', async () => {
-    restaurantId = await createRestaurant(ownerToken, `My Test Restaurant ${Date.now()}`);
+    restaurantId = await createRestaurant(ownerToken, uniqueTestName('SCRUM-325-Test-Restaurant'));
 
     const myRestaurants = await request('/api/restaurants/mine', {
       headers: { Authorization: `Bearer ${ownerToken}` }
@@ -333,7 +359,32 @@ async function main() {
     });
 
     expect(response.status === 204, `expected 204, got ${response.status}`);
+    restaurantId = null;
   });
+  } finally {
+    if (restaurantId && ownerToken) {
+      try {
+        const { response } = await request(`/api/restaurants/${restaurantId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${ownerToken}` }
+        });
+
+        if (response.status === 204 || response.status === 404) {
+          console.log('CLEANUP - SCRUM-325 temporary restaurant deleted.');
+        } else {
+          console.error(
+            `CLEANUP FAILED - SCRUM-325 restaurant deletion returned ${response.status}.`
+          );
+          process.exitCode = 1;
+        }
+      } catch (cleanupError) {
+        console.error(
+          `CLEANUP FAILED - SCRUM-325 restaurant could not be deleted: ${cleanupError.message}`
+        );
+        process.exitCode = 1;
+      }
+    }
+  }
 
   const passed = results.filter(Boolean).length;
   console.log(`\nSCRUM-325 SUMMARY: ${passed} passed, ${results.length - passed} failed`);
@@ -343,4 +394,7 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(`UNEXPECTED TEST ERROR: ${error.message}`);
+  process.exitCode = 1;
+});
