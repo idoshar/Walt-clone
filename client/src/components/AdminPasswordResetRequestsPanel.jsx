@@ -24,7 +24,7 @@ function formatDate(value) {
   return date.toLocaleString();
 }
 
-function AdminPasswordResetRequestsPanel() {
+function AdminPasswordResetRequestsPanel({ onBackToUsers }) {
   const { user: currentUser } = useAuth();
 
   const [requests, setRequests] = useState([]);
@@ -165,14 +165,25 @@ function AdminPasswordResetRequestsPanel() {
           </p>
         </div>
 
-        <button
-          type="button"
-          style={styles.refreshButton}
-          onClick={() => loadRequests()}
-          disabled={isLoading || isBusy}
-        >
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </button>
+        <div style={styles.headingActions}>
+          <button
+            type="button"
+            style={styles.backButton}
+            onClick={onBackToUsers}
+            disabled={isBusy}
+          >
+            Back to user accounts
+          </button>
+
+          <button
+            type="button"
+            style={styles.refreshButton}
+            onClick={() => loadRequests()}
+            disabled={isLoading || isBusy}
+          >
+            {isLoading ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -341,6 +352,20 @@ const styles = {
     lineHeight: 1.55,
     margin: 0,
     maxWidth: '760px'
+  },
+  headingActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  backButton: {
+    background: 'transparent',
+    border: '1px solid var(--color-border-strong)',
+    borderRadius: '10px',
+    color: 'var(--color-text)',
+    cursor: 'pointer',
+    fontWeight: 800,
+    padding: '10px 14px'
   },
   refreshButton: {
     background: 'var(--color-surface-muted)',

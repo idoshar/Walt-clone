@@ -80,6 +80,10 @@ function getIdFromLocation(response) {
   return response.headers.get('location')?.split('/').filter(Boolean).pop();
 }
 
+function uniqueTestName(prefix) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
 async function waitForServer() {
   for (let i = 0; i < 30; i += 1) {
     try {
@@ -100,6 +104,9 @@ async function main() {
   let restaurantId;
   let categoryId;
   let productId;
+
+  try {
+  await waitForServer();
 
   await scenario('MongoDB user CRUD creates user and login works', async () => {
     owner = await createUser('scrum404_owner');
@@ -131,7 +138,7 @@ async function main() {
       method: 'POST',
       headers: { Authorization: `Bearer ${ownerToken}` },
       body: JSON.stringify({
-        name: `SCRUM 404 Restaurant ${Date.now()}`,
+        name: uniqueTestName('SCRUM-404-Test-Restaurant'),
         address: 'Test address',
         phone: '03-0000000',
         cuisine: 'Test',
@@ -311,7 +318,32 @@ async function main() {
     );
 
     console.log('Cleanup - SCRUM-404 test restaurant deleted.');
+    restaurantId = null;
   });
+  } finally {
+    if (restaurantId && ownerToken) {
+      try {
+        const { response } = await request(`/api/restaurants/${restaurantId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${ownerToken}` },
+        });
+
+        if (response.status === 204 || response.status === 404) {
+          console.log('CLEANUP - SCRUM-404 temporary restaurant deleted.');
+        } else {
+          console.error(
+            `CLEANUP FAILED - SCRUM-404 restaurant deletion returned ${response.status}.`
+          );
+          process.exitCode = 1;
+        }
+      } catch (cleanupError) {
+        console.error(
+          `CLEANUP FAILED - SCRUM-404 restaurant could not be deleted: ${cleanupError.message}`
+        );
+        process.exitCode = 1;
+      }
+    }
+  }
 
   const passed = results.filter(Boolean).length;
   console.log(
@@ -323,4 +355,7 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(`UNEXPECTED TEST ERROR: ${error.message}`);
+  process.exitCode = 1;
+});

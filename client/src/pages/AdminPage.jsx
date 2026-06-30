@@ -1,40 +1,109 @@
-import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
-import AdminUserManagementPanel from '../components/AdminUserManagementPanel.jsx';
+import { useState } from 'react';
 import AdminPasswordResetRequestsPanel from '../components/AdminPasswordResetRequestsPanel.jsx';
+import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
+import AdminStatisticsPanel from '../components/AdminStatisticsPanel.jsx';
+import AdminUserManagementPanel from '../components/AdminUserManagementPanel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ADMIN_TOOLS = [
   {
+    id: 'restaurants',
     title: 'Restaurant moderation',
     description:
       'Review platform restaurants, edit non-system entries and protect the catalog.',
     status: 'Available now'
   },
   {
+    id: 'promotions',
     title: 'Sponsored promotions',
     description:
       'Choose which restaurants appear in sponsored placements.',
     status: 'Coming soon'
   },
   {
+    id: 'users',
     title: 'User accounts',
     description:
       'Manage access, roles, temporary passwords and eligible account deletion.',
     status: 'Available now'
   },
   {
+    id: 'insights',
     title: 'Platform insights',
     description:
       'View platform-wide activity, restaurant health and operational trends.',
-    status: 'Coming soon'
+    status: 'Available now'
   }
 ];
 
+function ComingSoonPanel({ title, description }) {
+  return (
+    <section style={styles.comingSoonPanel} aria-labelledby="coming-soon-title">
+      <p style={styles.eyebrow}>ADMINISTRATION</p>
+      <h2 id="coming-soon-title" style={styles.sectionTitle}>
+        {title}
+      </h2>
+      <p style={styles.comingSoonText}>{description}</p>
+      <p style={styles.comingSoonBadge}>Coming soon</p>
+    </section>
+  );
+}
+
 function AdminPage() {
   const { user } = useAuth();
+  const [activeToolId, setActiveToolId] = useState('');
+  const [activeUserView, setActiveUserView] = useState('users');
 
   const displayName =
     user?.fullName || user?.displayName || user?.username || 'Administrator';
+
+  function handleToolClick(toolId) {
+    if (activeToolId === toolId) {
+      setActiveToolId('');
+      return;
+    }
+
+    setActiveToolId(toolId);
+
+    if (toolId === 'users') {
+      setActiveUserView('users');
+    }
+  }
+
+  function renderActiveTool() {
+    if (activeToolId === 'restaurants') {
+      return <AdminRestaurantModerationPanel />;
+    }
+
+    if (activeToolId === 'users') {
+      return activeUserView === 'password-reset-requests' ? (
+        <AdminPasswordResetRequestsPanel
+          onBackToUsers={() => setActiveUserView('users')}
+        />
+      ) : (
+        <AdminUserManagementPanel
+          onOpenPasswordResetRequests={() =>
+            setActiveUserView('password-reset-requests')
+          }
+        />
+      );
+    }
+
+    if (activeToolId === 'insights') {
+      return <AdminStatisticsPanel />;
+    }
+
+    if (activeToolId === 'promotions') {
+      return (
+        <ComingSoonPanel
+          title="Sponsored promotions"
+          description="Sponsored placement management is not available yet. This workspace will show the promotion workflow when it is delivered."
+        />
+      );
+    }
+
+    return null;
+  }
 
   return (
     <section style={styles.page}>
@@ -68,27 +137,48 @@ function AdminPage() {
           </div>
 
           <p style={styles.sectionNote}>
-            Features are enabled here as their dedicated admin workflows are delivered.
+            Select one tool to open its workspace. Select the active tool again
+            to close it.
           </p>
         </div>
 
         <div style={styles.grid}>
-          {ADMIN_TOOLS.map((tool) => (
-            <article key={tool.title} style={styles.toolCard}>
-              <div>
-                <h3 style={styles.toolTitle}>{tool.title}</h3>
-                <p style={styles.toolDescription}>{tool.description}</p>
-              </div>
+          {ADMIN_TOOLS.map((tool) => {
+            const isActive = activeToolId === tool.id;
 
-              <span style={styles.comingSoon}>{tool.status}</span>
-            </article>
-          ))}
+            return (
+              <button
+                key={tool.id}
+                type="button"
+                aria-controls={`admin-tool-${tool.id}`}
+                aria-pressed={isActive}
+                onClick={() => handleToolClick(tool.id)}
+                style={{
+                  ...styles.toolButton,
+                  ...(isActive ? styles.activeToolButton : {})
+                }}
+              >
+                <span>
+                  <span style={styles.toolTitle}>{tool.title}</span>
+                  <span style={styles.toolDescription}>{tool.description}</span>
+                </span>
+
+                <span style={styles.toolStatus}>{tool.status}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
-      <AdminRestaurantModerationPanel />
-      <AdminPasswordResetRequestsPanel />
-      <AdminUserManagementPanel />
+      {activeToolId ? (
+        <section
+          id={`admin-tool-${activeToolId}`}
+          aria-live="polite"
+          style={styles.toolPanel}
+        >
+          {renderActiveTool()}
+        </section>
+      ) : null}
     </section>
   );
 }
@@ -155,6 +245,7 @@ const styles = {
   sectionHeading: {
     alignItems: 'end',
     display: 'flex',
+    flexWrap: 'wrap',
     gap: '20px',
     justifyContent: 'space-between',
     marginBottom: '18px'
@@ -174,27 +265,40 @@ const styles = {
     gap: '16px',
     gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))'
   },
-  toolCard: {
+  toolButton: {
     background: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
     borderRadius: '18px',
+    color: 'var(--color-text)',
+    cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
+    font: 'inherit',
     gap: '20px',
     justifyContent: 'space-between',
     minHeight: '195px',
-    padding: '22px'
+    padding: '22px',
+    textAlign: 'left',
+    transition: 'border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease',
+    width: '100%'
+  },
+  activeToolButton: {
+    border: '2px solid var(--color-primary)',
+    boxShadow: '0 10px 26px rgba(0, 0, 0, 0.12)',
+    transform: 'translateY(-2px)'
   },
   toolTitle: {
+    display: 'block',
     fontSize: '1.08rem',
-    margin: 0
+    fontWeight: 800
   },
   toolDescription: {
     color: 'var(--color-text-muted)',
+    display: 'block',
     lineHeight: 1.55,
-    margin: '10px 0 0'
+    marginTop: '10px'
   },
-  comingSoon: {
+  toolStatus: {
     alignSelf: 'flex-start',
     background: 'var(--color-info-bg)',
     borderRadius: '999px',
@@ -202,6 +306,31 @@ const styles = {
     fontSize: '0.78rem',
     fontWeight: 800,
     padding: '7px 10px'
+  },
+  toolPanel: {
+    marginTop: '28px'
+  },
+  comingSoonPanel: {
+    background: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '20px',
+    padding: '24px'
+  },
+  comingSoonText: {
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.55,
+    margin: '12px 0 0',
+    maxWidth: '720px'
+  },
+  comingSoonBadge: {
+    background: 'var(--color-info-bg)',
+    borderRadius: '999px',
+    color: 'var(--color-primary)',
+    display: 'inline-block',
+    fontSize: '0.82rem',
+    fontWeight: 800,
+    margin: '18px 0 0',
+    padding: '8px 11px'
   }
 };
 

@@ -555,23 +555,44 @@ async function main() {
             );
         });
     } finally {
-        if (restaurantId && editorToken) {
-            const cleanup = await request(
-                `/api/restaurants/${restaurantId}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        Authorization: `Bearer ${editorToken}`
-                    }
-                }
-            );
+        if (restaurantId) {
+            const cleanupTokens = [...new Set([ownerToken, editorToken].filter(Boolean))];
+            const cleanupOutcomes = [];
+            let cleanupSucceeded = false;
 
-            if (cleanup.response.status === 204) {
-                console.log('Cleanup - test restaurant deleted.');
+            for (const token of cleanupTokens) {
+                try {
+                    const cleanup = await request(
+                        `/api/restaurants/${restaurantId}`,
+                        {
+                            method: 'DELETE',
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        }
+                    );
+
+                    cleanupOutcomes.push(cleanup.response.status);
+
+                    if (
+                        cleanup.response.status === 204 ||
+                        cleanup.response.status === 404
+                    ) {
+                        cleanupSucceeded = true;
+                        break;
+                    }
+                } catch (cleanupError) {
+                    cleanupOutcomes.push(cleanupError.message);
+                }
+            }
+
+            if (cleanupSucceeded) {
+                console.log('CLEANUP - SCRUM-598 temporary restaurant deleted.');
             } else {
-                console.log(
-                    `Cleanup warning - restaurant deletion returned ${cleanup.response.status}.`
+                console.error(
+                    `CLEANUP FAILED - SCRUM-598 restaurant could not be deleted. Outcomes: ${cleanupOutcomes.join(', ')}`
                 );
+                process.exitCode = 1;
             }
         }
     }

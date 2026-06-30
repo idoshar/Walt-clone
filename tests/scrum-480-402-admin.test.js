@@ -1,6 +1,7 @@
-const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 
 const BASE_URL = 'http://localhost:3000';
+const DATABASE_NAME = process.env.MONGODB_DB_NAME || 'food_delivery';
 const results = [];
 
 function expect(condition, message) {
@@ -39,35 +40,6 @@ async function scenario(name, callback) {
     results.push(false);
     console.log(`FAIL - ${name}: ${error.message}`);
   }
-}
-
-function createAdminToken() {
-  const now = Math.floor(Date.now() / 1000);
-
-  const header = Buffer.from(
-    JSON.stringify({ alg: 'HS256', typ: 'JWT' })
-  ).toString('base64url');
-
-  const payload = Buffer.from(
-    JSON.stringify({
-      sub: `scrum480_admin_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      username: 'scrum480-admin',
-      fullName: 'SCRUM 480 Administrator',
-      role: 'admin',
-      iat: now,
-      exp: now + 900,
-    })
-  ).toString('base64url');
-
-  const signature = crypto
-    .createHmac(
-      'sha256',
-      process.env.JWT_SECRET || 'dev-secret-for-course-project'
-    )
-    .update(`${header}.${payload}`)
-    .digest('base64url');
-
-  return `${header}.${payload}.${signature}`;
 }
 
 async function createUser(prefix, password = '12345678Aa') {
@@ -118,6 +90,49 @@ function getIdFromLocation(response) {
     .pop();
 }
 
+function uniqueTestName(prefix) {
+  return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
+function mongoEval(script) {
+  return execFileSync(
+    'docker',
+    [
+      'compose',
+      'exec',
+      '-T',
+      'mongo',
+      'mongosh',
+      DATABASE_NAME,
+      '--quiet',
+      '--eval',
+      script,
+    ],
+    { encoding: 'utf8' }
+  ).trim();
+}
+
+function setUserRole(username, role) {
+  mongoEval(`
+    db.users.updateOne(
+      { username: ${JSON.stringify(username)} },
+      { $set: { role: ${JSON.stringify(role)} } }
+    );
+  `);
+}
+
+function cleanupUsers(usernames) {
+  if (usernames.length === 0) {
+    return;
+  }
+
+  mongoEval(`
+    db.users.deleteMany({
+      username: { $in: ${JSON.stringify(usernames)} }
+    });
+  `);
+}
+
 function hasNumericStatisticsShape(data) {
   const expectedFields = [
     'users',
@@ -153,10 +168,12 @@ async function waitForServer() {
 }
 
 async function main() {
+  const createdUsernames = [];
   let customerToken;
   let adminToken;
   let protectedRestaurant;
   let temporaryRestaurantId;
+  let temporaryRestaurantName;
   let temporaryCategoryId;
   let temporaryProductId;
 
@@ -172,10 +189,15 @@ async function main() {
       );
     });
 
-    await scenario('create a regular customer session', async () => {
+    await scenario('create customer and administrator sessions', async () => {
       const customer = await createUser('scrum480_customer');
+      const admin = await createUser('scrum480_admin');
+
+      createdUsernames.push(customer.username, admin.username);
+      setUserRole(admin.username, 'admin');
+
       customerToken = await login(customer.username, customer.password);
-      adminToken = createAdminToken();
+      adminToken = await login(admin.username, admin.password);
 
       expect(customerToken.split('.').length === 3, 'customer token is invalid');
       expect(adminToken.split('.').length === 3, 'admin token is invalid');
@@ -295,13 +317,15 @@ async function main() {
     });
 
     await scenario('admin can create a temporary non-system restaurant', async () => {
+      temporaryRestaurantName = uniqueTestName('SCRUM-480-Test-Restaurant');
+
       const { response, data } = await request('/api/restaurants', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
-          name: `SCRUM 480 Automated Test ${Date.now()}`,
+          name: temporaryRestaurantName,
           address: '10 Admin Street, Tel Aviv',
           phone: '03-4800480',
           cuisine: 'Verification',
@@ -412,7 +436,7 @@ async function main() {
             Authorization: `Bearer ${adminToken}`,
           },
           body: JSON.stringify({
-            name: 'SCRUM 480 Automated Test Updated',
+            name: `${temporaryRestaurantName} Updated`,
             cuisine: 'Admin verified',
             description: 'Updated by administrator moderation test.',
             latitude: null,
@@ -427,7 +451,7 @@ async function main() {
       );
 
       expect(
-        data?.name === 'SCRUM 480 Automated Test Updated',
+        data?.name === `${temporaryRestaurantName} Updated`,
         'admin update did not persist restaurant name'
       );
 
@@ -504,17 +528,43 @@ async function main() {
   } finally {
     if (temporaryRestaurantId && adminToken) {
       try {
-        await request(`/api/admin/restaurants/${temporaryRestaurantId}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${adminToken}`,
-          },
-        });
+        const cleanup = await request(
+          `/api/admin/restaurants/${temporaryRestaurantId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${adminToken}`,
+            },
+          }
+        );
 
-        console.log('CLEANUP - temporary restaurant deletion attempted');
-      } catch {
-        console.log('CLEANUP - could not remove temporary restaurant');
+        if (
+          cleanup.response.status === 204 ||
+          cleanup.response.status === 404
+        ) {
+          console.log('CLEANUP - SCRUM-480 temporary restaurant deleted.');
+        } else {
+          console.error(
+            `CLEANUP FAILED - SCRUM-480 restaurant deletion returned ${cleanup.response.status}.`
+          );
+          process.exitCode = 1;
+        }
+      } catch (cleanupError) {
+        console.error(
+          `CLEANUP FAILED - SCRUM-480 restaurant could not be deleted: ${cleanupError.message}`
+        );
+        process.exitCode = 1;
       }
+    }
+
+    try {
+      cleanupUsers(createdUsernames);
+      console.log('CLEANUP - SCRUM-480 temporary users deleted.');
+    } catch (cleanupError) {
+      console.error(
+        `CLEANUP FAILED - SCRUM-480 users could not be deleted: ${cleanupError.message}`
+      );
+      process.exitCode = 1;
     }
   }
 

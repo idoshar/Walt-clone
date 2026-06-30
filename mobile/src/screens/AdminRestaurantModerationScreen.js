@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -486,130 +489,176 @@ export default function AdminRestaurantModerationScreen() {
           </View>
         ) : null}
 
-        {selectedRestaurant && draft ? (
-          <AppCard style={styles.editorCard}>
-            <Text style={styles.editorTitle}>Edit restaurant</Text>
-
-            <Text style={styles.editorDescription}>
-              Ownership, sponsorship and catalog-protection fields cannot be
-              changed here.
-            </Text>
-
-            <Field
-              label="Name"
-              value={draft.name}
-              onChangeText={(value) => updateDraftField('name', value)}
-              styles={styles}
+      {selectedRestaurant && draft ? (
+        <Modal
+          animationType="slide"
+          onRequestClose={closeEditor}
+          transparent
+          visible
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.modalBackdrop}
+          >
+            <Pressable
+              onPress={closeEditor}
+              style={styles.modalDismissArea}
             />
 
-            <Field
-              label="Cuisine"
-              value={draft.cuisine}
-              onChangeText={(value) => updateDraftField('cuisine', value)}
-              styles={styles}
-            />
-
-            <Field
-              label="Address"
-              value={draft.address}
-              onChangeText={(value) => updateDraftField('address', value)}
-              styles={styles}
-            />
-
-            <Field
-              label="Phone"
-              value={draft.phone}
-              onChangeText={(value) => updateDraftField('phone', value)}
-              styles={styles}
-            />
-
-            <Field
-              label="Image URL"
-              value={draft.image}
-              onChangeText={(value) => updateDraftField('image', value)}
-              styles={styles}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <View style={styles.coordinateRow}>
-              <View style={styles.coordinateField}>
-                <Field
-                  label="Latitude"
-                  value={draft.latitude}
-                  onChangeText={(value) =>
-                    updateDraftField('latitude', value)
-                  }
-                  styles={styles}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-
-              <View style={styles.coordinateField}>
-                <Field
-                  label="Longitude"
-                  value={draft.longitude}
-                  onChangeText={(value) =>
-                    updateDraftField('longitude', value)
-                  }
-                  styles={styles}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-            </View>
-
-            <Text style={styles.fieldLabel}>Description</Text>
-            <TextInput
-              multiline
-              numberOfLines={4}
-              style={[styles.input, styles.descriptionInput]}
-              value={draft.description}
-              onChangeText={(value) => updateDraftField('description', value)}
-              placeholder="Restaurant description"
-              placeholderTextColor={theme.colors.textMuted}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.editorActions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.secondaryButton,
-                  pressed ? styles.pressed : null,
-                ]}
-                disabled={isSaving}
-                onPress={closeEditor}
+            <View style={styles.modalSheet}>
+              <ScrollView
+                contentContainerStyle={styles.modalContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.secondaryButtonText}>Cancel</Text>
-              </Pressable>
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderText}>
+                    <Text style={styles.modalEyebrow}>ADMINISTRATION</Text>
+                    <Text style={styles.modalTitle}>Edit restaurant</Text>
+                  </View>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  pressed ? styles.pressed : null,
-                  isSaving ? styles.disabledButton : null,
-                ]}
-                disabled={isSaving}
-                onPress={handleSave}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {isSaving ? 'Saving...' : 'Save changes'}
+                  <Pressable
+                    accessibilityLabel="Close restaurant editor"
+                    style={({ pressed }) => [
+                      styles.modalCloseButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                    disabled={isSaving}
+                    onPress={closeEditor}
+                  >
+                    <Text style={styles.modalCloseButtonText}>Close</Text>
+                  </Pressable>
+                </View>
+
+                <Text style={styles.editorDescription}>
+                  Ownership, sponsorship and catalog-protection fields cannot be
+                  changed here.
                 </Text>
-              </Pressable>
 
-              <Pressable
-                style={({ pressed }) => [
-                  styles.dangerButton,
-                  pressed ? styles.pressed : null,
-                  isSaving ? styles.disabledButton : null,
-                ]}
-                disabled={isSaving}
-                onPress={handleDelete}
-              >
-                <Text style={styles.dangerButtonText}>Delete</Text>
-              </Pressable>
+                {error ? (
+                  <View style={styles.modalErrorBox}>
+                    <Text style={styles.modalErrorText}>{error}</Text>
+                  </View>
+                ) : null}
+
+                <Field
+                  label="Name"
+                  value={draft.name}
+                  onChangeText={(value) => updateDraftField('name', value)}
+                  styles={styles}
+                />
+
+                <Field
+                  label="Cuisine"
+                  value={draft.cuisine}
+                  onChangeText={(value) => updateDraftField('cuisine', value)}
+                  styles={styles}
+                />
+
+                <Field
+                  label="Address"
+                  value={draft.address}
+                  onChangeText={(value) => updateDraftField('address', value)}
+                  styles={styles}
+                />
+
+                <Field
+                  label="Phone"
+                  value={draft.phone}
+                  onChangeText={(value) => updateDraftField('phone', value)}
+                  styles={styles}
+                />
+
+                <Field
+                  label="Image URL"
+                  value={draft.image}
+                  onChangeText={(value) => updateDraftField('image', value)}
+                  styles={styles}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+
+                <View style={styles.coordinateRow}>
+                  <View style={styles.coordinateField}>
+                    <Field
+                      label="Latitude"
+                      value={draft.latitude}
+                      onChangeText={(value) =>
+                        updateDraftField('latitude', value)
+                      }
+                      styles={styles}
+                      keyboardType="decimal-pad"
+                    />
+                  </View>
+
+                  <View style={styles.coordinateField}>
+                    <Field
+                      label="Longitude"
+                      value={draft.longitude}
+                      onChangeText={(value) =>
+                        updateDraftField('longitude', value)
+                      }
+                      styles={styles}
+                      keyboardType="decimal-pad"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.fieldLabel}>Description</Text>
+                <TextInput
+                  multiline
+                  numberOfLines={4}
+                  style={[styles.input, styles.descriptionInput]}
+                  value={draft.description}
+                  onChangeText={(value) => updateDraftField('description', value)}
+                  placeholder="Restaurant description"
+                  placeholderTextColor={theme.colors.textMuted}
+                  textAlignVertical="top"
+                />
+
+                <View style={styles.editorActions}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      pressed ? styles.pressed : null,
+                    ]}
+                    disabled={isSaving}
+                    onPress={closeEditor}
+                  >
+                    <Text style={styles.secondaryButtonText}>Cancel</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      pressed ? styles.pressed : null,
+                      isSaving ? styles.disabledButton : null,
+                    ]}
+                    disabled={isSaving}
+                    onPress={handleSave}
+                  >
+                    <Text style={styles.primaryButtonText}>
+                      {isSaving ? 'Saving...' : 'Save changes'}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.dangerButton,
+                      pressed ? styles.pressed : null,
+                      isSaving ? styles.disabledButton : null,
+                    ]}
+                    disabled={isSaving}
+                    onPress={handleDelete}
+                  >
+                    <Text style={styles.dangerButtonText}>Delete</Text>
+                  </Pressable>
+                </View>
+              </ScrollView>
             </View>
-          </AppCard>
-        ) : null}
+          </KeyboardAvoidingView>
+        </Modal>
+      ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -848,15 +897,74 @@ function createStyles(colors) {
       fontSize: 11,
       fontWeight: '800',
     },
-    editorCard: {
-      gap: 12,
-      marginTop: 8,
-      padding: 18,
+    modalBackdrop: {
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.56)',
+      flex: 1,
+      justifyContent: 'center',
+      padding: 16,
     },
-    editorTitle: {
-      color: colors.text,
-      fontSize: 21,
+    modalDismissArea: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    modalSheet: {
+      backgroundColor: colors.surface,
+      borderColor: colors.border,
+      borderRadius: 18,
+      borderWidth: 1,
+      maxHeight: '90%',
+      maxWidth: 640,
+      width: '100%',
+    },
+    modalContent: {
+      gap: 12,
+      padding: 20,
+      paddingBottom: 24,
+    },
+    modalHeader: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
+      gap: 12,
+      justifyContent: 'space-between',
+    },
+    modalHeaderText: {
+      flex: 1,
+    },
+    modalEyebrow: {
+      color: colors.primary,
+      fontSize: 11,
       fontWeight: '800',
+      letterSpacing: 1,
+    },
+    modalTitle: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: '800',
+      marginTop: 4,
+    },
+    modalCloseButton: {
+      borderColor: colors.border,
+      borderRadius: 10,
+      borderWidth: 1,
+      paddingHorizontal: 11,
+      paddingVertical: 8,
+    },
+    modalCloseButtonText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '800',
+    },
+    modalErrorBox: {
+      backgroundColor: colors.dangerSoft || '#fff0f0',
+      borderColor: colors.danger || '#b00020',
+      borderRadius: 12,
+      borderWidth: 1,
+      padding: 12,
+    },
+    modalErrorText: {
+      color: colors.danger || '#b00020',
+      fontSize: 14,
+      lineHeight: 20,
     },
     editorDescription: {
       color: colors.textMuted,
