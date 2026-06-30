@@ -265,7 +265,11 @@ function AdminUserManagementPanel({ onOpenPasswordResetRequests }) {
   }
 
   return (
-    <section style={styles.panel} aria-labelledby="user-management-heading">
+    <section
+      className="admin-user-management-panel"
+      style={styles.panel}
+      aria-labelledby="user-management-heading"
+    >
       <div style={styles.heading}>
         <div>
           <p style={styles.eyebrow}>ADMINISTRATION</p>
@@ -571,6 +575,7 @@ const styles = {
   panel: {
     background: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
+    borderTop: '4px solid var(--color-primary)',
     borderRadius: '20px',
     marginTop: '28px',
     padding: '24px'
@@ -590,6 +595,7 @@ const styles = {
     margin: 0
   },
   title: {
+    color: 'var(--color-primary)',
     fontSize: '1.45rem',
     margin: '7px 0 10px'
   },
@@ -605,10 +611,10 @@ const styles = {
     gap: '10px'
   },
   passwordRequestsButton: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
+    background: 'var(--color-info-bg)',
+    border: '1px solid var(--color-border-strong)',
     borderRadius: '10px',
-    color: 'var(--color-text)',
+    color: 'var(--color-primary)',
     cursor: 'pointer',
     fontWeight: 800,
     padding: '10px 13px'
@@ -628,6 +634,7 @@ const styles = {
     paddingTop: '20px'
   },
   searchLabel: {
+    color: 'var(--color-primary)',
     display: 'block',
     fontSize: '0.84rem',
     fontWeight: 800,
@@ -699,6 +706,7 @@ const styles = {
     gap: '12px'
   },
   resetTitle: {
+    color: 'var(--color-primary)',
     fontSize: '1rem',
     fontWeight: 800,
     margin: 0
@@ -717,6 +725,7 @@ const styles = {
     padding: '11px'
   },
   passwordLabel: {
+    color: 'var(--color-primary)',
     fontSize: '0.84rem',
     fontWeight: 800,
     marginTop: '4px'
@@ -785,6 +794,7 @@ const styles = {
     gap: '7px'
   },
   userName: {
+    color: 'var(--color-primary)',
     fontSize: '1rem',
     margin: 0
   },
@@ -852,10 +862,10 @@ const styles = {
     padding: '9px 11px'
   },
   secondaryAction: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
+    background: 'var(--color-info-bg)',
+    border: '1px solid var(--color-border-strong)',
     borderRadius: '9px',
-    color: 'var(--color-text)',
+    color: 'var(--color-primary)',
     cursor: 'pointer',
     fontWeight: 700,
     padding: '9px 11px'

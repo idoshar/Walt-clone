@@ -40,6 +40,7 @@ export default function RestaurantAccessScreen({
 
   const restaurant = route.params?.restaurant || null;
   const restaurantId = restaurant?.id;
+  const isAdminManagement = route.params?.adminMode === true;
 
   const [access, setAccess] = useState(null);
   const [username, setUsername] = useState('');
@@ -311,9 +312,9 @@ export default function RestaurantAccessScreen({
           <Text style={styles.title}>Manage team access</Text>
 
           <Text style={styles.subtitle}>
-            Editors can manage restaurant details and products, but
-            cannot manage access, transfer ownership, or delete the
-            restaurant.
+            {isAdminManagement
+              ? 'As an administrator, you can add and remove editors. Only the restaurant owner can transfer ownership.'
+              : 'Editors can manage restaurant details and products, but cannot manage access, transfer ownership, or delete the restaurant.'}
           </Text>
 
           <View style={styles.section}>
@@ -459,21 +460,23 @@ export default function RestaurantAccessScreen({
                     </Text>
                   </Pressable>
 
-                  <Pressable
-                    disabled={isSaving || candidateIsOwner}
-                    onPress={confirmTransferOwnership}
-                    style={({ pressed }) => [
-                      styles.transferButton,
-                      isSaving || candidateIsOwner
-                        ? styles.disabled
-                        : null,
-                      pressed ? styles.pressed : null,
-                    ]}
-                  >
-                    <Text style={styles.transferButtonText}>
-                      Transfer ownership
-                    </Text>
-                  </Pressable>
+                  {!isAdminManagement ? (
+                    <Pressable
+                      disabled={isSaving || candidateIsOwner}
+                      onPress={confirmTransferOwnership}
+                      style={({ pressed }) => [
+                        styles.transferButton,
+                        isSaving || candidateIsOwner
+                          ? styles.disabled
+                          : null,
+                        pressed ? styles.pressed : null,
+                      ]}
+                    >
+                      <Text style={styles.transferButtonText}>
+                        Transfer ownership
+                      </Text>
+                    </Pressable>
+                  ) : null}
                 </View>
               </View>
             ) : null}
