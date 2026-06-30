@@ -1,211 +1,214 @@
-# Exercise 4 — Wolt Clone
+# Exercise 5 - Wolt Clone
 
-A full-stack food delivery web application inspired by Wolt, developed for the Advanced Systems Programming course.
+A full-stack food-delivery platform inspired by Wolt, developed as **Exercise 5** for the *Advanced Systems Programming* course.
 
-The project combines:
+The project extends the previous exercises into one integrated system:
 
-* A React frontend application.
-* A Node.js and Express REST API.
-* A C++ TCP recommendation server from the previous exercises.
-* Docker Compose for a complete local environment.
+- A **React web client** for browser-based use.
+- A **React Native mobile app** built with Expo.
+- A **Node.js + Express REST API**.
+- A **MongoDB** database for persistent application data.
+- A **C++ TCP recommendation server** from the earlier exercises.
+- **Docker Compose** orchestration for the backend services and web client.
 
-The application supports registration, login, restaurant browsing, product browsing, search, cart and checkout flow, detailed previous orders, restaurant and menu management, location-based restaurant sorting, dark/light mode, and integration with the recommendation service.
+The system is designed as a complete application rather than a collection of disconnected screens: users receive clear feedback for invalid input, authentication failures, authorization errors, empty states, loading states, and failed requests.
+
+> **Important:** Use only fictional test data. Do not commit `.env` files, real passwords, personal information, API keys, tokens, or `node_modules`.
 
 ---
 
 ## Table of Contents
 
-* [System Overview](#system-overview)
-* [Main Features](#main-features)
-* [Architecture](#architecture)
-* [Prerequisites](#prerequisites)
-* [Run the Full System with Docker](#run-the-full-system-with-docker)
-* [Environment Configuration](#environment-configuration)
-* [Application Usage](#application-usage)
-* [API Overview](#api-overview)
-* [Testing and Verification](#testing-and-verification)
-* [Screenshots](#screenshots)
-* [Project Structure](#project-structure)
-* [Runtime Data](#runtime-data)
-* [Troubleshooting](#troubleshooting)
+- [Course Requirements Addressed](#course-requirements-addressed)
+- [Architecture](#architecture)
+- [Technologies](#technologies)
+- [Main Features](#main-features)
+- [Prerequisites](#prerequisites)
+- [Run the Complete System](#run-the-complete-system)
+- [Run the Mobile App](#run-the-mobile-app)
+- [Verification and Testing](#verification-and-testing)
+- [Project Structure](#project-structure)
+- [Persistence and Resetting Local Data](#persistence-and-resetting-local-data)
+- [Project Wiki](#project-wiki)
+- [Development Workflow](#development-workflow)
+- [Submission Notes](#submission-notes)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## System Overview
+## Course Requirements Addressed
 
-The application is a food delivery platform in which authenticated users can:
+This repository implements the Exercise 5 requirements:
 
-1. Create an account and log in.
-2. Browse restaurants and filter them by cuisine.
-3. Search restaurants and products.
-4. Open a restaurant page and view its available menu items.
-5. Add products to the cart and create an order.
-6. View previous orders.
-7. Use browser geolocation to save their current location.
-8. View nearby restaurants ordered from closest to farthest.
-9. Switch between light mode and dark mode.
-10. Create and manage personally owned restaurants and menu items from the Management route.
-
-The React client does not contain restaurant, product, order, or user data as static presentation data. It receives application data from the Express API.
-
----
-
-## Main Features
-
-### Authentication and Protected Routes
-
-* Registration form with client-side validation.
-* Login form with validation and support for pressing Enter to submit.
-* JWT-based authentication.
-* Protected application pages for authenticated users.
-* Logout support.
-* Authenticated user data stored in the React authentication context.
-
-### Restaurant Browsing
-
-* Dynamic restaurant list loaded from the server API.
-* Restaurant cards with cuisine, address, and optional distance information.
-* Restaurant details page.
-* Restaurant menu/product display when products are available.
-* Empty state when a restaurant has no menu items.
-
-### Search
-
-* Search restaurants and products from the header or Search page.
-* Debounced search input.
-* Search results separated into restaurants and products.
-* Empty state when no matching result exists.
-
-### Categories
-
-* Browse restaurants by cuisine category.
-* Category filter updates the Nearby restaurants section.
-* Available categories are derived from server-provided restaurant data.
-
-### User and Restaurant Location
-
-* Restaurants include latitude and longitude coordinates.
-* The user can click **Use my location** to request browser location permission.
-* The browser location is saved to the authenticated user through a protected API endpoint.
-* Nearby restaurants are sorted by distance from the user’s saved location.
-* Distances are calculated client-side with the Haversine formula.
-* The application handles location permission denial, unavailable location, unsupported browsers, and request timeout gracefully.
-
-### Cart, Checkout, and Orders
-
-* Add available menu products to the cart.
-* Update cart quantities.
-* Checkout flow creates an authenticated order.
-* Order status screen handles successful and failed order flows.
-* Previous Orders screen shows both empty and populated states.
-* Each completed order preserves restaurant and menu item snapshots so the history remains readable even if menu data changes later.
-* Previous Orders cards display restaurant name, item count, menu item names, quantities, status, and total price.
-* Orders are user-specific.
-
-### Restaurant Management
-
-* **My Restaurants** workspace for restaurants owned by the authenticated user.
-* Create a restaurant with its details and an optional direct image URL.
-* Search personally owned restaurants by name, cuisine, or address.
-* Manage a restaurant directly from its card: edit restaurant details and manage its menu.
-* Add, edit, and delete menu items with names, descriptions, prices, categories, and optional image URLs.
-* New owner-created restaurants begin as **Draft** and are private until they contain at least one menu item.
-* Restaurants with one or more menu items become **Published** and are visible to customers through browsing and search.
-* Restaurant and menu write operations are enforced server-side so only the owner can manage them.
-* Deleting a restaurant also removes its menu items.
-
-### Recommendation Service
-
-* The Node.js web server communicates with the C++ TCP recommendation server.
-* Product views can be reported for authenticated users.
-* Recommendation endpoints can return products related to user viewing history.
-
-### Theme and Responsive UI
-
-* Light mode and dark mode.
-* Theme toggle stored in the client.
-* Responsive layouts for narrow screens.
-* Loading, error, and empty states across the application.
+- A React Native application that uses **real, dynamic data** from the same backend as the web application.
+- Full MongoDB persistence instead of in-memory arrays for users, restaurants, products, orders, categories, access roles, promotions, and password-reset requests.
+- Registration and login validation, including clear user-facing error messages.
+- Registration profile-image selection from the phone gallery or camera, image preview, and password confirmation.
+- Restaurant, menu-item, and order workflows across the web and mobile clients.
+- A dedicated `wiki/` directory documenting architecture, startup, and core application flows.
+- Ongoing Jira-based Scrum work with feature branches, Pull Requests, reviews, task status updates, and dependency tracking.
 
 ---
 
 ## Architecture
 
 ```text
-Browser
-  |
-  | React UI / React Router / Context state
-  v
-React Client
-  |
-  | HTTP JSON requests to /api
-  v
-Node.js + Express Web Server
-  |
-  | TCP requests for recommendation-related operations
-  v
-C++ TCP Recommendation Server
+┌────────────────────┐           ┌────────────────────────┐
+│   React Web Client │           │ React Native / Expo App │
+│   Browser UI       │           │ Phone UI               │
+└─────────┬──────────┘           └──────────┬─────────────┘
+          │ HTTP / JSON                     │ HTTP / JSON
+          └─────────────────┬───────────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │ Node.js + Express   │
+                 │ REST API / MVC      │
+                 └───────┬────────┬────┘
+                         │        │
+                  Mongoose│        │ TCP text protocol
+                         │        │
+                ┌────────▼───┐ ┌──▼────────────────────┐
+                │ MongoDB 7  │ │ C++ Recommendation    │
+                │ Persistence│ │ Server                │
+                └────────────┘ └───────────────────────┘
 ```
 
-### Components
+Docker Compose runs the MongoDB database, C++ recommendation service, Node.js API, and production React web client together. The React Native client runs through Expo and connects to the same API over the local network.
 
-| Component            | Responsibility                                                                        |
-| -------------------- | ------------------------------------------------------------------------------------- |
-| `client/`            | React frontend, routing, UI components, context, API calls, styles                    |
-| `web-server/`        | Express REST API for users, authentication, restaurants, products, search, and orders |
-| `src/`               | C++ TCP recommendation server from the previous exercises                             |
-| `docker-compose.yml` | Starts the full environment with both backend services                                |
-| `docs/`              | Additional documentation and screenshots                                              |
+---
+
+## Technologies
+
+| Area | Technology |
+|---|---|
+| Web client | React, React Router, Vite |
+| Mobile client | React Native, Expo, React Navigation |
+| API server | Node.js, Express |
+| Data persistence | MongoDB 7, Mongoose |
+| Recommendation engine | C++17, TCP sockets |
+| Authentication | JWT and bcrypt password hashing |
+| Containerization | Docker, Docker Compose |
+| Project management | Jira, GitHub, Pull Requests |
+
+---
+
+## Main Features
+
+### Authentication and User Accounts
+
+- Registration with required-field validation and clear inline feedback.
+- Password rules, password confirmation, and prevention of invalid submissions.
+- Login validation and clear handling of incorrect credentials.
+- JWT-based authenticated API access.
+- Logout that clears the active session and returns the user to the login screen.
+- Profile editing for full name, phone number, address, and profile image.
+- Gallery/camera image selection in the mobile registration and profile flows.
+- Forgot-password request flow with administrator-issued temporary passwords.
+- Change-password screen for authenticated users.
+
+### Restaurant Discovery and Search
+
+- Dynamic restaurant catalog loaded from the API.
+- Restaurant details pages/screens with menu items, images, descriptions, prices, and category filters.
+- Search for restaurants and dishes.
+- Restaurant carousels and sponsored restaurant promotion rail.
+- Browser/mobile location support for nearby restaurant sorting.
+- Light mode and dark mode.
+- Multi-currency display for ILS, USD, EUR, and GBP.
+- Loading, empty, and error states throughout the browsing experience.
+- Fallback placeholders for missing or broken restaurant and product images.
+
+### Cart, Recommendations, Checkout, and Orders
+
+- Add items to the cart, edit quantities, remove items, and clear the cart.
+- Products grouped by restaurant.
+- Product recommendations supplied by the C++ collaborative-filtering service.
+- Category-based recommendation fallback when no recommendation history exists.
+- Checkout with delivery address, phone, diner count, notes, price summary, and confirmation.
+- Order history with detailed items, delivery data, total, and status.
+- Order cancellation and deletion rules with authorization checks.
+- Reorder flow that restores a previous order to the cart.
+- Server-side validation and price calculation for order creation.
+
+### Restaurant and Menu Management
+
+- Create, edit, and delete restaurants.
+- Create, edit, delete, publish, and manage menu products.
+- Restaurant ownership and editor access roles.
+- Menu-category CRUD and category ordering.
+- Restaurant team management and ownership transfer.
+- Sales statistics for restaurant owners/editors: orders, revenue, average order value, and top product.
+- Server-side authorization prevents unauthorized management actions.
+
+### Administrator Workspace
+
+The system includes extra administrator features in both clients:
+
+- Platform statistics dashboard.
+- User management: view users, enable/disable, delete, assign roles, and reset passwords.
+- Restaurant moderation for all restaurants.
+- Sponsored restaurant management.
+- Password-reset request review.
+- Protection against deleting default system/catalog restaurants.
 
 ---
 
 ## Prerequisites
 
-For the recommended full Docker run, install:
+Install the following before running the project:
 
-* Docker Desktop.
-* Docker Compose v2, included with current Docker Desktop installations.
-* A modern browser such as Chrome, Edge, or Firefox.
-
-For optional frontend development outside Docker, install:
-
-* Node.js 20 or later.
-* npm.
-
-For optional C++ development and tests, install:
-
-* CMake 3.10 or later.
-* A C++17-compatible compiler.
-* Python 3 for the C++ end-to-end test.
+- **Docker Desktop** with Docker Compose v2, running locally.
+- **Node.js 20+** and npm for the React Native / Expo application.
+- **Expo Go** on an Android or iOS device for physical-device testing.
+- A phone and computer connected to the **same Wi-Fi network** when using Expo Go.
+- Optional for local C++ testing: a C++17 compiler, CMake 3.10+, and Python 3.
 
 ---
 
-## Run the Full System with Docker
+## Run the Complete System
 
-Docker Compose starts:
+All commands in this section must be executed from the project root.
 
-* `web-server` — Express API and built React client.
-* `ex2-server` — C++ TCP recommendation server.
+### 1. Create local environment files
 
-The React production build is served by the Express server, so the complete application is available through one browser address.
-
-### 1. Optional: create a local `.env` file
-
-Docker Compose includes default values, so this step is optional.
+PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
+Copy-Item mobile\.env.example mobile\.env
 ```
 
-Do not commit `.env` to Git.
+The root `.env` file contains local Docker configuration. The default values are sufficient for normal local development.
 
-### 2. Build and start all services
+### Optional: create the initial administrator
+
+To create the first administrator automatically during server startup, fill **all five** fields below in the root `.env` file. Use fictional local test values only; `.env` is ignored by Git and must remain uncommitted.
+
+```env
+INITIAL_ADMIN_USERNAME=<local-admin-username>
+INITIAL_ADMIN_PASSWORD=<password-with-at-least-8-characters-including-letters-and-numbers>
+INITIAL_ADMIN_FULL_NAME=<display-name>
+INITIAL_ADMIN_PHONE=<phone-number>
+INITIAL_ADMIN_ADDRESS=<address>
+```
+
+On startup, the API creates an account with the `admin` role when no user with that username exists. If the username already exists, the bootstrap deliberately leaves that account unchanged. To disable bootstrap, leave all five variables empty. Do not put real passwords or personal information in Git, Jira, the Wiki, or this README.
+
+### 2. Start all backend services and the web client
 
 ```powershell
 docker compose up --build -d
 ```
 
-### 3. Verify that the services are running
+Docker Compose starts:
+
+| Service | Responsibility |
+|---|---|
+| `mongo` | MongoDB database with persistent volume and health check |
+| `ex2-server` | C++ TCP recommendation server |
+| `web-server` | Node.js/Express API and the built React web client |
+
+### 3. Check container status
 
 ```powershell
 docker compose ps
@@ -214,11 +217,12 @@ docker compose ps
 Expected services:
 
 ```text
-web-server
+mongo
 ex2-server
+web-server
 ```
 
-### 4. Verify the API health endpoint
+### 4. Verify the API
 
 ```powershell
 Invoke-RestMethod http://localhost:3000/api/health
@@ -232,519 +236,297 @@ status service
 ok     food-delivery-api
 ```
 
-### 5. Open the application
+You can also verify the seeded restaurant catalog:
 
-Open the following address in the browser:
+```powershell
+Invoke-RestMethod http://localhost:3000/api/restaurants
+```
+
+### 5. Open the web application
+
+Open:
 
 ```text
 http://localhost:3000
 ```
 
-### 6. View live logs
+The same container serves the production React build and the `/api` endpoints.
+
+### 6. View logs when needed
 
 ```powershell
-docker compose logs -f web-server ex2-server
+docker compose logs -f web-server
 ```
 
-Press `Ctrl+C` to stop following logs without stopping the containers.
+To view every service:
 
-### 7. Stop the application
+```powershell
+docker compose logs -f
+```
+
+### 7. Stop the system
 
 ```powershell
 docker compose down
 ```
 
-### 8. Clean restart
+This stops the containers while preserving MongoDB and recommendation-server runtime data.
 
-Use this when a clean runtime environment is needed:
+---
 
-```powershell
-docker compose down --remove-orphans
-docker compose up --build -d --force-recreate
+## Run the Mobile App
+
+The mobile app uses Expo and connects to the Docker Compose backend through your computer's LAN address.
+
+### 1. Configure the API address
+
+Open `mobile/.env` and set:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://YOUR_COMPUTER_LAN_IP:3000/api
 ```
 
-> **Important:** users, orders, and other in-memory web-server data are reset when the relevant container is recreated. Create a fresh test user after a forced recreation.
+Use your computer's Wi-Fi IPv4 address, not `localhost`.
 
----
-
-## Environment Configuration
-
-The repository includes `.env.example` with safe local defaults.
-
-| Variable               |                     Default | Purpose                                                     |
-| ---------------------- | --------------------------: | ----------------------------------------------------------- |
-| `WEB_SERVER_HOST_PORT` |                      `3000` | Host port exposed by Docker for the web application and API |
-| `WEB_SERVER_PORT`      |                      `3000` | Internal Express server port inside the container           |
-| `EX2_SERVER_PORT`      |                      `8080` | Internal port of the C++ recommendation server              |
-| `EX2_HOST`             |                `ex2-server` | Docker service hostname of the recommendation server        |
-| `VITE_API_BASE_URL`    | `http://localhost:3000/api` | API base URL for Vite development mode; Docker uses the client `/api` default            |
-
-### Environment-file submission note
-
-* `.env` is ignored by Git and must not be committed to the repository.
-* `.env.example` is tracked in the repository and contains safe local defaults.
-* For course submission, include the required environment configuration alongside the submitted exercise only as instructed by the course staff.
-* Do not commit personal, secret, or machine-specific values to Git history.
-
----
-
-## Optional Frontend Development Mode
-
-The recommended full-system command is Docker Compose.
-
-For frontend development with Vite while the backend runs in Docker:
+On Windows, find it with:
 
 ```powershell
-docker compose up --build -d
+ipconfig
+```
 
-cd client
+Look for the IPv4 address under the active Wi-Fi adapter. Do not use a `172.*` Docker, WSL, or virtual-network address.
+
+For an Android emulator, use:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:3000/api
+```
+
+For Expo Web on the same computer, use:
+
+```env
+EXPO_PUBLIC_API_BASE_URL=http://localhost:3000/api
+```
+
+### 2. Start Expo
+
+Open a second terminal:
+
+```powershell
+cd mobile
 npm install
-
-$env:VITE_API_BASE_URL = "http://localhost:3000/api"
-
-npm run dev
+npx expo start --clear
 ```
 
-Then open:
+Then scan the QR code with Expo Go, or choose the Android emulator option from Expo.
 
-```text
-http://localhost:5173
-```
-
-For final testing and screenshots, use the complete Docker deployment at:
-
-```text
-http://localhost:3000
-```
+> After changing `mobile/.env`, stop Expo completely and rerun `npx expo start --clear`. A normal app reload does not reload environment variables.
 
 ---
 
-## Application Usage
+## Verification and Testing
 
-### 1. Register
+### Manual flow checklist
 
-1. Open `/register`.
-2. Enter a username, display name, password, and matching password confirmation.
-3. Optionally select a profile image.
-4. Click **Register**.
-5. Continue to Login.
+Verify each flow in both the web client and the mobile client:
 
-### 2. Login
+1. Register a new fictional user with valid fields and a profile image.
+2. Confirm invalid registration and login input displays understandable feedback.
+3. Log in and log out.
+4. Browse restaurants, open a menu, search for restaurants/dishes, and switch theme.
+5. Add products to the cart, review recommendations, and complete checkout.
+6. Open order history and order details; test allowed cancel/delete/reorder actions.
+7. Create, edit, and delete a restaurant and its products using an authorized account.
+8. Confirm unauthorized users cannot manage another user's restaurant.
+9. Verify data remains after `docker compose down` followed by `docker compose up -d`.
+10. Verify the main required workflows are documented with screenshots in `wiki/`.
 
-1. Open `/login`.
-2. Enter a valid username and password.
-3. Click **Log In** or press Enter.
-4. The application redirects to the Home page.
-
-### 3. Browse Restaurants
-
-1. Open the Home page.
-2. View restaurant cards loaded from the API.
-3. Click a restaurant to open its details page.
-4. Browse menu products when they are available.
-
-### 4. Filter by Category
-
-1. On the Home page, select a cuisine category such as Italian, American, or Japanese.
-2. The Nearby restaurants section updates to show only restaurants in that category.
-3. Click **All** to remove the filter.
-
-### 5. Search
-
-1. Open the Search page or use the header search bar.
-2. Type part of a restaurant or product name.
-3. Review restaurant and product results.
-4. Click a matching restaurant or product to continue browsing.
-
-### 6. Save Location and Sort Nearby Restaurants
-
-1. Log in.
-2. Open the Home page.
-3. Click **Use my location**.
-4. Approve the browser location permission.
-5. The location is stored for the authenticated user.
-6. The Nearby restaurants section displays restaurants from closest to farthest.
-7. Each restaurant with coordinates displays its distance in kilometers.
-8. Click **Update my location** later to save a new location.
-
-### 7. Cart and Checkout
-
-1. Open a restaurant that has products.
-2. Add one or more products to the cart.
-3. Review quantities and total price.
-4. Continue to Checkout.
-5. Confirm the order.
-6. Review the success or failure status screen.
-
-### 8. Previous Orders
-
-1. Open **Orders** from the navigation bar.
-2. A new user sees an empty state.
-3. After checkout, the created order appears with the restaurant name, item count, ordered menu items and quantities, status, and total price.
-4. Order history uses a snapshot captured at checkout, so it remains readable even if restaurant or menu data changes later.
-
-### 9. Restaurant Management
-
-1. Log in and open **Management** from the navigation bar.
-2. Select **Create Restaurant** and enter restaurant details. An image URL is optional.
-3. A newly created restaurant starts as **Draft** and is visible only in **My Restaurants**.
-4. Select **Manage Restaurant** on a restaurant card.
-5. Use **Edit Restaurant Details** to update restaurant information.
-6. Use **Manage Menu** to add, edit, or delete menu items.
-7. Add the first menu item to publish the restaurant. Published restaurants appear in public browsing and search results.
-8. Use the **Search your restaurants** field to filter your own restaurants by name, cuisine, or address.
-
-### 10. Theme Toggle
-
-1. Click **Dark** to enable dark mode.
-2. Click **Light** to return to light mode.
-
----
-
-## API Overview
-
-Base URL:
-
-```text
-http://localhost:3000/api
-```
-
-### Health
-
-| Method | Endpoint  | Description                   |
-| ------ | --------- | ----------------------------- |
-| `GET`  | `/health` | Returns service health status |
-
-### Users and Authentication
-
-| Method  | Endpoint             | Description                                             |
-| ------- | -------------------- | ------------------------------------------------------- |
-| `POST`  | `/users`             | Creates a user                                          |
-| `GET`   | `/users/:id`         | Returns a user by ID                                    |
-| `PATCH` | `/users/me/location` | Saves latitude and longitude for the authenticated user |
-| `POST`  | `/tokens`            | Logs in and returns a JWT plus user information         |
-
-### Restaurants and Products
-
-| Method   | Endpoint                                         | Description                                                          |
-| -------- | ------------------------------------------------ | -------------------------------------------------------------------- |
-| `GET`    | `/restaurants`                                   | Returns public published restaurants with at least one menu item     |
-| `GET`    | `/restaurants/mine`                              | Returns the authenticated user's owned restaurants and product counts |
-| `POST`   | `/restaurants`                                   | Creates an owner-managed Draft restaurant                            |
-| `GET`    | `/restaurants/:id`                               | Returns one public published restaurant                              |
-| `PATCH`  | `/restaurants/:id`                               | Updates a restaurant owned by the authenticated user                 |
-| `DELETE` | `/restaurants/:id`                               | Deletes an owned restaurant and its menu items                       |
-| `GET`    | `/restaurants/:id/products`                      | Returns products for a restaurant                                    |
-| `POST`   | `/restaurants/:id/products`                      | Creates a menu item for an owned restaurant                          |
-| `GET`    | `/restaurants/:id/products/:pId`                 | Returns one product                                                  |
-| `PATCH`  | `/restaurants/:id/products/:pId`                 | Updates a menu item for an owned restaurant                          |
-| `DELETE` | `/restaurants/:id/products/:pId`                 | Deletes a menu item for an owned restaurant                          |
-| `GET`    | `/restaurants/:id/products/:pId/recommendations` | Returns authenticated recommendation results                         |
-
-> Restaurant and menu write endpoints require JWT authentication and enforce ownership on the server.
-
-### Search and Orders
-
-| Method   | Endpoint         | Description                                                          |
-| -------- | ---------------- | -------------------------------------------------------------------- |
-| `GET`    | `/search/:query` | Searches public published restaurants and their available products  |
-| `POST`   | `/orders`        | Creates an authenticated order and stores display snapshots         |
-| `GET`    | `/orders`        | Returns the authenticated user's detailed order history             |
-| `GET`    | `/orders/:id`    | Returns one authenticated user order                                |
-| `PATCH`  | `/orders/:id`    | Updates an authenticated user order                                 |
-| `DELETE` | `/orders/:id`    | Deletes an authenticated user order                                 |
-
----
-
-## Testing and Verification
-
-### Build the React client
+### C++ tests
 
 ```powershell
-cd client
-npm install
-npm run build
-cd ..
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
-### Check the Node.js source syntax
+### API scenario tests
 
-```powershell
-node --check .\web-server\src\server.js
-node --check .\web-server\src\app.js
-node --check .\web-server\src\controllers\userController.js
-node --check .\web-server\src\controllers\restaurantController.js
-node --check .\web-server\src\controllers\orderController.js
-```
-
-### Run the API scenario checks
-
-Start Docker Compose first, then run:
+Start Docker Compose first, then run selected Node.js scenario tests from the project root:
 
 ```powershell
 node tests/scrum-323-create-order.test.js
 node tests/scrum-324-previous-orders.test.js
 node tests/scrum-325-management.test.js
+node tests/scrum-404-backend.test.js
 ```
 
-Expected summaries:
+These tests create fictional test data in the local development database.
 
-```text
-SCRUM-323 SUMMARY: 10 passed, 0 failed
-SCRUM-324 SUMMARY: 7 passed, 0 failed
-SCRUM-325 SUMMARY: 17 passed, 0 failed
-```
-
-### Run the C++ test suite
+### Web production build
 
 ```powershell
-cmake -S . -B build
-cmake --build build
-cmake --build build --target run_tests
+cd client
+npm install
+npm run build
 ```
 
-### Docker smoke test
-
-```powershell
-docker compose up --build -d
-
-docker compose ps
-
-Invoke-RestMethod http://localhost:3000/api/health
-```
-
----
-
-## Screenshots
-
-All screenshots should be saved under:
-
-```text
-docs/screenshots/
-```
-
-The screenshots below document the main application flows and the Docker deployment.
-
-### 1. Docker Services and Health Check
-
-Shows both Docker services running and the successful health endpoint response.
-
-![Docker services and API health check](docs/screenshots/01-docker-health.png)
-
-### 2. Login Screen
-
-Shows the clean Login page before a user signs in.
-
-![Login screen](docs/screenshots/02-login.png)
-
-### 3. Register Screen
-
-Shows the clean Register page and its client-side form fields.
-
-![Register screen](docs/screenshots/03-register.png)
-
-### 4. Home Page — Light Mode
-
-Shows the authenticated Home page with the hero section, categories, restaurant cards, and navigation.
-
-![Home page in light mode](docs/screenshots/04-home-light.png)
-
-### 5. Home Page — Dark Mode
-
-Shows that dark mode changes the application layout, cards, navigation, and colors.
-
-![Home page in dark mode](docs/screenshots/05-home-dark.png)
-
-### 6. Category Filtering
-
-Shows a selected cuisine category and the filtered Nearby restaurants section.
-
-![Category filtering](docs/screenshots/06-category-filter.png)
-
-### 7. Search Results
-
-Shows a restaurant search query and matching result.
-
-![Restaurant search results](docs/screenshots/07-search-restaurants.png)
-
-### 8. Restaurant Menu and Cart
-
-Shows a restaurant with available products, products added to the cart, quantities, and total price.
-
-![Restaurant menu and cart](docs/screenshots/08-restaurant-menu-cart.png)
-
-### 9. Checkout Summary
-
-Shows the checkout page before the user confirms the order.
-
-![Checkout summary](docs/screenshots/09-checkout-summary.png)
-
-### 10. Successful Order Status
-
-Shows the confirmation message and generated order identifier after a successful checkout.
-
-![Successful order status](docs/screenshots/10-order-success.png)
-
-### 11. Previous Orders — Empty State
-
-Shows the Previous Orders page for a user with no orders.
-
-![Previous orders empty state](docs/screenshots/11-orders-empty.png)
-
-### 12. Previous Orders — Order History
-
-Shows an existing order with restaurant name, ordered menu items and quantities, status, and total price.
-
-![Previous orders history](docs/screenshots/12-orders-history.png)
-
-### 13. Nearby Restaurants by Saved Location
-
-Shows restaurants sorted by distance from the user’s saved browser location, including kilometer labels.
-
-![Nearby restaurants sorted by saved location](docs/screenshots/13-nearby-distance.png)
-
-### 14. Restaurant Management
-
-Shows the Management route with My Restaurants, owner-side search, Draft/Published status, and restaurant/menu management actions.
-
-![Restaurant management](docs/screenshots/14-management.png)
-
-### 15. Responsive Mobile Layout
-
-Shows the responsive Restaurant page layout on a narrow mobile viewport.
-
-![Responsive mobile layout](docs/screenshots/15-mobile-layout.png)
+The Docker build performs this production build automatically when `docker compose up --build` is used.
 
 ---
 
 ## Project Structure
 
 ```text
-.
-├── client/
-│   ├── src/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── css/
-│   │   ├── pages/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── web-server/
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── repositories/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   └── utilities/
-│   └── package.json
-├── src/
-│   └── C++ TCP recommendation server source files
-├── tests/
-│   └── C++ unit, integration, and end-to-end tests
-├── docs/
-│   ├── file-format.md
-│   └── screenshots/
-├── docker-compose.yml
-├── Dockerfile
-├── Dockerfile.webserver
-├── .env.example
-└── README.md
+targil-5/
+├── src/                        # C++ recommendation server
+├── tests/                      # C++ tests and API scenario tests
+├── web-server/                 # Node.js + Express REST API
+│   └── src/
+│       ├── config/             # MongoDB connection
+│       ├── controllers/        # HTTP request handlers
+│       ├── middleware/         # Authentication, authorization, error handling
+│       ├── models/             # Mongoose schemas
+│       ├── repositories/       # MongoDB data access layer
+│       ├── routes/             # API routes
+│       ├── seed/               # Initial catalog / optional admin seed
+│       ├── services/           # Business logic and TCP bridge
+│       └── utilities/          # Validation and helper functions
+├── client/                     # React + Vite web client
+│   └── src/
+│       ├── api/                # API client functions
+│       ├── components/         # Reusable UI components
+│       ├── context/            # Authentication, cart, and currency contexts
+│       ├── css/                # Responsive styles and themes
+│       ├── pages/              # Web application routes
+│       └── utils/              # Shared UI helpers
+├── mobile/                     # React Native + Expo application
+│   └── src/
+│       ├── api/                # API client functions
+│       ├── auth/               # Authentication context
+│       ├── cart/               # Cart context
+│       ├── components/         # Reusable native components
+│       ├── currency/           # Currency context
+│       ├── location/           # Location helpers
+│       ├── navigation/         # React Navigation configuration
+│       ├── screens/            # Mobile screens
+│       ├── theme/              # Light/dark design system
+│       └── utils/              # Shared utilities
+├── wiki/                       # Setup documentation, flows, proof, screenshots
+├── docker-compose.yml          # Backend and web orchestration
+├── Dockerfile                  # C++ recommendation server build
+├── Dockerfile.webserver        # React build + Node.js API image
+└── .env.example                # Safe local configuration template
 ```
 
 ---
 
-## Runtime Data
+## Persistence and Resetting Local Data
 
-The Exercise 4 web server uses runtime in-memory repositories for users, orders, owner-created restaurants, and owner-created menu items.
+MongoDB data is stored in the Docker volume `mongo-data`. The recommendation server stores its data in `ex2-data`.
 
-This means:
+```powershell
+# Stop containers but keep local data
+docker compose down
 
-* Users created during a Docker run are temporary.
-* Orders created during a Docker run are temporary.
-* Owner-created restaurants and menu items are temporary.
-* Recreating the web-server container resets those runtime entities.
-* The default restaurant and menu seed data remains available after a fresh container start.
+# Start again with the existing data
+docker compose up -d
+```
 
-This behavior is expected for the current exercise and does not require MongoDB or another database.
+To delete local development data and start from a clean state:
+
+```powershell
+docker compose down -v
+docker compose up --build -d
+```
+
+The fresh start recreates the database and seeds the default restaurant catalog.
 
 ---
 
-## Troubleshooting
+## Project Wiki
 
-### `http://localhost:3000` does not open
+The detailed project documentation is stored in the repository's `wiki/` directory:
 
-Check the containers:
+| Page | Content |
+|---|---|
+| [Wiki Home](wiki/Home.md) | Wiki index and system summary |
+| [System Architecture](wiki/System-Architecture.md) | Components, communication, and directory structure |
+| [Run Instructions](wiki/Run-Instructions.md) | Docker, environment variables, web, and mobile startup |
+| [Web Client Flows](wiki/Web-Client-Flows.md) | Browser-based registration, browsing, ordering, and management flows |
+| [Mobile App Flows](wiki/Mobile-App-Flows.md) | React Native flows and mobile-specific behavior |
+| [Admin Features](wiki/Admin-Features.md) | Administrator tools and authorization rules |
+| [Extended Features](wiki/Extended-Features.md) | Additional functionality beyond the core requirement |
+| [Proof](wiki/proof/) | Per-task verification notes and screenshots |
 
-```powershell
-docker compose ps
-```
+The wiki is intended to demonstrate:
 
-Check the API:
-
-```powershell
-Invoke-RestMethod http://localhost:3000/api/health
-```
-
-Check logs:
-
-```powershell
-docker compose logs --tail=100 web-server
-```
-
-### Docker build fails because of a local Docker cache issue
-
-Restart Docker Desktop, then run:
-
-```powershell
-docker builder prune -af
-docker buildx prune -af
-docker compose build --no-cache
-docker compose up -d --force-recreate
-```
-
-### The user cannot log in after Docker recreation
-
-A clean recreation resets web-server in-memory users. Register a new user and log in again.
-
-### Browser location is denied
-
-Use the browser site settings to allow location access for `http://localhost:3000`, then click **Use my location** again.
+- Bringing up the complete environment.
+- Registration and login.
+- Creating, editing, and deleting restaurants, products, and orders in the relevant clients.
+- Mobile-specific UI behavior such as native navigation, camera/gallery image selection, and native confirmation dialogs.
 
 ---
 
 ## Development Workflow
 
-Development is managed through Jira tasks, feature branches, Pull Requests, and code review.
-
-Typical workflow:
+Development is managed with Jira, GitHub feature branches, Pull Requests, and code review.
 
 ```text
-Create Jira task
-→ Create feature branch
-→ Implement one focused change
-→ Build and test
-→ Open Pull Request
-→ Code review
-→ Merge into main
+Create / refine Jira issue
+        ↓
+Assign the issue before implementation
+        ↓
+Create branch: SCRUM-<issue-number>-short-description
+        ↓
+Implement one focused change
+        ↓
+Test locally and update Jira activity
+        ↓
+Open Pull Request
+        ↓
+Move issue to Code Review
+        ↓
+All other team members review and approve
+        ↓
+Merge into main
+        ↓
+Move issue to Done
 ```
+
+The Jira board tracks epics, user stories, tasks, sprint planning, status meetings, assignment, blockers, implementation updates, Pull Requests, and final ownership of each task.
 
 ---
 
-## Course Submission Checklist
+## Submission Notes
 
-* [ ] `.env.example` is included.
-* [ ] No personal or secret `.env` file is committed to Git.
-* [ ] Docker Compose builds and starts both services.
-* [ ] `http://localhost:3000/api/health` returns `ok`.
-* [ ] The full application opens at `http://localhost:3000`.
-* [ ] README Docker instructions were tested from a clean state.
-* [ ] All required screenshots were copied into `docs/screenshots/`.
-* [ ] All screenshot comments were converted into rendered Markdown images.
-* [ ] Login, Register, Home, Search, Restaurant, Cart, Checkout, detailed Orders, Location, Theme, and Management flows were verified.
-* [ ] API scenario checks pass: SCRUM-323, SCRUM-324, and SCRUM-325.
-* [ ] Final build passes with `npm run build`.
+Before submission:
+
+- Keep the GitHub repository **private** and grant the course checker the required read access to both GitHub and Jira.
+- Do not commit `.env`, API keys, tokens, passwords, personal information, or `node_modules`.
+- Use only legal, free, and open-source resources, including images and icons.
+- Ensure the required Wiki pages contain the relevant commands and real screenshots.
+- Ensure `details.txt` is placed at the required submission location and contains:
+  - one English-only line for each submitting student: `FirstName LastName ID`
+  - one final line containing the GitHub repository URL
+  - no extra lines or spaces
+- Submit the required `details.txt` file to Moodle according to the course instructions.
+
+---
+
+## Troubleshooting
+
+| Issue | Likely cause | Fix |
+|---|---|---|
+| `Cannot connect to the Docker API` | Docker Desktop is not running | Start Docker Desktop and wait for the engine to become available. |
+| `web-server` restarts repeatedly | Backend error during startup | Run `docker compose logs web-server --tail 100`. |
+| The mobile app cannot reach the API | Incorrect mobile API URL | Update `mobile/.env` with the active Wi-Fi IPv4 address and restart Expo with `--clear`. |
+| The mobile app times out | Phone and computer are on different networks, or the IP changed | Connect both devices to the same Wi-Fi, run `ipconfig`, update `.env`, and restart Expo. |
+| Browser location is denied | Browser permission was blocked | Allow location for `http://localhost:3000` in browser site settings, then retry. |
+| Data seems stale after a code change | Old Docker image/container is still running | Run `docker compose down`, then `docker compose up --build -d`. |
+| A fresh database is needed | Docker volumes still contain old local data | Run `docker compose down -v`, then rebuild and start the services. |
+
+---
+
+## License and Educational Use
+
+This project was developed for educational purposes as part of the Advanced Systems Programming course. All external assets used in the final submission must be legal, free to use, and appropriately licensed.

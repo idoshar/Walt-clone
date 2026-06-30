@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Image,
@@ -9,11 +9,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-import { updateCurrentUserImage } from '../api/users';
+import {
+  updateCurrentUserImage,
+  updateCurrentUserProfile,
+} from '../api/users';
 import { useAuth } from '../auth/AuthContext';
 import AppButton from '../components/AppButton';
 import AppCard from '../components/AppCard';
@@ -63,6 +67,18 @@ export default function ProfileScreen() {
   const [successMessage, setSuccessMessage] = useState('');
   const [imageMenuVisible, setImageMenuVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [detailsError, setDetailsError] = useState('');
+  const [detailsSuccess, setDetailsSuccess] = useState('');
+  const [isDetailsSaving, setIsDetailsSaving] = useState(false);
+
+  useEffect(() => {
+    setFullName(user?.fullName || '');
+    setPhone(user?.phone || '');
+    setAddress(user?.address || '');
+  }, [user?.address, user?.fullName, user?.phone]);
 
   const userLabel = getUserLabel(user);
   const currentImage =
@@ -269,6 +285,47 @@ export default function ProfileScreen() {
     clearFeedback();
   }
 
+  async function handleSaveDetails() {
+    if (!token) {
+      setDetailsError('You must be signed in to update your profile.');
+      return;
+    }
+
+    const profile = {
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+    };
+
+    if (!profile.fullName || !profile.phone || !profile.address) {
+      setDetailsSuccess('');
+      setDetailsError('Full name, phone number, and address are required.');
+      return;
+    }
+
+    setIsDetailsSaving(true);
+    setDetailsError('');
+    setDetailsSuccess('');
+
+    try {
+      const updatedUser = await updateCurrentUserProfile(token, profile);
+
+      if (!updatedUser?.id) {
+        throw new Error('The server returned an invalid profile response.');
+      }
+
+      await updateUser(updatedUser);
+      setDetailsSuccess('Profile details updated.');
+    } catch (error) {
+      setDetailsError(
+        error?.message ||
+          'Your profile details could not be updated. Please try again.'
+      );
+    } finally {
+      setIsDetailsSaving(false);
+    }
+  }
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -278,7 +335,7 @@ export default function ProfileScreen() {
           <Text style={styles.eyebrow}>ACCOUNT</Text>
           <Text style={styles.title}>Your profile</Text>
           <Text style={styles.subtitle}>
-            Manage the photo shown throughout the app.
+            Keep your delivery details and profile photo up to date.
           </Text>
         </View>
 
@@ -303,6 +360,78 @@ export default function ProfileScreen() {
               </Text>
               <Text style={styles.role}>{user?.role || 'customer'}</Text>
             </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.detailsSection}>
+            <Text style={styles.sectionTitle}>Account details</Text>
+            <Text style={styles.sectionDescription}>
+              Keep your name and delivery contact details accurate for future orders.
+            </Text>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Full name</Text>
+              <TextInput
+                accessibilityLabel="Full name"
+                autoComplete="name"
+                editable={!isDetailsSaving}
+                onChangeText={setFullName}
+                placeholder="Enter your full name"
+                placeholderTextColor={theme.colors.textMuted}
+                style={styles.input}
+                value={fullName}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Phone number</Text>
+              <TextInput
+                accessibilityLabel="Phone number"
+                autoComplete="tel"
+                editable={!isDetailsSaving}
+                keyboardType="phone-pad"
+                onChangeText={setPhone}
+                placeholder="Enter your phone number"
+                placeholderTextColor={theme.colors.textMuted}
+                style={styles.input}
+                value={phone}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.fieldLabel}>Address</Text>
+              <TextInput
+                accessibilityLabel="Address"
+                autoComplete="street-address"
+                editable={!isDetailsSaving}
+                multiline
+                numberOfLines={2}
+                onChangeText={setAddress}
+                placeholder="Enter your delivery address"
+                placeholderTextColor={theme.colors.textMuted}
+                style={[styles.input, styles.addressInput]}
+                textAlignVertical="top"
+                value={address}
+              />
+            </View>
+
+            <AppButton
+              loading={isDetailsSaving}
+              onPress={handleSaveDetails}
+              style={styles.saveDetailsButton}
+              title="Save details"
+            />
+
+            {detailsError ? (
+              <Text style={styles.errorMessage}>{detailsError}</Text>
+            ) : null}
+
+            {detailsSuccess ? (
+              <Text accessibilityLiveRegion="polite" style={styles.successMessage}>
+                {detailsSuccess}
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.divider} />
@@ -528,6 +657,35 @@ function createStyles(colors) {
     divider: {
       backgroundColor: colors.border,
       height: 1,
+    },
+    detailsSection: {
+      gap: 12,
+    },
+    field: {
+      gap: 7,
+    },
+    fieldLabel: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '800',
+    },
+    input: {
+      backgroundColor: colors.background,
+      borderColor: colors.border,
+      borderRadius: 14,
+      borderWidth: 1,
+      color: colors.text,
+      fontSize: 16,
+      minHeight: 50,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    addressInput: {
+      minHeight: 74,
+    },
+    saveDetailsButton: {
+      alignSelf: 'flex-end',
+      marginTop: 2,
     },
     imageSection: {
       gap: 12,

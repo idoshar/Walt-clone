@@ -15,6 +15,14 @@ export async function lookupUserByUsername(token, username) {
   );
 }
 
+export function updateCurrentUserProfile(token, profile) {
+  return apiRequest('/users/me', {
+    method: 'PATCH',
+    token,
+    body: profile,
+  });
+}
+
 export function updateCurrentUserImage(token, image) {
   return apiRequest('/users/me/image', {
     method: 'PATCH',
