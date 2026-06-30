@@ -1,4 +1,4 @@
-﻿import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -14,6 +14,7 @@ import CheckoutPage from './pages/CheckoutPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 
 function RequireAuth({ children }) {
   const { token } = useAuth();
@@ -138,6 +139,13 @@ function App() {
         <Route
           path="/login"
           element={token ? <Navigate to="/" replace /> : <LoginPage />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={
+            token ? <Navigate to="/" replace /> : <ForgotPasswordPage />
+          }
         />
 
         <Route 

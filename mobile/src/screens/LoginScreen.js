@@ -149,6 +149,21 @@ export default function LoginScreen({ navigation }) {
               title="Sign in"
             />
 
+            <Text
+              accessibilityRole="link"
+              onPress={() => navigation.navigate('ForgotPassword')}
+              style={[
+                styles.forgotPasswordLink,
+                {
+                  color: isSubmitting
+                    ? theme.colors.textMuted
+                    : theme.colors.primary,
+                },
+              ]}
+            >
+              Forgot your password?
+            </Text>
+
             <AppButton
               disabled={isSubmitting}
               onPress={() => navigation.navigate('Register')}
@@ -234,6 +249,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  forgotPasswordLink: {
+    alignSelf: 'center',
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: -4,
+    paddingVertical: 4,
   },
   footer: {
     fontSize: 12,

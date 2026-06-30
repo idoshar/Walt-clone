@@ -45,3 +45,42 @@ export function deleteAdminUser(userId) {
     method: 'DELETE'
   });
 }
+
+function getPasswordResetRequestPath(requestId = '') {
+  const normalizedId = String(requestId || '').trim();
+
+  if (!normalizedId) {
+    throw new Error('A password-reset request id is required.');
+  }
+
+  return `/admin/password-reset-requests/${encodeURIComponent(normalizedId)}`;
+}
+
+export function getAdminPasswordResetRequests(status = 'pending') {
+  const normalizedStatus = String(status || 'pending').trim();
+
+  return apiRequest(
+    `/admin/password-reset-requests?status=${encodeURIComponent(
+      normalizedStatus
+    )}`
+  );
+}
+
+export function approveAdminPasswordResetRequest(
+  requestId,
+  temporaryPassword
+) {
+  return apiRequest(`${getPasswordResetRequestPath(requestId)}/approve`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      temporaryPassword
+    })
+  });
+}
+
+export function rejectAdminPasswordResetRequest(requestId) {
+  return apiRequest(`${getPasswordResetRequestPath(requestId)}/reject`, {
+    method: 'PATCH',
+    body: JSON.stringify({})
+  });
+}

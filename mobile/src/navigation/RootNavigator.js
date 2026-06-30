@@ -17,12 +17,14 @@ import { useAuth } from '../auth/AuthContext';
 import AdminRestaurantModerationScreen from '../screens/AdminRestaurantModerationScreen';
 import AdminScreen from '../screens/AdminScreen';
 import AdminUserManagementScreen from '../screens/AdminUserManagementScreen';
+import AdminPasswordResetRequestsScreen from '../screens/AdminPasswordResetRequestsScreen';
 import AdminStatisticsScreen from '../screens/AdminStatisticsScreen';
 import CartScreen from '../screens/CartScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import MyRestaurantsScreen from '../screens/MyRestaurantsScreen';
 import MenuCategoryManagementScreen from '../screens/MenuCategoryManagementScreen';
 import OrderDetailsScreen from '../screens/OrderDetailsScreen';
@@ -66,6 +68,11 @@ function AuthNavigator({ screenOptions }) {
         component={RegisterScreen}
         name="Register"
         options={{ title: 'Create account' }}
+      />
+      <Stack.Screen
+        component={ForgotPasswordScreen}
+        name="ForgotPassword"
+        options={{ title: 'Request password reset' }}
       />
     </Stack.Navigator>
   );
@@ -180,6 +187,11 @@ function AppNavigator({ screenOptions }) {
             component={AdminUserManagementScreen}
             name="AdminUserManagement"
             options={{ title: 'User account management' }}
+          />
+          <Stack.Screen
+            component={AdminPasswordResetRequestsScreen}
+            name="AdminPasswordResetRequests"
+            options={{ title: 'Password recovery requests' }}
           />
           <Stack.Screen
             component={AdminStatisticsScreen}

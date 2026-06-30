@@ -217,7 +217,17 @@ export default function ProductFormScreen({ navigation, route }) {
 
       navigation.goBack();
     } catch (requestError) {
-      setError(requestError.message || 'Could not save product.');
+      if (requestError.status === 403) {
+        setError(
+          'You are not authorized to manage this restaurant. Only the owner can add or edit products.'
+        );
+      } else if (requestError.status === 409) {
+        setError('A product with this name already exists.');
+      } else {
+        setError(
+          requestError.message || 'Could not save product. Please try again.'
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -238,7 +248,10 @@ export default function ProductFormScreen({ navigation, route }) {
       <TextInput
         autoCapitalize="sentences"
         editable={!saving}
-        onChangeText={setName}
+        onChangeText={(value) => {
+          setName(value);
+          setError('');
+        }}
         placeholder="Product name"
         placeholderTextColor={theme.colors.textMuted}
         style={styles.input}
@@ -249,7 +262,10 @@ export default function ProductFormScreen({ navigation, route }) {
       <TextInput
         editable={!saving}
         keyboardType="numeric"
-        onChangeText={setPrice}
+        onChangeText={(value) => {
+          setPrice(value);
+          setError('');
+        }}
         placeholder="Price"
         placeholderTextColor={theme.colors.textMuted}
         style={styles.input}
@@ -346,8 +362,7 @@ export default function ProductFormScreen({ navigation, route }) {
                 </Text>
               ) : null}
             </View>
-
-            <Text style={styles.categorySelectorArrow}>⌄</Text>
+            <Text style={styles.categorySelectorArrow}>v</Text>
           </TouchableOpacity>
 
           {product?.category && !categoryId ? (
@@ -363,7 +378,10 @@ export default function ProductFormScreen({ navigation, route }) {
       <TextInput
         autoCapitalize="none"
         editable={!saving}
-        onChangeText={setImage}
+        onChangeText={(value) => {
+          setImage(value);
+          setError('');
+        }}
         placeholder="https://..."
         placeholderTextColor={theme.colors.textMuted}
         style={styles.input}
@@ -374,14 +392,21 @@ export default function ProductFormScreen({ navigation, route }) {
       <TextInput
         editable={!saving}
         multiline
-        onChangeText={setDescription}
+        onChangeText={(value) => {
+          setDescription(value);
+          setError('');
+        }}
         placeholder="Product description"
         placeholderTextColor={theme.colors.textMuted}
         style={[styles.input, styles.textArea]}
         value={description}
       />
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.actions}>
         <TouchableOpacity
@@ -478,7 +503,7 @@ export default function ProductFormScreen({ navigation, route }) {
                     </View>
 
                     {isSelected ? (
-                      <Text style={styles.selectedMark}>✓</Text>
+                       <Text style={styles.selectedMark}>✓</Text>
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -658,6 +683,14 @@ function createStyles(colors) {
       fontSize: 12,
       lineHeight: 18,
       marginTop: 6,
+    },
+    errorBox: {
+      backgroundColor: colors.errorContainer || colors.dangerSoft,
+      borderColor: colors.danger,
+      borderRadius: 12,
+      borderWidth: 1,
+      marginTop: 14,
+      padding: 12,
     },
     errorText: {
       color: colors.danger,

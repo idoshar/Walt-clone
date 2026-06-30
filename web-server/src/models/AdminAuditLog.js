@@ -26,7 +26,9 @@ const adminAuditLogSchema = new mongoose.Schema(
                 'user.reactivated',
                 'user.roleChanged',
                 'user.passwordReset',
-                'user.deleted'
+                'user.deleted',
+                'passwordResetRequest.approved',
+                'passwordResetRequest.rejected'
             ],
             index: true
         },
@@ -44,4 +46,7 @@ const adminAuditLogSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model('AdminAuditLog', adminAuditLogSchema);
+module.exports = mongoose.model(
+    'AdminAuditLog',
+    adminAuditLogSchema
+);

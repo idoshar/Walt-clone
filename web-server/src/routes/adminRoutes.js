@@ -8,6 +8,8 @@ const adminStatisticsController =
     require('../controllers/adminStatisticsController');
 const adminUserManagementController =
     require('../controllers/adminUserManagementController');
+const passwordResetRequestController =
+    require('../controllers/passwordResetRequestController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const asyncHandler = require('../middleware/asyncHandler');
@@ -61,6 +63,27 @@ router.patch(
     authMiddleware,
     adminMiddleware,
     asyncHandler(adminUserManagementController.updateUserRole)
+);
+
+router.get(
+    '/password-reset-requests',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(passwordResetRequestController.getAdminRequests)
+);
+
+router.patch(
+    '/password-reset-requests/:id/approve',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(passwordResetRequestController.approveRequest)
+);
+
+router.patch(
+    '/password-reset-requests/:id/reject',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(passwordResetRequestController.rejectRequest)
 );
 
 router.get(

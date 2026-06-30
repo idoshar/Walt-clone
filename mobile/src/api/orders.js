@@ -12,17 +12,53 @@ function extractOrders(response) {
   return [];
 }
 
-export async function createOrder({ token, restaurantId, items }) {
+function isPlainObject(value) {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+  );
+}
+
+export async function createOrder({
+  token,
+  restaurantId,
+  items,
+  deliveryDetails,
+} = {}) {
   requireToken(token, 'place an order');
 
-  if (!restaurantId) throw new Error('A restaurant is required to place an order.');
-  if (!Array.isArray(items) || items.length === 0)
+  if (!restaurantId) {
+    throw new Error('A restaurant is required to place an order.');
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
     throw new Error('Your order must include at least one item.');
+  }
+
+  if (
+    deliveryDetails !== undefined &&
+    deliveryDetails !== null &&
+    !isPlainObject(deliveryDetails)
+  ) {
+    throw new Error(
+      'Delivery details must be an object when they are provided.'
+    );
+  }
+
+  const body = {
+    restaurantId,
+    items,
+  };
+
+  if (deliveryDetails !== undefined) {
+    body.deliveryDetails = deliveryDetails;
+  }
 
   return apiRequest('/orders', {
     method: 'POST',
     token,
-    body: { restaurantId, items },
+    body,
   });
 }
 
