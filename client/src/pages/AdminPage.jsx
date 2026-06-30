@@ -1,5 +1,6 @@
 import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
 import AdminUserManagementPanel from '../components/AdminUserManagementPanel.jsx';
+import AdminPasswordResetRequestsPanel from '../components/AdminPasswordResetRequestsPanel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ADMIN_TOOLS = [
@@ -86,6 +87,7 @@ function AdminPage() {
       </section>
 
       <AdminRestaurantModerationPanel />
+      <AdminPasswordResetRequestsPanel />
       <AdminUserManagementPanel />
     </section>
   );

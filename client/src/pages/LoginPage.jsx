@@ -155,6 +155,8 @@ function LoginPage() {
         </button>
 
         <p className="form-footer">
+          <Link to="/forgot-password">Forgot your password?</Link>
+          <br />
           New user? <Link to="/register">Create account</Link>
         </p>
       </form>

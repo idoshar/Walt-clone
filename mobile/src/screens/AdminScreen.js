@@ -36,6 +36,14 @@ const ADMIN_TOOLS = [
     status: 'Available now',
   },
   {
+    area: 'RECOVERY',
+    title: 'Password recovery requests',
+    description:
+      'Review pending password-reset requests and issue temporary passwords.',
+    route: 'AdminPasswordResetRequests',
+    status: 'Available now',
+  },
+  {
     area: 'INSIGHTS',
     title: 'Platform insights',
     description:
