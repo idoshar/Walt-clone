@@ -10,6 +10,10 @@ function getRequestUserId(req) {
     return toUserId(req?.user?.sub || req?.user?.id);
 }
 
+function isAdministrator(userRole) {
+    return userRole === 'admin';
+}
+
 function getEditorIds(restaurant) {
     const editorIds = Array.isArray(restaurant?.editorIds)
         ? restaurant.editorIds
@@ -54,14 +58,49 @@ function isRestaurantEditor(restaurant, userId) {
     );
 }
 
-function canManageRestaurant(restaurant, userId) {
+function canManageRestaurant(restaurant, userId, userRole) {
     return (
+        isAdministrator(userRole) ||
         isRestaurantOwner(restaurant, userId) ||
         isRestaurantEditor(restaurant, userId)
     );
 }
 
-function getRestaurantAccessRole(restaurant, userId) {
+function canManageRestaurantAccess(restaurant, userId, userRole) {
+    return (
+        isAdministrator(userRole) ||
+        isRestaurantOwner(restaurant, userId)
+    );
+}
+
+function canTransferRestaurantOwnership(restaurant, userId) {
+    return isRestaurantOwner(restaurant, userId);
+}
+
+function getPersonalRestaurantAccessRole(restaurant, userId) {
+    if (isRestaurantOwner(restaurant, userId)) {
+        return 'owner';
+    }
+
+    if (isRestaurantEditor(restaurant, userId)) {
+        return 'editor';
+    }
+
+    return null;
+}
+
+function canDeleteRestaurant(restaurant, userId, userRole) {
+    return Boolean(
+        !restaurant?.isDefault &&
+        (isAdministrator(userRole) || isRestaurantOwner(restaurant, userId))
+    );
+}
+
+function getRestaurantAccessRole(restaurant, userId, userRole) {
+    if (isAdministrator(userRole)) {
+        return 'admin';
+    }
+
     if (isRestaurantOwner(restaurant, userId)) {
         return 'owner';
     }
@@ -76,10 +115,15 @@ function getRestaurantAccessRole(restaurant, userId) {
 module.exports = {
     toUserId,
     getRequestUserId,
+    isAdministrator,
     getEditorIds,
     normalizeEditorIds,
     isRestaurantOwner,
     isRestaurantEditor,
     canManageRestaurant,
+    canManageRestaurantAccess,
+    canTransferRestaurantOwnership,
+    getPersonalRestaurantAccessRole,
+    canDeleteRestaurant,
     getRestaurantAccessRole
 };

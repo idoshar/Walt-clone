@@ -10,9 +10,11 @@ const {
     validateRequiredFields
 } = require('../utilities/validationHelper');
 const {
+    canDeleteRestaurant,
     canManageRestaurant,
+    getPersonalRestaurantAccessRole,
     getRequestUserId,
-    getRestaurantAccessRole,
+    isRestaurantEditor,
     isRestaurantOwner
 } = require('../services/restaurantAccessService');
 
@@ -68,7 +70,7 @@ async function toManagementResponseObject(restaurant, userId) {
     return {
         ...restaurant.toResponseObject(),
         productCount: await getProductCount(restaurant.id),
-        accessRole: getRestaurantAccessRole(restaurant, userId)
+        accessRole: getPersonalRestaurantAccessRole(restaurant, userId)
     };
 }
 
@@ -109,8 +111,8 @@ class RestaurantController {
 
             const managedRestaurants = restaurants.filter(
                 (restaurant) =>
-                    !restaurant.isDefault &&
-                    canManageRestaurant(restaurant, userId)
+                    isRestaurantOwner(restaurant, userId) ||
+                    isRestaurantEditor(restaurant, userId)
             );
 
             const myRestaurants = await Promise.all(
@@ -199,13 +201,14 @@ class RestaurantController {
             if (
                 !canManageRestaurant(
                     existingRestaurant,
-                    getRequestUserId(req)
+                    getRequestUserId(req),
+                    req.user?.role
                 )
             ) {
                 return res.status(403).json({
                     error: 'Forbidden',
                     message:
-                        'You can manage only restaurants where you are an owner or editor'
+                        'You can manage only restaurants where you are an owner, editor, or administrator'
                 });
             }
 
@@ -254,10 +257,18 @@ class RestaurantController {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            if (!isRestaurantOwner(restaurant, getRequestUserId(req))) {
+            if (
+                !canDeleteRestaurant(
+                    restaurant,
+                    getRequestUserId(req),
+                    req.user?.role
+                )
+            ) {
                 return res.status(403).json({
                     error: 'Forbidden',
-                    message: 'Only the restaurant owner can delete a restaurant'
+                    message: restaurant.isDefault
+                        ? 'System catalog restaurants cannot be deleted'
+                        : 'Only the restaurant owner or an administrator can delete a restaurant'
                 });
             }
 

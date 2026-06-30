@@ -13,7 +13,8 @@ function getUserDisplayName(user) {
 
 function RestaurantAccessManager({
   restaurant,
-  onOwnershipTransferred
+  onOwnershipTransferred,
+  canTransferOwnership = true
 }) {
   const [access, setAccess] = useState(null);
   const [username, setUsername] = useState('');
@@ -190,9 +191,18 @@ function RestaurantAccessManager({
   return (
     <section className="restaurant-access-manager">
       <p className="restaurant-access-intro">
-        Owners can delegate day-to-day restaurant management to editors.
-        Editors can manage details, menus, categories, and statistics, but
-        cannot manage access, transfer ownership, or delete the restaurant.
+        {canTransferOwnership ? (
+          <>
+            Owners can delegate day-to-day restaurant management to editors.
+            Editors can manage details, menus, categories, and statistics, but
+            cannot manage access, transfer ownership, or delete the restaurant.
+          </>
+        ) : (
+          <>
+            As an administrator, you can add and remove team members. Only the
+            restaurant owner can transfer ownership.
+          </>
+        )}
       </p>
 
       {isLoading ? (
@@ -307,14 +317,16 @@ function RestaurantAccessManager({
                         : 'Grant Editor Access'}
                   </button>
 
-                  <button
-                    type="button"
-                    className="management-danger-button"
-                    disabled={isSaving || candidateIsOwner}
-                    onClick={handleTransferOwnership}
-                  >
-                    Transfer Ownership
-                  </button>
+                  {canTransferOwnership && (
+                    <button
+                      type="button"
+                      className="management-danger-button"
+                      disabled={isSaving || candidateIsOwner}
+                      onClick={handleTransferOwnership}
+                    >
+                      Transfer Ownership
+                    </button>
+                  )}
                 </div>
               </div>
             )}

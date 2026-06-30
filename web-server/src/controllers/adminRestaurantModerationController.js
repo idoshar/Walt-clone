@@ -201,7 +201,7 @@ class AdminRestaurantModerationController {
         }
     }
 
-    async updateRestaurant(req, res, next) {
+    async getRestaurant(req, res, next) {
         try {
             const restaurant = await restaurantRepository.findById(
                 req.params.id
@@ -211,12 +211,23 @@ class AdminRestaurantModerationController {
                 return responseHelper.notFound(res, 'Restaurant not found');
             }
 
-            if (isSystemRestaurant(restaurant)) {
-                return res.status(403).json({
-                    error: 'Forbidden',
-                    message:
-                        'System catalog restaurants cannot be edited through moderation'
-                });
+            return responseHelper.ok(res, {
+                ...(await toModerationResponse(restaurant)),
+                accessRole: 'admin'
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    async updateRestaurant(req, res, next) {
+        try {
+            const restaurant = await restaurantRepository.findById(
+                req.params.id
+            );
+
+            if (!restaurant) {
+                return responseHelper.notFound(res, 'Restaurant not found');
             }
 
             const updates = normalizeUpdates(req.body);

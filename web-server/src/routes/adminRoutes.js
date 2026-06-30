@@ -93,6 +93,13 @@ router.get(
     asyncHandler(adminRestaurantModerationController.getRestaurants)
 );
 
+router.get(
+    '/restaurants/:id',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminRestaurantModerationController.getRestaurant)
+);
+
 router.patch(
     '/restaurants/:id/sponsorship',
     authMiddleware,

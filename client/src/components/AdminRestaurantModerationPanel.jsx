@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   deleteAdminRestaurant,
   getAdminRestaurants,
@@ -46,6 +47,7 @@ function getRestaurantMeta(restaurant) {
 }
 
 function AdminRestaurantModerationPanel() {
+  const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [draft, setDraft] = useState(null);
@@ -114,6 +116,14 @@ function AdminRestaurantModerationPanel() {
   useEffect(() => {
     loadRestaurants();
   }, [loadRestaurants]);
+
+  function openRestaurantManagement(restaurant) {
+    navigate(
+      `/admin/restaurants/${encodeURIComponent(
+        String(restaurant.id)
+      )}/manage`
+    );
+  }
 
   function selectRestaurant(restaurant) {
     setSelectedRestaurantId(restaurant.id);
@@ -259,8 +269,8 @@ function AdminRestaurantModerationPanel() {
             Restaurant moderation
           </h2>
           <p style={styles.description}>
-            Review all platform restaurants. System catalog entries remain
-            visible but are protected from edits and deletion.
+            Review and manage all platform restaurants. System catalog entries
+            can be managed too, but remain protected from deletion.
           </p>
         </div>
 
@@ -345,13 +355,25 @@ function AdminRestaurantModerationPanel() {
                           </small>
                         </div>
 
-                        <button
-                          type="button"
-                          style={styles.primaryButton}
-                          onClick={() => selectRestaurant(restaurant)}
-                        >
-                          {isSelected ? 'Editing' : 'Edit'}
-                        </button>
+                        <div style={styles.restaurantCardActions}>
+                          <button
+                            type="button"
+                            style={styles.secondaryButton}
+                            onClick={() => selectRestaurant(restaurant)}
+                          >
+                            {isSelected ? 'Editing' : 'Quick edit'}
+                          </button>
+
+                          <button
+                            type="button"
+                            style={styles.primaryButton}
+                            onClick={() =>
+                              openRestaurantManagement(restaurant)
+                            }
+                          >
+                            Manage Restaurant
+                          </button>
+                        </div>
                       </article>
                     );
                   })}
@@ -364,8 +386,8 @@ function AdminRestaurantModerationPanel() {
                 </summary>
 
                 <p style={styles.protectedExplanation}>
-                  These starter restaurants are restored from the catalog when
-                  the server starts, so they cannot be changed or removed here.
+                  These starter restaurants remain available for full
+                  administrator management, but are protected from deletion.
                 </p>
 
                 <div style={styles.restaurantList}>
@@ -382,7 +404,19 @@ function AdminRestaurantModerationPanel() {
                         </small>
                       </div>
 
-                      <span style={styles.protectedBadge}>Protected</span>
+                      <div style={styles.protectedActions}>
+                        <button
+                          type="button"
+                          style={styles.primaryButton}
+                          onClick={() => openRestaurantManagement(restaurant)}
+                        >
+                          Manage Restaurant
+                        </button>
+
+                        <span style={styles.protectedBadge}>
+                          Deletion protected
+                        </span>
+                      </div>
                     </article>
                   ))}
                 </div>
@@ -652,6 +686,18 @@ const styles = {
     display: 'grid',
     gap: '10px'
   },
+  restaurantCardActions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+    justifyContent: 'flex-end'
+  },
+  protectedActions: {
+    alignItems: 'flex-end',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
   restaurantCard: {
     alignItems: 'center',
     background: 'var(--color-surface)',
@@ -674,7 +720,7 @@ const styles = {
     display: 'flex',
     gap: '14px',
     justifyContent: 'space-between',
-    opacity: 0.86,
+    opacity: 1,
     padding: '15px'
   },
   restaurantName: {

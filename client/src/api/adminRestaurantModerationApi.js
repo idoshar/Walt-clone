@@ -14,6 +14,10 @@ export function getAdminRestaurants() {
   return apiRequest('/admin/restaurants');
 }
 
+export function getAdminRestaurant(restaurantId) {
+  return apiRequest(getRestaurantPath(restaurantId));
+}
+
 export function updateAdminRestaurant(restaurantId, restaurantUpdates) {
   return apiRequest(getRestaurantPath(restaurantId), {
     method: 'PATCH',

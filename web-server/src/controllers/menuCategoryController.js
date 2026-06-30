@@ -86,11 +86,15 @@ async function requireManagedRestaurant(req, res) {
         return null;
     }
 
-    if (!canManageRestaurant(restaurant, getRequestUserId(req))) {
+    if (!canManageRestaurant(
+            restaurant,
+            getRequestUserId(req),
+            req.user?.role
+        )) {
         res.status(403).json({
             error: 'Forbidden',
             message:
-                'You can manage only restaurants where you are an owner or editor'
+                'You can manage only restaurants where you are an owner, editor, or administrator'
         });
 
         return null;

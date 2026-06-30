@@ -17,11 +17,11 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
     await connectDatabase();
     await backfillRecommendationIds();
-    await seedRestaurants();
+    const createdCatalogRestaurantIds = await seedRestaurants();
     await backfillRestaurantSponsorship();
-    await seedMenuCategories();
+    await seedMenuCategories(createdCatalogRestaurantIds);
     await seedInitialAdmin();
-    await seedProducts();
+    await seedProducts(createdCatalogRestaurantIds);
 
     app.listen(PORT, () => {
         console.log(`Food Delivery API server is running on http://localhost:${PORT}`);

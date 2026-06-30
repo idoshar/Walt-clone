@@ -11,6 +11,10 @@ const {
     issueTemporaryPassword
 } = require('../services/temporaryPasswordService');
 const responseHelper = require('../utilities/responseHelper');
+const {
+    getEditorIds,
+    toUserId
+} = require('../services/restaurantAccessService');
 
 function isActiveUser(user) {
     return user?.isActive !== false;
@@ -392,9 +396,14 @@ class AdminUserManagementController {
                 });
             }
 
-            const [orderCount, ownedRestaurantCount] = await Promise.all([
+            const [
+                orderCount,
+                ownedRestaurantCount,
+                editorManagedRestaurants
+            ] = await Promise.all([
                 orderRepository.countByUserId(targetUser.id),
-                restaurantRepository.countByOwnerId(targetUser.id)
+                restaurantRepository.countByOwnerId(targetUser.id),
+                restaurantRepository.findAllByEditorId(targetUser.id)
             ]);
 
             if (orderCount > 0) {
@@ -412,11 +421,44 @@ class AdminUserManagementController {
                 });
             }
 
+            const orphanedRestaurants = editorManagedRestaurants.filter(
+                (restaurant) => {
+                    const remainingEditorIds = getEditorIds(restaurant).filter(
+                        (editorId) => editorId !== toUserId(targetUser.id)
+                    );
+
+                    return (
+                        !toUserId(restaurant.ownerId) &&
+                        remainingEditorIds.length === 0
+                    );
+                }
+            );
+
+            if (orphanedRestaurants.length > 0) {
+                return res.status(409).json({
+                    error: 'Conflict',
+                    message:
+                        'Users who are the final team member of a restaurant cannot be deleted'
+                });
+            }
+
             const wasDeleted = await userRepository.deleteById(targetUser.id);
 
             if (!wasDeleted) {
                 return responseHelper.notFound(res, 'User not found');
             }
+
+            await Promise.all(
+                editorManagedRestaurants.map((restaurant) =>
+                    restaurantRepository.updateAccess(restaurant.id, {
+                        ownerId: restaurant.ownerId,
+                        editorIds: getEditorIds(restaurant).filter(
+                            (editorId) =>
+                                editorId !== toUserId(targetUser.id)
+                        )
+                    })
+                )
+            );
 
             await adminAuditLogRepository.create({
                 actorUserId: req.user.sub,
