@@ -350,6 +350,12 @@ async function main() {
       );
 
       expect(reorderResponse.response.status === 200, `admin category reorder expected 200, got ${reorderResponse.response.status}`);
+      expect(
+        Array.isArray(reorderResponse.data) &&
+          reorderResponse.data.map((category) => category.id).join(',') ===
+            [temporarySecondCategoryId, temporaryCategoryId].join(','),
+        'category reorder response did not preserve the requested canonical order'
+      );
 
       const productResponse = await request(
         `/api/restaurants/${temporaryRestaurantId}/products`,

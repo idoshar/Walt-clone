@@ -17,6 +17,7 @@ import {
   getRestaurantProducts,
 } from '../api/restaurants';
 import { getProductRecommendations } from '../api/products';
+import { getMenuCategories } from '../api/menuCategories';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
 import ThemeToggle from '../components/ThemeToggle';
@@ -26,6 +27,30 @@ import { useAppTheme } from '../theme/ThemeContext';
 import { getRestaurantImage } from '../utils/restaurantImages';
 
 const ALL_CATEGORIES = 'All';
+
+function getSortOrder(category) {
+  const value = Number(category?.sortOrder);
+  return Number.isFinite(value) && value >= 0
+    ? value
+    : Number.MAX_SAFE_INTEGER;
+}
+
+function orderMenuCategories(categories) {
+  return (Array.isArray(categories) ? categories : [])
+    .filter(
+      (category) =>
+        typeof category?.name === 'string' && category.name.trim() !== ''
+    )
+    .slice()
+    .sort(
+      (firstCategory, secondCategory) =>
+        getSortOrder(firstCategory) - getSortOrder(secondCategory) ||
+        firstCategory.name.localeCompare(secondCategory.name) ||
+        String(firstCategory.id || '').localeCompare(
+          String(secondCategory.id || '')
+        )
+    );
+}
 
 function hasImage(item) {
   return typeof item?.image === 'string' && item.image.trim().length > 0;
@@ -85,6 +110,7 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
 
   const [restaurant, setRestaurant] = useState(initialRestaurant);
   const [products, setProducts] = useState([]);
+  const [menuCategories, setMenuCategories] = useState([]);
   const [screenState, setScreenState] = useState(
     restaurantId ? 'loading' : 'error'
   );
@@ -113,13 +139,15 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
       }
 
       try {
-        const [nextRestaurant, nextProducts] = await Promise.all([
+        const [nextRestaurant, nextProducts, nextMenuCategories] = await Promise.all([
           getRestaurantById(restaurantId),
           getRestaurantProducts(restaurantId),
+          getMenuCategories(restaurantId),
         ]);
 
         setRestaurant(nextRestaurant);
         setProducts(nextProducts);
+        setMenuCategories(orderMenuCategories(nextMenuCategories));
         setScreenState('success');
         setMessage(
           nextProducts.length === 0
@@ -165,21 +193,39 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
   }, [loadRestaurantContent]);
 
   const categories = useMemo(() => {
-    const productCategories = products
-      .map((product) => product.category?.trim())
-      .filter(Boolean);
+    const productCategories = new Set(
+      products
+        .map((product) => product.category?.trim())
+        .filter(Boolean)
+    );
 
-    return [
-      ALL_CATEGORIES,
-      ...Array.from(new Set(productCategories)).sort((a, b) =>
-        a.localeCompare(b)
-      ),
-    ];
-  }, [products]);
+    const configuredCategories = menuCategories
+      .map((category) => category.name.trim())
+      .filter((name) => productCategories.has(name));
+
+    const configuredNames = new Set(configuredCategories);
+    const legacyCategories = Array.from(productCategories)
+      .filter((name) => !configuredNames.has(name))
+      .sort((firstName, secondName) => firstName.localeCompare(secondName));
+
+    return [ALL_CATEGORIES, ...configuredCategories, ...legacyCategories];
+  }, [menuCategories, products]);
+
+  useEffect(() => {
+    if (
+      selectedCategory !== ALL_CATEGORIES &&
+      !categories.includes(selectedCategory)
+    ) {
+      setSelectedCategory(ALL_CATEGORIES);
+    }
+  }, [categories, selectedCategory]);
 
   const visibleProducts = useMemo(() => {
     if (selectedCategory === ALL_CATEGORIES) return products;
-    return products.filter((p) => p.category === selectedCategory);
+
+    return products.filter(
+      (product) => product.category?.trim() === selectedCategory
+    );
   }, [products, selectedCategory]);
 
   const handleAddToCart = useCallback(
