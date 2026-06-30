@@ -100,6 +100,13 @@ router.get(
     asyncHandler(adminRestaurantModerationController.getRestaurant)
 );
 
+router.put(
+    '/restaurants/sponsorship-order',
+    authMiddleware,
+    adminMiddleware,
+    asyncHandler(adminSponsorshipController.replaceSponsorshipOrder)
+);
+
 router.patch(
     '/restaurants/:id/sponsorship',
     authMiddleware,

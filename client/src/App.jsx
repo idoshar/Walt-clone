@@ -146,6 +146,15 @@ function App() {
         />
 
         <Route
+          path="/change-password"
+          element={
+            <RequireAuth>
+              <ChangePasswordPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route
           path="/login"
           element={token ? <Navigate to="/" replace /> : <LoginPage />}
         />

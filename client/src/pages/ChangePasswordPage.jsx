@@ -22,7 +22,8 @@ function validatePassword(password) {
 
 function ChangePasswordPage() {
   const navigate = useNavigate();
-  const { login, logout } = useAuth();
+  const { login, logout, user } = useAuth();
+  const mustChangePassword = Boolean(user?.mustChangePassword);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -59,11 +60,7 @@ function ChangePasswordPage() {
       errors.confirmPassword = 'Passwords do not match';
     }
 
-    if (
-      currentPassword &&
-      newPassword &&
-      currentPassword === newPassword
-    ) {
+    if (currentPassword && newPassword && currentPassword === newPassword) {
       errors.newPassword = 'New password must be different from current password';
     }
 
@@ -98,7 +95,7 @@ function ChangePasswordPage() {
       }
 
       login(result.token, result.user);
-      navigate('/', { replace: true });
+      navigate(mustChangePassword ? '/' : '/profile', { replace: true });
     } catch (requestError) {
       setError(
         requestError.message ||
@@ -112,10 +109,12 @@ function ChangePasswordPage() {
   return (
     <section className="auth-page">
       <form onSubmit={handleSubmit} className="form-card" noValidate>
-        <h1>Update your password</h1>
+        <h1>{mustChangePassword ? 'Update your password' : 'Change your password'}</h1>
 
         <p>
-          Your account requires a password update before you can continue.
+          {mustChangePassword
+            ? 'Your account requires a password update before you can continue.'
+            : 'Enter your current password and choose a new one for your account.'}
         </p>
 
         <label className="form-field">
@@ -197,14 +196,25 @@ function ChangePasswordPage() {
           {loading ? 'Updating password...' : 'Update password'}
         </button>
 
-        <button
-          type="button"
-          className="password-change-signout"
-          onClick={logout}
-          disabled={loading}
-        >
-          Sign out instead
-        </button>
+        {mustChangePassword ? (
+          <button
+            type="button"
+            className="password-change-signout"
+            onClick={logout}
+            disabled={loading}
+          >
+            Sign out instead
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="password-change-signout"
+            onClick={() => navigate('/profile')}
+            disabled={loading}
+          >
+            Back to profile
+          </button>
+        )}
       </form>
     </section>
   );

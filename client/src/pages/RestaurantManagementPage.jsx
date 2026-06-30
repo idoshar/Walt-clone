@@ -53,11 +53,19 @@ function getRestaurantStatus(restaurant) {
   };
 }
 
-function RestaurantManagementPage({ mode = 'personal' }) {
+function RestaurantManagementPage({
+  mode = 'personal',
+  presentation = 'page',
+  restaurantId: suppliedRestaurantId = '',
+  onClose = null
+}) {
   const { formatPrice } = useCurrency();
-  const { restaurantId } = useParams();
+  const { restaurantId: routeRestaurantId } = useParams();
   const navigate = useNavigate();
   const isAdminManagement = mode === 'admin';
+  const isAdminManagementModal =
+    isAdminManagement && presentation === 'modal';
+  const restaurantId = suppliedRestaurantId || routeRestaurantId;
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
@@ -134,7 +142,32 @@ function RestaurantManagementPage({ mode = 'personal' }) {
   }
 
   useEffect(() => {
-    loadRestaurants().catch((error) => setMessage(error.message));
+    let isCurrentRoute = true;
+
+    async function initializeManagementPage() {
+      try {
+        const loadedRestaurants = await loadRestaurants();
+
+        if (
+          isCurrentRoute &&
+          isAdminManagement &&
+          loadedRestaurants.length > 0
+        ) {
+          setEditingProduct(null);
+          setIsRestaurantActionsOpen(true);
+        }
+      } catch (error) {
+        if (isCurrentRoute) {
+          setMessage(error.message);
+        }
+      }
+    }
+
+    initializeManagementPage();
+
+    return () => {
+      isCurrentRoute = false;
+    };
   }, [isAdminManagement, restaurantId]);
 
   async function handleCreateRestaurant(restaurant) {
@@ -396,6 +429,28 @@ function RestaurantManagementPage({ mode = 'personal' }) {
     }
   }
 
+  function closeRestaurantActions() {
+    if (isAdminManagementModal) {
+      onClose?.();
+      return;
+    }
+
+    setIsRestaurantActionsOpen(false);
+  }
+
+  function returnToAdminModeration() {
+    if (isAdminManagementModal) {
+      onClose?.();
+      return;
+    }
+
+    navigate('/admin', {
+      state: {
+        activeToolId: 'restaurants'
+      }
+    });
+  }
+
   async function handleDeleteRestaurant() {
     if (!selectedRestaurant) {
       return;
@@ -413,6 +468,11 @@ function RestaurantManagementPage({ mode = 'personal' }) {
       await deleteRestaurant(selectedRestaurant.id);
 
       if (isAdminManagement) {
+        if (isAdminManagementModal) {
+          onClose?.();
+          return;
+        }
+
         navigate('/admin', {
           replace: true,
           state: {
@@ -625,8 +685,13 @@ function RestaurantManagementPage({ mode = 'personal' }) {
   );
 
   return (
-    <main className="page management-page">
-      <section className="page-header management-page-header">
+    <main
+      className={`page management-page ${
+        isAdminManagementModal ? 'management-page-admin-overlay' : ''
+      }`}
+    >
+      <div className="management-page-workspace">
+        <section className="page-header management-page-header">
         <p className="management-eyebrow">
           {isAdminManagement
             ? 'Administrator restaurant tools'
@@ -663,13 +728,7 @@ function RestaurantManagementPage({ mode = 'personal' }) {
             <button
               type="button"
               className="secondary-button management-secondary-action"
-              onClick={() =>
-                navigate('/admin', {
-                  state: {
-                    activeToolId: 'restaurants'
-                  }
-                })
-              }
+              onClick={returnToAdminModeration}
             >
               Back to Restaurant Moderation
             </button>
@@ -808,7 +867,7 @@ function RestaurantManagementPage({ mode = 'personal' }) {
           </>
         )}
       </section>
-
+      </div>
 
       {!isAdminManagement && isCreateRestaurantOpen && (
         <Modal
@@ -861,7 +920,7 @@ function RestaurantManagementPage({ mode = 'personal' }) {
       {isRestaurantActionsOpen && selectedRestaurant && (
         <Modal
           title={`Manage ${selectedRestaurant.name}`}
-          onClose={() => setIsRestaurantActionsOpen(false)}
+          onClose={closeRestaurantActions}
         >
           <div className="management-action-summary">
             <p>{selectedRestaurant.address || 'No address provided'}</p>

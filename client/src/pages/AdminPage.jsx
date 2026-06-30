@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import AdminPasswordResetRequestsPanel from '../components/AdminPasswordResetRequestsPanel.jsx';
 import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
+import AdminSponsoredPromotionsPanel from '../components/AdminSponsoredPromotionsPanel.jsx';
 import AdminStatisticsPanel from '../components/AdminStatisticsPanel.jsx';
 import AdminUserManagementPanel from '../components/AdminUserManagementPanel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -11,44 +12,27 @@ const ADMIN_TOOLS = [
     id: 'restaurants',
     title: 'Restaurant moderation',
     description:
-      'Review and manage every platform restaurant. Catalog entries are protected from deletion.',
-    status: 'Available now'
+      'Review and manage every platform restaurant. Catalog entries are protected from deletion.'
   },
   {
     id: 'promotions',
     title: 'Sponsored promotions',
     description:
-      'Choose which restaurants appear in sponsored placements.',
-    status: 'Coming soon'
+      'Choose which restaurants appear in sponsored placements and control their order.'
   },
   {
     id: 'users',
     title: 'User accounts',
     description:
-      'Manage access, roles, temporary passwords and eligible account deletion.',
-    status: 'Available now'
+      'Manage access, roles, temporary passwords and eligible account deletion.'
   },
   {
     id: 'insights',
     title: 'Platform insights',
     description:
-      'View platform-wide activity, restaurant health and operational trends.',
-    status: 'Available now'
+      'View platform-wide activity, restaurant health and operational trends.'
   }
 ];
-
-function ComingSoonPanel({ title, description }) {
-  return (
-    <section style={styles.comingSoonPanel} aria-labelledby="coming-soon-title">
-      <p style={styles.eyebrow}>ADMINISTRATION</p>
-      <h2 id="coming-soon-title" style={styles.sectionTitle}>
-        {title}
-      </h2>
-      <p style={styles.comingSoonText}>{description}</p>
-      <p style={styles.comingSoonBadge}>Coming soon</p>
-    </section>
-  );
-}
 
 function AdminPage() {
   const { user } = useAuth();
@@ -81,6 +65,10 @@ function AdminPage() {
       return <AdminRestaurantModerationPanel />;
     }
 
+    if (activeToolId === 'promotions') {
+      return <AdminSponsoredPromotionsPanel />;
+    }
+
     if (activeToolId === 'users') {
       return activeUserView === 'password-reset-requests' ? (
         <AdminPasswordResetRequestsPanel
@@ -97,15 +85,6 @@ function AdminPage() {
 
     if (activeToolId === 'insights') {
       return <AdminStatisticsPanel />;
-    }
-
-    if (activeToolId === 'promotions') {
-      return (
-        <ComingSoonPanel
-          title="Sponsored promotions"
-          description="Sponsored placement management is not available yet. This workspace will show the promotion workflow when it is delivered."
-        />
-      );
     }
 
     return null;
@@ -168,8 +147,6 @@ function AdminPage() {
                   <span style={styles.toolTitle}>{tool.title}</span>
                   <span style={styles.toolDescription}>{tool.description}</span>
                 </span>
-
-                <span style={styles.toolStatus}>{tool.status}</span>
               </button>
             );
           })}
@@ -282,7 +259,7 @@ const styles = {
     font: 'inherit',
     gap: '20px',
     justifyContent: 'space-between',
-    minHeight: '195px',
+    minHeight: '170px',
     padding: '22px',
     textAlign: 'left',
     transition: 'border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease',
@@ -315,28 +292,6 @@ const styles = {
   },
   toolPanel: {
     marginTop: '28px'
-  },
-  comingSoonPanel: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '20px',
-    padding: '24px'
-  },
-  comingSoonText: {
-    color: 'var(--color-text-muted)',
-    lineHeight: 1.55,
-    margin: '12px 0 0',
-    maxWidth: '720px'
-  },
-  comingSoonBadge: {
-    background: 'var(--color-info-bg)',
-    borderRadius: '999px',
-    color: 'var(--color-primary)',
-    display: 'inline-block',
-    fontSize: '0.82rem',
-    fontWeight: 800,
-    margin: '18px 0 0',
-    padding: '8px 11px'
   }
 };
 

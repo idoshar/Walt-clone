@@ -87,6 +87,46 @@ class RestaurantRepository {
         );
     }
 
+    async updateSponsorshipOrder(restaurantIds) {
+        const normalizedRestaurantIds = restaurantIds.map((restaurantId) =>
+            String(restaurantId)
+        );
+        const sponsorshipRanks = new Map(
+            normalizedRestaurantIds.map((restaurantId, index) => [
+                restaurantId,
+                index + 1
+            ])
+        );
+        const restaurants = await Restaurant.find({});
+
+        if (restaurants.length > 0) {
+            await Restaurant.bulkWrite(
+                restaurants.map((restaurant) => {
+                    const sponsoredRank = sponsorshipRanks.get(
+                        String(restaurant.id)
+                    );
+
+                    return {
+                        updateOne: {
+                            filter: { _id: restaurant._id },
+                            update: {
+                                $set: {
+                                    isSponsored: sponsoredRank !== undefined,
+                                    sponsoredRank:
+                                        sponsoredRank !== undefined
+                                            ? sponsoredRank
+                                            : null
+                                }
+                            }
+                        }
+                    };
+                })
+            );
+        }
+
+        return this.findAll();
+    }
+
     async search(query) {
         const normalizedQuery = String(query || '').trim();
 

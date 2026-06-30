@@ -8,6 +8,13 @@ export function lookupUserByUsername(username) {
   return apiRequest(`/users/lookup?${query.toString()}`);
 }
 
+export function updateCurrentUserProfile(profile) {
+  return apiRequest('/users/me', {
+    method: 'PATCH',
+    body: JSON.stringify(profile)
+  });
+}
+
 export function updateCurrentUserLocation(location) {
   return apiRequest('/users/me/location', {
     method: 'PATCH',

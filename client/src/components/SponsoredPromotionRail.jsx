@@ -35,16 +35,15 @@ function getRestaurantCuisine(restaurant) {
 function SponsoredPromotionRail({
   restaurants = [],
   placement = 'right',
-  initialIndex = 0
+  initialIndex = 0,
+  showEmptyState = true
 }) {
   const sponsoredRestaurants = useMemo(
-    () => getUniqueRestaurants(restaurants).slice(0, 3),
+    () => getUniqueRestaurants(restaurants),
     [restaurants]
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
-  const [isPointerInside, setIsPointerInside] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(
     getReducedMotionPreference
   );
@@ -80,12 +79,7 @@ function SponsoredPromotionRail({
   useEffect(() => {
     const restaurantCount = sponsoredRestaurants.length;
 
-    if (
-      restaurantCount < 2 ||
-      prefersReducedMotion ||
-      isManuallyPaused ||
-      isPointerInside
-    ) {
+    if (restaurantCount < 2 || prefersReducedMotion) {
       return undefined;
     }
 
@@ -98,59 +92,50 @@ function SponsoredPromotionRail({
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [
-    isManuallyPaused,
-    isPointerInside,
-    prefersReducedMotion,
-    sponsoredRestaurants.length
-  ]);
+  }, [prefersReducedMotion, sponsoredRestaurants.length]);
 
   if (sponsoredRestaurants.length === 0) {
-    return null;
+    if (!showEmptyState) {
+      return null;
+    }
+
+    return (
+      <aside
+        className={`sponsored-side-rail sponsored-side-rail-${placement}`}
+        aria-label="Sponsored placement information"
+      >
+        <article className="sponsored-side-rail-card sponsored-side-rail-empty-card">
+          <div className="sponsored-side-rail-empty-visual" aria-hidden="true">
+            W
+          </div>
+
+          <div className="sponsored-side-rail-content">
+            <p className="sponsored-side-rail-label">Sponsored placement</p>
+            <h2>Your restaurant here</h2>
+            <p className="sponsored-side-rail-description">
+              Want to promote your restaurant? Contact the site administration
+              to learn about sponsored placements.
+            </p>
+          </div>
+        </article>
+      </aside>
+    );
   }
 
   const activeRestaurant = sponsoredRestaurants[activeIndex];
   const restaurantCount = sponsoredRestaurants.length;
-  const isPaused = prefersReducedMotion || isManuallyPaused;
   const cuisine = getRestaurantCuisine(activeRestaurant);
   const description =
     activeRestaurant.description ||
     activeRestaurant.address ||
     'Explore this restaurant and its menu.';
 
-  function showPreviousRestaurant() {
-    setIsManuallyPaused(true);
-    setActiveIndex((currentIndex) =>
-      getCampaignIndex(currentIndex, -1, restaurantCount)
-    );
-  }
-
-  function showNextRestaurant() {
-    setIsManuallyPaused(true);
-    setActiveIndex((currentIndex) =>
-      getCampaignIndex(currentIndex, 1, restaurantCount)
-    );
-  }
-
-  function selectRestaurant(index) {
-    setIsManuallyPaused(true);
-    setActiveIndex(index);
-  }
-
   return (
     <aside
       className={`sponsored-side-rail sponsored-side-rail-${placement}`}
       aria-label={`${placement} sponsored restaurant offers`}
       aria-roledescription="carousel"
-      onFocusCapture={() => setIsManuallyPaused(true)}
-      onMouseEnter={() => setIsPointerInside(true)}
-      onMouseLeave={() => setIsPointerInside(false)}
     >
-      <div className="sponsored-side-rail-header">
-        <span>Sponsored</span>
-        <span className="sponsored-side-rail-demo-badge">Demo</span>
-      </div>
-
       <article
         className="sponsored-side-rail-card"
         aria-label={`Promotion ${activeIndex + 1} of ${restaurantCount}`}
@@ -163,7 +148,7 @@ function SponsoredPromotionRail({
         />
 
         <div className="sponsored-side-rail-content">
-          <p className="sponsored-side-rail-label">Sponsored · Demo</p>
+          <p className="sponsored-side-rail-label">Sponsored</p>
 
           <h2>{activeRestaurant.name}</h2>
 
@@ -185,62 +170,6 @@ function SponsoredPromotionRail({
           </Link>
         </div>
       </article>
-
-      <div className="sponsored-side-rail-controls">
-        <button
-          type="button"
-          className="sponsored-side-rail-arrow"
-          onClick={showPreviousRestaurant}
-          aria-label="Show previous sponsored restaurant"
-          disabled={restaurantCount < 2}
-        >
-          <span aria-hidden="true">←</span>
-        </button>
-
-        <div
-          className="sponsored-side-rail-indicators"
-          role="group"
-          aria-label="Choose a sponsored restaurant"
-        >
-          {sponsoredRestaurants.map((restaurant, index) => (
-            <button
-              type="button"
-              key={restaurant.id}
-              className={`sponsored-side-rail-indicator ${
-                index === activeIndex
-                  ? 'sponsored-side-rail-indicator-active'
-                  : ''
-              }`}
-              onClick={() => selectRestaurant(index)}
-              aria-label={`Show promotion ${index + 1}: ${restaurant.name}`}
-              aria-pressed={index === activeIndex}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="sponsored-side-rail-arrow"
-          onClick={showNextRestaurant}
-          aria-label="Show next sponsored restaurant"
-          disabled={restaurantCount < 2}
-        >
-          <span aria-hidden="true">→</span>
-        </button>
-
-        <button
-          type="button"
-          className="sponsored-side-rail-pause"
-          onClick={() => setIsManuallyPaused((currentValue) => !currentValue)}
-          disabled={prefersReducedMotion || restaurantCount < 2}
-        >
-          {prefersReducedMotion
-            ? 'Reduced motion'
-            : isPaused
-              ? 'Resume'
-              : 'Pause'}
-        </button>
-      </div>
     </aside>
   );
 }

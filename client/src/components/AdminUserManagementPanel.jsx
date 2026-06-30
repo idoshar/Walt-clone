@@ -186,6 +186,15 @@ function AdminUserManagementPanel({ onOpenPasswordResetRequests }) {
   }
 
   async function handleDelete(user) {
+    if (user.role === 'admin') {
+      setNotice('');
+      setActionError({
+        userId: user.id,
+        message: 'Administrator accounts cannot be deleted.'
+      });
+      return;
+    }
+
     const shouldContinue = window.confirm(
       `Delete ${getDisplayName(user)} permanently?\n\n` +
         'Deletion is allowed only when the account has no orders and owns no restaurants.'
@@ -426,7 +435,7 @@ function AdminUserManagementPanel({ onOpenPasswordResetRequests }) {
                 user.isActive === true &&
                 isFinalActiveAdmin);
             const canResetPassword = !isSelf;
-            const canDelete = !isSelf && user.role !== 'admin';
+            const canDelete = user.role === 'admin' || !isSelf;
             const isUserPending = pendingKey.includes(`:${user.id}`);
 
             return (
