@@ -92,6 +92,15 @@ function App() {
         />
 
         <Route
+          path="/admin/restaurants/:restaurantId/manage"
+          element={
+            <RequireAdmin>
+              <RestaurantManagementPage mode="admin" />
+            </RequireAdmin>
+          }
+        />
+
+        <Route
           path="/admin"
           element={
             <RequireAdmin>

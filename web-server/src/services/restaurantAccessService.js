@@ -73,6 +73,22 @@ function canManageRestaurantAccess(restaurant, userId, userRole) {
     );
 }
 
+function canTransferRestaurantOwnership(restaurant, userId) {
+    return isRestaurantOwner(restaurant, userId);
+}
+
+function getPersonalRestaurantAccessRole(restaurant, userId) {
+    if (isRestaurantOwner(restaurant, userId)) {
+        return 'owner';
+    }
+
+    if (isRestaurantEditor(restaurant, userId)) {
+        return 'editor';
+    }
+
+    return null;
+}
+
 function canDeleteRestaurant(restaurant, userId, userRole) {
     return Boolean(
         !restaurant?.isDefault &&
@@ -106,6 +122,8 @@ module.exports = {
     isRestaurantEditor,
     canManageRestaurant,
     canManageRestaurantAccess,
+    canTransferRestaurantOwnership,
+    getPersonalRestaurantAccessRole,
     canDeleteRestaurant,
     getRestaurantAccessRole
 };

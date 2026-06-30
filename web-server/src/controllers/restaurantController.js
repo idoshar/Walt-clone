@@ -12,9 +12,10 @@ const {
 const {
     canDeleteRestaurant,
     canManageRestaurant,
+    getPersonalRestaurantAccessRole,
     getRequestUserId,
-    getRestaurantAccessRole,
-    isAdministrator
+    isRestaurantEditor,
+    isRestaurantOwner
 } = require('../services/restaurantAccessService');
 
 function getLocationFields(body) {
@@ -65,15 +66,11 @@ async function isPublicRestaurant(restaurant) {
     return (await getProductCount(restaurant.id)) > 0;
 }
 
-async function toManagementResponseObject(restaurant, userId, userRole) {
+async function toManagementResponseObject(restaurant, userId) {
     return {
         ...restaurant.toResponseObject(),
         productCount: await getProductCount(restaurant.id),
-        accessRole: getRestaurantAccessRole(
-            restaurant,
-            userId,
-            userRole
-        )
+        accessRole: getPersonalRestaurantAccessRole(restaurant, userId)
     };
 }
 
@@ -108,22 +105,19 @@ class RestaurantController {
     async getMyRestaurants(req, res, next) {
         try {
             const userId = getRequestUserId(req);
-            const userRole = req.user?.role;
             const restaurants = restaurantRepository.getAll
                 ? await restaurantRepository.getAll()
                 : await restaurantRepository.findAll();
 
-            const managedRestaurants = isAdministrator(userRole)
-                ? restaurants
-                : restaurants.filter(
-                    (restaurant) =>
-                        !restaurant.isDefault &&
-                        canManageRestaurant(restaurant, userId, userRole)
-                );
+            const managedRestaurants = restaurants.filter(
+                (restaurant) =>
+                    isRestaurantOwner(restaurant, userId) ||
+                    isRestaurantEditor(restaurant, userId)
+            );
 
             const myRestaurants = await Promise.all(
                 managedRestaurants.map((restaurant) =>
-                    toManagementResponseObject(restaurant, userId, userRole)
+                    toManagementResponseObject(restaurant, userId)
                 )
             );
 
@@ -188,8 +182,7 @@ class RestaurantController {
                 .json(
                     await toManagementResponseObject(
                         restaurant,
-                        getRequestUserId(req),
-                        req.user?.role
+                        getRequestUserId(req)
                     )
                 );
         } catch (err) {

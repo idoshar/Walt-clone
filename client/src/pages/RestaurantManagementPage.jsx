@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   createRestaurant,
   deleteRestaurant,
@@ -6,6 +7,7 @@ import {
   getRestaurantStatistics,
   updateRestaurant
 } from '../api/restaurantApi.js';
+import { getAdminRestaurant } from '../api/adminRestaurantModerationApi.js';
 import {
   createProduct,
   deleteProduct,
@@ -51,8 +53,11 @@ function getRestaurantStatus(restaurant) {
   };
 }
 
-function RestaurantManagementPage() {
+function RestaurantManagementPage({ mode = 'personal' }) {
   const { formatPrice } = useCurrency();
+  const { restaurantId } = useParams();
+  const navigate = useNavigate();
+  const isAdminManagement = mode === 'admin';
   const [restaurants, setRestaurants] = useState([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [products, setProducts] = useState([]);
@@ -79,6 +84,16 @@ function RestaurantManagementPage() {
   const [isAccessManagerOpen, setIsAccessManagerOpen] = useState(false);
 
   async function loadRestaurants() {
+    if (isAdminManagement) {
+      const restaurant = await getAdminRestaurant(restaurantId);
+      const adminRestaurants = restaurant ? [restaurant] : [];
+
+      setRestaurants(adminRestaurants);
+      setSelectedRestaurant(restaurant || null);
+
+      return adminRestaurants;
+    }
+
     const data = await getMyRestaurants();
     const myRestaurants = Array.isArray(data) ? data : [];
 
@@ -120,7 +135,7 @@ function RestaurantManagementPage() {
 
   useEffect(() => {
     loadRestaurants().catch((error) => setMessage(error.message));
-  }, []);
+  }, [isAdminManagement, restaurantId]);
 
   async function handleCreateRestaurant(restaurant) {
     try {
@@ -396,6 +411,18 @@ function RestaurantManagementPage() {
 
     try {
       await deleteRestaurant(selectedRestaurant.id);
+
+      if (isAdminManagement) {
+        navigate('/admin', {
+          replace: true,
+          state: {
+            activeToolId: 'restaurants'
+          }
+        });
+
+        return;
+      }
+
       setSelectedRestaurant(null);
       setProducts([]);
       setMenuCategories([]);
@@ -471,7 +498,7 @@ function RestaurantManagementPage() {
   function openAccessManagement() {
     if (
       !selectedRestaurant ||
-      selectedRestaurant.accessRole !== 'owner'
+      !['owner', 'admin'].includes(selectedRestaurant.accessRole)
     ) {
       return;
     }
@@ -580,33 +607,81 @@ function RestaurantManagementPage() {
     return searchableRestaurantDetails.includes(normalizedRestaurantSearchQuery);
   });
 
+  const canManageSelectedRestaurantAccess = Boolean(
+    selectedRestaurant &&
+      ['owner', 'admin'].includes(selectedRestaurant.accessRole)
+  );
+
+  const canDeleteSelectedRestaurant = Boolean(
+    selectedRestaurant &&
+      !selectedRestaurant.isDefault &&
+      (
+        selectedRestaurant.accessRole === 'owner' ||
+        (
+          isAdminManagement &&
+          selectedRestaurant.accessRole === 'admin'
+        )
+      )
+  );
+
   return (
     <main className="page management-page">
       <section className="page-header management-page-header">
-        <p className="management-eyebrow">Restaurant owner tools</p>
-        <h1>Restaurant Management</h1>
+        <p className="management-eyebrow">
+          {isAdminManagement
+            ? 'Administrator restaurant tools'
+            : 'Restaurant owner tools'}
+        </p>
+        <h1>
+          {isAdminManagement
+            ? 'Administrator Restaurant Management'
+            : 'Restaurant Management'}
+        </h1>
         <p>
-          Create restaurants, update their details, and keep every menu item
-          accurate.
+          {isAdminManagement
+            ? 'Manage this restaurant on behalf of the platform without adding it to your personal workspace.'
+            : 'Create restaurants, update their details, and keep every menu item accurate.'}
         </p>
       </section>
 
       <section className="management-control-card">
         <div>
-          <h2>Manage your restaurants</h2>
+          <h2>
+            {isAdminManagement
+              ? 'Administrator management mode'
+              : 'Manage your restaurants'}
+          </h2>
           <p>
-            Create a restaurant, add its menu, and keep its details up to date.
+            {isAdminManagement
+              ? 'This access is temporary and does not add the restaurant to your personal management list.'
+              : 'Create a restaurant, add its menu, and keep its details up to date.'}
           </p>
         </div>
 
         <div className="management-control-actions">
-          <button
-            type="button"
-            className="primary-button management-primary-action"
-            onClick={() => setIsCreateRestaurantOpen(true)}
-          >
-            Create Restaurant
-          </button>
+          {isAdminManagement ? (
+            <button
+              type="button"
+              className="secondary-button management-secondary-action"
+              onClick={() =>
+                navigate('/admin', {
+                  state: {
+                    activeToolId: 'restaurants'
+                  }
+                })
+              }
+            >
+              Back to Restaurant Moderation
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="primary-button management-primary-action"
+              onClick={() => setIsCreateRestaurantOpen(true)}
+            >
+              Create Restaurant
+            </button>
+          )}
         </div>
       </section>
 
@@ -623,7 +698,9 @@ function RestaurantManagementPage() {
         <div className="management-section-heading">
           <div>
             <p className="management-eyebrow">Your workspace</p>
-            <h2 id="my-restaurants-title">My Restaurants</h2>
+            <h2 id="my-restaurants-title">
+              {isAdminManagement ? 'Selected Restaurant' : 'My Restaurants'}
+            </h2>
           </div>
           <span className="management-restaurant-count">
             {restaurants.length}{' '}
@@ -633,27 +710,39 @@ function RestaurantManagementPage() {
 
         {restaurants.length === 0 ? (
           <div className="management-empty-state">
-            <strong>You do not have any restaurants yet.</strong>
-            <p>Create your first restaurant to start building a menu.</p>
-            <button
-              type="button"
-              className="primary-button management-primary-action"
-              onClick={() => setIsCreateRestaurantOpen(true)}
-            >
-              Create Restaurant
-            </button>
+            <strong>
+              {isAdminManagement
+                ? 'This restaurant is no longer available.'
+                : 'You do not have any restaurants yet.'}
+            </strong>
+            <p>
+              {isAdminManagement
+                ? 'Return to Restaurant Moderation and choose another restaurant.'
+                : 'Create your first restaurant to start building a menu.'}
+            </p>
+            {!isAdminManagement && (
+              <button
+                type="button"
+                className="primary-button management-primary-action"
+                onClick={() => setIsCreateRestaurantOpen(true)}
+              >
+                Create Restaurant
+              </button>
+            )}
           </div>
         ) : (
           <>
-            <div className="management-restaurant-search">
-              <input
-                type="search"
-                value={restaurantSearchQuery}
-                onChange={(event) => setRestaurantSearchQuery(event.target.value)}
-                placeholder="Search your restaurants"
-                aria-label="Search your restaurants by name, cuisine, or address"
-              />
-            </div>
+            {!isAdminManagement && (
+              <div className="management-restaurant-search">
+                <input
+                  type="search"
+                  value={restaurantSearchQuery}
+                  onChange={(event) => setRestaurantSearchQuery(event.target.value)}
+                  placeholder="Search your restaurants"
+                  aria-label="Search your restaurants by name, cuisine, or address"
+                />
+              </div>
+            )}
 
             {filteredRestaurants.length === 0 ? (
               <div className="management-empty-state">
@@ -690,9 +779,11 @@ function RestaurantManagementPage() {
                                 : 'management-role-owner'
                             }`}
                           >
-                            {restaurant.accessRole === 'editor'
-                              ? 'Editor access'
-                              : 'Owner'}
+                            {restaurant.accessRole === 'admin'
+                              ? 'Administrator override'
+                              : restaurant.accessRole === 'editor'
+                                ? 'Editor access'
+                                : 'Owner'}
                           </span>
                         </div>
 
@@ -719,7 +810,7 @@ function RestaurantManagementPage() {
       </section>
 
 
-      {isCreateRestaurantOpen && (
+      {!isAdminManagement && isCreateRestaurantOpen && (
         <Modal
           title="Create Restaurant"
           onClose={() => setIsCreateRestaurantOpen(false)}
@@ -736,7 +827,7 @@ function RestaurantManagementPage() {
         </Modal>
       )}
 
-      {isPostCreatePromptOpen && selectedRestaurant && (
+      {!isAdminManagement && isPostCreatePromptOpen && selectedRestaurant && (
         <Modal
           title="Restaurant created"
           onClose={() => setIsPostCreatePromptOpen(false)}
@@ -813,7 +904,7 @@ function RestaurantManagementPage() {
               <small>Review orders, revenue, and best-selling menu items.</small>
             </button>
 
-            {selectedRestaurant.accessRole === 'owner' && (
+            {canManageSelectedRestaurantAccess && (
               <button
                 type="button"
                 className="management-action-button"
@@ -821,13 +912,15 @@ function RestaurantManagementPage() {
               >
                 <span>Manage Team Access</span>
                 <small>
-                  Add or remove editors, and transfer restaurant ownership.
+                  {selectedRestaurant.accessRole === 'admin'
+                    ? 'Add or remove editors. Only the restaurant owner can transfer ownership.'
+                    : 'Add or remove editors, and transfer restaurant ownership.'}
                 </small>
               </button>
             )}
           </div>
 
-          {selectedRestaurant.accessRole === 'owner' && (
+          {canDeleteSelectedRestaurant && (
             <button
               type="button"
               className="management-danger-button"
@@ -836,12 +929,18 @@ function RestaurantManagementPage() {
               Delete Restaurant
             </button>
           )}
+
+          {isAdminManagement && selectedRestaurant.isDefault && (
+            <p className="management-feedback">
+              This system catalog restaurant is protected from deletion.
+            </p>
+          )}
         </Modal>
       )}
 
       {isAccessManagerOpen &&
         selectedRestaurant &&
-        selectedRestaurant.accessRole === 'owner' && (
+        canManageSelectedRestaurantAccess && (
           <Modal
             title={`${selectedRestaurant.name} Team Access`}
             onClose={() => setIsAccessManagerOpen(false)}
@@ -851,6 +950,9 @@ function RestaurantManagementPage() {
             <RestaurantAccessManager
               restaurant={selectedRestaurant}
               onOwnershipTransferred={handleOwnershipTransferred}
+              canTransferOwnership={
+                selectedRestaurant.accessRole === 'owner'
+              }
             />
           </Modal>
         )}

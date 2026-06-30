@@ -4,6 +4,7 @@ const userRepository = require('../repositories/userRepository');
 const responseHelper = require('../utilities/responseHelper');
 const {
     canManageRestaurantAccess,
+    canTransferRestaurantOwnership,
     getEditorIds,
     getRequestUserId,
     normalizeEditorIds,
@@ -169,6 +170,19 @@ class RestaurantAccessController {
                 return responseHelper.notFound(res, 'Editor not found');
             }
 
+            const remainingTeamMemberCount =
+                (toUserId(restaurant.ownerId) ? 1 : 0) +
+                currentEditorIds.length -
+                1;
+
+            if (remainingTeamMemberCount < 1) {
+                return res.status(409).json({
+                    error: 'Conflict',
+                    message:
+                        'A restaurant must keep at least one team member.'
+                });
+            }
+
             await restaurantRepository.updateAccess(restaurant.id, {
                 ownerId: restaurant.ownerId,
                 editorIds: currentEditorIds.filter(
@@ -188,6 +202,19 @@ class RestaurantAccessController {
 
             if (!restaurant) {
                 return;
+            }
+
+            if (
+                !canTransferRestaurantOwnership(
+                    restaurant,
+                    getRequestUserId(req)
+                )
+            ) {
+                return res.status(403).json({
+                    error: 'Forbidden',
+                    message:
+                        'Only the restaurant owner can transfer ownership'
+                });
             }
 
             const targetUserId = getTargetUserId(req.body, 'userId');

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import AdminPasswordResetRequestsPanel from '../components/AdminPasswordResetRequestsPanel.jsx';
 import AdminRestaurantModerationPanel from '../components/AdminRestaurantModerationPanel.jsx';
 import AdminStatisticsPanel from '../components/AdminStatisticsPanel.jsx';
@@ -10,7 +11,7 @@ const ADMIN_TOOLS = [
     id: 'restaurants',
     title: 'Restaurant moderation',
     description:
-      'Review platform restaurants, edit non-system entries and protect the catalog.',
+      'Review and manage every platform restaurant. Catalog entries are protected from deletion.',
     status: 'Available now'
   },
   {
@@ -51,7 +52,12 @@ function ComingSoonPanel({ title, description }) {
 
 function AdminPage() {
   const { user } = useAuth();
-  const [activeToolId, setActiveToolId] = useState('');
+  const location = useLocation();
+  const initialActiveToolId =
+    location.state?.activeToolId === 'restaurants'
+      ? 'restaurants'
+      : '';
+  const [activeToolId, setActiveToolId] = useState(initialActiveToolId);
   const [activeUserView, setActiveUserView] = useState('users');
 
   const displayName =

@@ -28,6 +28,18 @@ class RestaurantRepository {
         return Restaurant.countDocuments({ ownerId: String(ownerId) });
     }
 
+    async findAllByEditorId(editorId) {
+        const normalizedEditorId = toUserId(editorId);
+
+        if (!normalizedEditorId) {
+            return [];
+        }
+
+        return Restaurant.find({
+            editorIds: normalizedEditorId
+        }).sort({ createdAt: 1, _id: 1 });
+    }
+
     async update(id, updatedFields) {
         const {
             id: _id,
