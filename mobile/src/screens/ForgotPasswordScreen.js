@@ -12,7 +12,6 @@ import {
 import { submitPasswordResetRequest } from '../api/passwordResetRequests';
 import AppButton from '../components/AppButton';
 import AppCard from '../components/AppCard';
-import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
 export default function ForgotPasswordScreen({ navigation }) {
@@ -74,7 +73,6 @@ export default function ForgotPasswordScreen({ navigation }) {
               </Text>
             </View>
 
-            <ThemeToggle compact />
           </View>
 
           <AppCard style={styles.card}>

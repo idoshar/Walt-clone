@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Platform,
   StyleSheet,
   Text,
@@ -16,6 +15,7 @@ import {
   getProductsByRestaurant,
 } from '../api/products';
 import { useAuth } from '../auth/AuthContext';
+import ProductImage from '../components/ProductImage';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -228,13 +228,10 @@ export default function RestaurantProductsScreen({ navigation, route }) {
 
             return (
               <View style={styles.card}>
-                {item.image ? (
-                  <Image source={{ uri: item.image }} style={styles.image} />
-                ) : (
-                  <View style={styles.placeholder}>
-                    <Text style={styles.placeholderText}>No image</Text>
-                  </View>
-                )}
+                <ProductImage
+                  product={item}
+                  style={styles.image}
+                />
 
                 <View style={styles.content}>
                   <View style={styles.nameRow}>

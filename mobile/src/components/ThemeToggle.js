@@ -5,32 +5,33 @@ import { useAppTheme } from '../theme/ThemeContext';
 export default function ThemeToggle({ compact = false }) {
   const { theme, toggleTheme } = useAppTheme();
   const isDark = theme.mode === 'dark';
+  const nextThemeLabel = isDark ? 'Light' : 'Dark';
+  const nextThemeMode = `${nextThemeLabel.toLowerCase()} mode`;
 
   return (
     <Pressable
-      accessibilityLabel="Toggle light and dark theme"
+      accessibilityLabel={`Switch to ${nextThemeMode}`}
       accessibilityRole="switch"
       accessibilityState={{ checked: isDark }}
       onPress={toggleTheme}
       style={[
         styles.toggle,
+        compact ? styles.compactToggle : null,
         {
           backgroundColor: theme.colors.primarySoft,
           borderColor: theme.colors.border,
         },
       ]}
     >
-      <Text style={[styles.icon, { color: theme.colors.primary }]}>
-        {isDark ? '☾' : '☀'}
-      </Text>
+      <Text style={styles.icon}>{isDark ? '☀️' : '🌙'}</Text>
 
       {!compact ? (
         <View>
           <Text style={[styles.label, { color: theme.colors.text }]}>
-            {isDark ? 'Dark theme' : 'Light theme'}
+            {nextThemeLabel}
           </Text>
           <Text style={[styles.hint, { color: theme.colors.textMuted }]}>
-            Tap to switch
+            Switch to {nextThemeMode}
           </Text>
         </View>
       ) : null}
@@ -49,9 +50,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
+  compactToggle: {
+    minHeight: 36,
+    minWidth: 36,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
   icon: {
     fontSize: 18,
-    fontWeight: '700',
   },
   label: {
     fontSize: 13,

@@ -14,7 +14,6 @@ import {
 import { createOrder } from '../api/orders';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
-import ThemeToggle from '../components/ThemeToggle';
 import { useCurrency } from '../currency/CurrencyContext';
 import {
   LOCATION_STATUS,
@@ -317,8 +316,6 @@ export default function CheckoutScreen({ navigation, route }) {
         <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
 
         <View style={styles.successContainer}>
-          <ThemeToggle compact />
-
           <View style={styles.successCard}>
             <Text style={styles.successIcon}>✓</Text>
             <Text style={styles.successTitle}>Order placed</Text>
@@ -383,7 +380,6 @@ export default function CheckoutScreen({ navigation, route }) {
             </Text>
           </View>
 
-          <ThemeToggle compact />
         </View>
 
         {restaurantItems.length === 0 ? (

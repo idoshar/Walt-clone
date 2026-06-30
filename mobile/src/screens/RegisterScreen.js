@@ -16,7 +16,6 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from '../auth/AuthContext';
-import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 
 const INITIAL_FORM = {
@@ -356,7 +355,6 @@ export default function RegisterScreen() {
         <View style={styles.card}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Create account</Text>
-            <ThemeToggle compact />
           </View>
 
           <Text style={styles.subtitle}>

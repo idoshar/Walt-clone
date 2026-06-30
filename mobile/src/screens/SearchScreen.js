@@ -13,18 +13,12 @@ import {
 
 import { getRestaurants } from '../api/restaurants';
 import { useCart } from '../cart/CartContext';
+import ProductImage from '../components/ProductImage';
+import ThemeToggle from '../components/ThemeToggle';
 import { useAppTheme } from '../theme/ThemeContext';
 import { useCurrency } from '../currency/CurrencyContext';
 import { getRestaurantImage } from '../utils/restaurantImages';
 
-
-function hasImage(item) {
-  return typeof item?.image === 'string' && item.image.trim().length > 0;
-}
-
-function getInitial(item, fallback = '?') {
-  return item?.name?.trim()?.charAt(0)?.toUpperCase() || fallback;
-}
 
 // Search restaurants + their products locally — no extra endpoint needed.
 function searchData(restaurants, query) {
@@ -120,7 +114,11 @@ export default function SearchScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Search bar */}
+      <View style={styles.screenHeader}>
+        <Text style={styles.screenTitle}>Search</Text>
+        <ThemeToggle compact />
+      </View>
+
       <View style={styles.searchBar}>
         <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
@@ -257,13 +255,10 @@ export default function SearchScreen({ navigation }) {
 
             {results.products.map((p) => (
               <View key={`${p.restaurantId || p.restaurant?.id}:${p.id}`} style={styles.productCard}>
-                {hasImage(p) ? (
-                  <Image source={{ uri: p.image }} style={styles.productImage} />
-                ) : (
-                  <View style={styles.productImagePlaceholder}>
-                    <Text style={styles.initial}>{getInitial(p, 'P')}</Text>
-                  </View>
-                )}
+                <ProductImage
+                  product={p}
+                  style={styles.productImage}
+                />
 
                 <View style={styles.productInfo}>
                   <Text numberOfLines={1} style={styles.productName}>
@@ -307,6 +302,21 @@ function createStyles(colors) {
     container: {
       backgroundColor: colors.background,
       flex: 1,
+    },
+    screenHeader: {
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderBottomColor: colors.border,
+      borderBottomWidth: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 10,
+    },
+    screenTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '800',
     },
     searchBar: {
       alignItems: 'center',

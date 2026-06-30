@@ -20,8 +20,8 @@ import { getProductRecommendations } from '../api/products';
 import { getMenuCategories } from '../api/menuCategories';
 import { useAuth } from '../auth/AuthContext';
 import { useCart } from '../cart/CartContext';
-import ThemeToggle from '../components/ThemeToggle';
 import CurrencySelector from '../components/CurrencySelector';
+import ProductImage from '../components/ProductImage';
 import { useCurrency } from '../currency/CurrencyContext';
 import { useAppTheme } from '../theme/ThemeContext';
 import { getRestaurantImage } from '../utils/restaurantImages';
@@ -50,14 +50,6 @@ function orderMenuCategories(categories) {
           String(secondCategory.id || '')
         )
     );
-}
-
-function hasImage(item) {
-  return typeof item?.image === 'string' && item.image.trim().length > 0;
-}
-
-function getInitial(item, fallback = 'R') {
-  return item?.name?.trim()?.charAt(0)?.toUpperCase() || fallback;
 }
 
 // Fallback: picks products from the same restaurant in the same category
@@ -272,7 +264,6 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
       >
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle}>Restaurant</Text>
-          <ThemeToggle compact />
         </View>
 
         <View style={styles.currencySection}>
@@ -428,18 +419,10 @@ export default function RestaurantDetailsScreen({ navigation, route }) {
             {!isLoading &&
               visibleProducts.map((product) => (
                 <View key={product.id} style={styles.productCard}>
-                  {hasImage(product) ? (
-                    <Image
-                      source={{ uri: product.image }}
-                      style={styles.productImage}
-                    />
-                  ) : (
-                    <View style={styles.productImagePlaceholder}>
-                      <Text style={styles.productImageInitial}>
-                        {getInitial(product, 'P')}
-                      </Text>
-                    </View>
-                  )}
+                  <ProductImage
+                    product={product}
+                    style={styles.productImage}
+                  />
 
                   <View style={styles.productContent}>
                     <View style={styles.productTitleRow}>
