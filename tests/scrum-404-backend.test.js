@@ -284,6 +284,35 @@ async function main() {
     expect(response.status === 204, `expected 204, got ${response.status}`);
   });
 
+  await scenario('test cleanup removes the temporary restaurant', async () => {
+    if (!restaurantId) {
+      throw new Error(
+        'Cannot clean up because the test restaurant was not created.'
+      );
+    }
+
+    if (!ownerToken) {
+      throw new Error(
+        'Cannot clean up because the owner token is unavailable.'
+      );
+    }
+
+    const { response } = await request(
+      `/api/restaurants/${restaurantId}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${ownerToken}` },
+      }
+    );
+
+    expect(
+      response.status === 204,
+      `cleanup expected 204, got ${response.status}`
+    );
+
+    console.log('Cleanup - SCRUM-404 test restaurant deleted.');
+  });
+
   const passed = results.filter(Boolean).length;
   console.log(
     `\nSCRUM-404 SUMMARY: ${passed} passed, ${results.length - passed} failed`
