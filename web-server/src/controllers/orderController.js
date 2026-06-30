@@ -213,17 +213,11 @@ function createDeliveryDetailsSnapshot(user, deliveryDetailsInput) {
         return phone;
     }
 
-    const address = resolveDeliveryField(
-        details,
-        'address',
-        user.address,
-        240,
-        'address'
-    );
+    const rawAddress = hasOwnProperty(details, 'address')
+        ? details.address
+        : user.address;
 
-    if (address.error) {
-        return address;
-    }
+    const address = normalizeRequiredText(rawAddress, 240);
 
     const dinerCount = hasOwnProperty(details, 'dinerCount')
         ? normalizeDinerCount(details.dinerCount)
@@ -251,11 +245,18 @@ function createDeliveryDetailsSnapshot(user, deliveryDetailsInput) {
         return location;
     }
 
+    if (!address && !location.value) {
+        return {
+            error:
+                'deliveryDetails.address must be a non-empty string up to 240 characters when no deliveryDetails.location is provided'
+        };
+    }
+
     return {
         value: {
             recipientName: recipientName.value,
             phone: phone.value,
-            address: address.value,
+            address: address || '',
             dinerCount,
             notes,
             location: location.value
